@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from 'react';
-import { Download, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Trash2 } from 'lucide-react';
+import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Trash2 } from 'lucide-react';
 import type { LocalPlaylist, Playlist, Track } from '../types';
 import { live, send, usePart } from '../live';
 import { canLike, cls, formatTime, isLiked, providerName } from '../util';
@@ -133,6 +133,9 @@ export function TrackMenu({ track, context, index }: { track: Track; context?: C
         <button onClick={() => send('like', { track })}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> {liked ? 'Remove from your likes' : `Like on ${providerName[track.provider]}`}</button>
       )}
       <button onClick={() => send('download', { track }).then((e) => !e && live.notice(`Downloading ${track.title}…`))}><Download size={17} /> Download to keep</button>
+      {live.state.downloads?.canSaveAsMp3 && (
+        <button onClick={() => send('export', { track }).then((e) => !e && live.notice(`Saving ${track.title} as an MP3…`))}><FileAudio size={17} /> Save as MP3 on the computer</button>
+      )}
       <button onClick={() => send('pin', { track })}><Pin size={17} /> Pin to Home</button>
       <button onClick={() => { navigator.clipboard?.writeText(track.sourceUrl).then(() => live.notice('Link copied', 'good'), () => send('copyLink', { track })); }}><Link2 size={17} /> Copy the link</button>
       <button onClick={() => window.open(track.sourceUrl, '_blank', 'noopener')}><ExternalLink size={17} /> Open on {providerName[track.provider]}</button>
