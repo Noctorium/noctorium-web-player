@@ -1,0 +1,26 @@
+{
+  "name": "noctorium-web-player",
+  "private": true,
+  "version": "0.7.0",
+  "description": "Noctorium in a browser: the page `noctorium web` serves to the devices in the house.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "hls.js": "^1.7.3",
+    "lucide-react": "^1.50.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.2"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Noctorium",
+  "short_name": "Noctorium",
+  "description": "YouTube Music and SoundCloud in one library.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#07050a",
+  "icons": [
+    { "src": "/noctorium.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
