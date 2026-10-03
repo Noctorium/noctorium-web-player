@@ -12,6 +12,8 @@ const seekBars = [['MINIMAL', 'Minimal'], ['MATERIAL', 'Material'], ['WAVE', 'Wa
 const accents: Record<string, [string, string | null]> = {
   THEME: ['Theme’s own', null], VIOLET: ['Violet', '#b47cff'], MAGENTA: ['Magenta', '#ff6ec7'], EMBER: ['Ember', '#ff9757'],
   AZURE: ['Azure', '#5ab2ff'], MINT: ['Mint', '#5fe3b0'], ARTWORK: ['Match the artwork', null],
+  // The listener's own colour, chosen on the desktop or the phone; the page shows it as the accent in force.
+  CUSTOM: ['Your own', null],
 };
 const lyricSources = [['', 'Whichever has them'], ['LRCLIB', 'LRCLIB'], ['BETTER_LYRICS', 'Better Lyrics'], ['KARALYR', 'Karalyr'], ['SYNCLRC', 'SyncLRC'], ['LYRICS_OVH', 'lyrics.ovh'], ['MUSIXMATCH', 'Musixmatch'], ['HAPPI', 'Happi'], ['GENIUS', 'Genius']];
 
