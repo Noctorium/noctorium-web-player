@@ -1,7 +1,7 @@
 {
   "name": "noctorium-web-player",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Noctorium in a browser: the page `noctorium web` serves to the devices in the house, and the hosted player.",
   "license": "GPL-3.0-only",
   "type": "module",
