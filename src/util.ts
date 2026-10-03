@@ -1,4 +1,5 @@
 import type { Provider, Track, Likes } from './types';
+import { HOSTED } from './mode';
 
 export function formatTime(ms?: number): string {
   if (!ms || ms <= 0 || !Number.isFinite(ms)) return '–:––';
@@ -43,7 +44,7 @@ export const providerName: Record<Provider, string> = {
   YOUTUBE_VIDEO: 'YouTube',
   SOUNDCLOUD: 'SoundCloud',
   SPOTIFY: 'Spotify',
-  LOCAL: 'This computer',
+  LOCAL: HOSTED ? 'This browser' : 'This computer',
 };
 
 export const providerBadge: Record<Provider, string> = {

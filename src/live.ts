@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Command, State } from './types';
 import { audio } from './audio';
+import { HOSTED } from './mode';
 
 /*
  * The one connection to `noctorium web`.
@@ -9,7 +10,16 @@ import { audio } from './audio';
  * audio instructions for when this tab is the speaker, and the commands this page sends, each answered by
  * id so a button can show that what it asked for went wrong. When the socket drops -- a laptop lid closed,
  * the program restarted -- the page says so and keeps trying, and picks the state up whole when it is back.
+ *
+ * The hosted player has no Noctorium to connect to. There the same commands go to the engine in
+ * hosted/engine.ts, inside this page, which sends the same parts back -- so nothing above this file can tell.
  */
+
+/** The hosted player's engine, as this file sees it. */
+interface Host {
+  send(command: Command): Promise<string | undefined>;
+  report(event: Record<string, unknown>): void;
+}
 
 export type Connection = 'connecting' | 'open' | 'closed' | 'unauthorised';
 
@@ -29,6 +39,7 @@ class Live {
   private nextId = 1;
   private retry = 500;
   private noticeId = 1;
+  private host?: Host;
 
   subscribe = (listener: Listener) => {
     this.listeners.add(listener);
@@ -42,6 +53,14 @@ class Live {
   }
 
   async start() {
+    if (HOSTED) {
+      const { HostedEngine } = await import('./hosted/engine');
+      const engine = new HostedEngine(this);
+      this.host = engine;
+      this.connection = 'open';
+      engine.start();
+      return;
+    }
     const session = await fetch('/api/session', { credentials: 'same-origin' }).catch(() => undefined);
     if (session && session.status === 401) {
       this.connection = 'unauthorised';
@@ -79,12 +98,17 @@ class Live {
     };
   }
 
+  /** One part of the state, arrived: from the socket, or from the hosted engine directly. */
+  part<K extends keyof State>(name: K, data: State[K]) {
+    this.state[name] = data;
+    if (name === 'playback') this.playbackAt = performance.now();
+    this.emit();
+  }
+
   private received(message: any) {
     switch (message.kind) {
       case 'part':
-        (this.state as any)[message.name] = message.data;
-        if (message.name === 'playback') this.playbackAt = performance.now();
-        this.emit();
+        this.part(message.name, message.data);
         break;
       case 'reply': {
         const reply = this.pending.get(message.id);
@@ -124,6 +148,12 @@ class Live {
 
   /** Sends [command]; resolves with the problem, if there was one. */
   send(command: Command): Promise<string | undefined> {
+    if (this.host) {
+      return this.host.send(command).then((error) => {
+        if (error) this.notice(error, 'bad');
+        return error;
+      });
+    }
     const socket = this.socket;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       this.notice('Not connected to Noctorium', 'bad');
@@ -136,7 +166,13 @@ class Live {
 
   /** For the audio element: what it is doing. */
   report(event: Record<string, unknown>) {
-    if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ kind: 'audio', ...event }));
+    if (this.host) this.host.report(event);
+    else if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ kind: 'audio', ...event }));
+  }
+
+  /** The hosted engine's own calls that are not commands: the library as a file to save. */
+  hosted<T>(use: (engine: any) => T): T | undefined {
+    return this.host ? use(this.host) : undefined;
   }
 
   claim() {

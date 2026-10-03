@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Download, Home as HomeIcon, Library as LibraryIcon, ListMusic, MonitorSpeaker, Search as SearchIcon, Settings as SettingsIcon } from 'lucide-react';
 import { live, send, useLive, usePart } from './live';
+import { HOSTED } from './mode';
 import { go, useRoute } from './router';
 import { cls } from './util';
 import { Badge, Layers } from './components/Common';
@@ -13,7 +14,7 @@ import { DevicesPage, DownloadsPage, QueuePage } from './pages/Other';
 import { SettingsPage } from './pages/Settings';
 import { closeNowPlaying, openNowPlaying, useUi } from './ui';
 
-const pages = [
+const allPages = [
   ['home', 'Home', HomeIcon],
   ['search', 'Search', SearchIcon],
   ['library', 'Library', LibraryIcon],
@@ -22,6 +23,12 @@ const pages = [
   ['devices', 'Devices', MonitorSpeaker],
   ['settings', 'Settings', SettingsIcon],
 ] as const;
+
+/** What only a Noctorium on a computer has: files kept on it, and its speakers and Connect. */
+const pages = HOSTED ? allPages.filter(([id]) => id !== 'downloads' && id !== 'devices') : allPages;
+
+/** YouTube's player, which only the hosted player shows; left out of the other build. */
+const YouTubeStage = HOSTED ? lazy(() => import('./hosted/Stage')) : null;
 
 /** The theme's colours on the page, so every Noctorium theme is this page's theme too. */
 function useTheme() {
@@ -108,6 +115,12 @@ function Sidebar() {
           </button>
         ))}
       </div>
+      {HOSTED && (
+        <a className="sidebar-get" href="https://noctorium.vercel.app" target="_blank" rel="noreferrer">
+          <strong>Noctorium for your computer and phone</strong>
+          <span>With your own YouTube Music and SoundCloud accounts.</span>
+        </a>
+      )}
     </aside>
   );
 }
@@ -149,10 +162,12 @@ function TopBar() {
         <SearchIcon size={18} />
         <input value={text} onChange={(e) => typed(e.target.value)} placeholder="Songs, artists, playlists — or paste a link" aria-label="Search" />
       </form>
-      <span className="connection">
-        <span className={cls('dot', connection !== 'open' && 'off')} />
-        <span>{connection === 'open' ? 'Connected' : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}</span>
-      </span>
+      {!HOSTED && (
+        <span className="connection">
+          <span className={cls('dot', connection !== 'open' && 'off')} />
+          <span>{connection === 'open' ? 'Connected' : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}</span>
+        </span>
+      )}
     </header>
   );
 }
@@ -188,8 +203,8 @@ function Page() {
     case 'playlist': return <PlaylistPage />;
     case 'local': return <LocalPage />;
     case 'queue': return <QueuePage />;
-    case 'downloads': return <DownloadsPage />;
-    case 'devices': return <DevicesPage />;
+    case 'downloads': return HOSTED ? <Home /> : <DownloadsPage />;
+    case 'devices': return HOSTED ? <Home /> : <DevicesPage />;
     case 'settings': return <SettingsPage />;
     case 'now-playing': openNowPlaying(); return <Home />;
     default: return <Home />;
@@ -239,6 +254,7 @@ export function App() {
       <Notices />
       <Layers />
       <MediaSession />
+      {YouTubeStage && <Suspense fallback={null}><YouTubeStage /></Suspense>}
     </div>
   );
 }

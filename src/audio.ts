@@ -1,5 +1,6 @@
 import type Hls from 'hls.js';
 import { live } from './live';
+import { HOSTED } from './mode';
 
 /** hls.js, fetched the first time a track needs it: most never do, and it is half the page's weight. */
 let hlsModule: Promise<typeof import('hls.js')> | undefined;
@@ -145,7 +146,9 @@ class Audio {
     if (hls && !a.canPlayType('application/vnd.apple.mpegurl')) {
       const { default: Hls } = await loadHls();
       if (Hls.isSupported()) {
-        const player = new Hls({ xhrSetup: (xhr) => { xhr.withCredentials = true; } });
+        // Noctorium's own address wants its cookie; SoundCloud's servers, which the hosted player reads
+        // from directly, answer any page only when no cookie is sent.
+        const player = new Hls(HOSTED ? {} : { xhrSetup: (xhr) => { xhr.withCredentials = true; } });
         player.on(Hls.Events.ERROR, (_, data) => {
           if (data.fatal) this.report('error', { message: 'The stream could not be read' });
         });

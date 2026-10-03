@@ -1,7 +1,7 @@
 name: CI
 
-# The page type-checks and builds. It is shipped inside Noctorium-cli, which builds it again from the
-# commit its web/ submodule pins; this is only so a broken page is caught here first.
+# The page type-checks and builds, both ways: as noctorium web serves it (shipped inside Noctorium-cli, which
+# builds it again from the commit its web/ submodule pins) and as the hosted player, with its API.
 on:
   push:
     branches: [main]
@@ -20,3 +20,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm run build:hosted

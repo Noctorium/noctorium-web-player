@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react';
-import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Trash2 } from 'lucide-react';
+import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Radio, Trash2 } from 'lucide-react';
+import { HOSTED } from '../mode';
 import type { LocalPlaylist, Playlist, Track } from '../types';
 import { live, send, usePart } from '../live';
 import { canLike, cls, formatTime, isLiked, providerName } from '../util';
@@ -130,9 +131,10 @@ export function TrackMenu({ track, context, index }: { track: Track; context?: C
       <button data-keep onClick={(e) => openMenu(e, <AddToPlaylist track={track} />)}><ListPlus size={17} /> Add to a playlist…</button>
       <hr />
       {canLike(likes, track) && (
-        <button onClick={() => send('like', { track })}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> {liked ? 'Remove from your likes' : `Like on ${providerName[track.provider]}`}</button>
+        <button onClick={() => send('like', { track })}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> {liked ? 'Remove from your likes' : HOSTED ? 'Like' : `Like on ${providerName[track.provider]}`}</button>
       )}
-      <button onClick={() => send('download', { track }).then((e) => !e && live.notice(`Downloading ${track.title}…`))}><Download size={17} /> Download to keep</button>
+      {HOSTED && <button onClick={() => send('radio', { track })}><Radio size={17} /> Start a radio from it</button>}
+      {live.state.downloads && <button onClick={() => send('download', { track }).then((e) => !e && live.notice(`Downloading ${track.title}…`))}><Download size={17} /> Download to keep</button>}
       {live.state.downloads?.canSaveAsMp3 && (
         <button onClick={() => send('export', { track }).then((e) => !e && live.notice(`Saving ${track.title} as an MP3…`))}><FileAudio size={17} /> Save as MP3 on the computer</button>
       )}
@@ -161,7 +163,7 @@ export function AddToPlaylist({ track }: { track: Track }) {
   const youTube = track.provider === 'YOUTUBE_MUSIC' || track.provider === 'YOUTUBE_VIDEO';
   const service = (library?.playlists ?? []).filter((p) => p.editable && (track.provider === 'SOUNDCLOUD' ? p.provider === 'SOUNDCLOUD' : youTube && p.provider !== 'SOUNDCLOUD'));
   const make = (provider: string, where: string) => openDialog(
-    <Prompt title={`New playlist ${where}`} hint={provider === 'LOCAL' ? 'Kept in Noctorium on the computer.' : 'Private to begin with.'} action="Make it"
+    <Prompt title={HOSTED ? 'New playlist' : `New playlist ${where}`} hint={provider === 'LOCAL' ? (HOSTED ? 'Kept in this browser.' : 'Kept in Noctorium on the computer.') : 'Private to begin with.'} action="Make it"
       submit={(title) => send('createPlaylist', { title, provider, track }).then((e) => !e && live.notice(`Made “${title}”`, 'good'))} />,
   );
   return (
@@ -174,14 +176,14 @@ export function AddToPlaylist({ track }: { track: Track }) {
       ))}
       {(library?.local ?? []).map((p) => (
         <button key={p.id} onClick={() => send('addToPlaylist', { localId: p.id, track }).then((e) => !e && live.notice(`Added to ${p.title}`, 'good'))}>
-          <Badge provider="LOCAL" /> <span className="ellipsis">{p.title}</span>
+          {!HOSTED && <Badge provider="LOCAL" />} <span className="ellipsis">{p.title}</span>
         </button>
       ))}
       <hr />
-      {(youTube || track.provider === 'SOUNDCLOUD') && (
+      {!HOSTED && (youTube || track.provider === 'SOUNDCLOUD') && (
         <button onClick={() => make(youTube ? 'YOUTUBE_MUSIC' : 'SOUNDCLOUD', `on ${youTube ? 'YouTube Music' : 'SoundCloud'}`)}><Plus size={17} /> New playlist on {youTube ? 'YouTube Music' : 'SoundCloud'}…</button>
       )}
-      <button onClick={() => make('LOCAL', 'on the computer')}><Plus size={17} /> New playlist on the computer…</button>
+      <button onClick={() => make('LOCAL', 'on the computer')}><Plus size={17} /> {HOSTED ? 'New playlist…' : 'New playlist on the computer…'}</button>
     </>
   );
 }

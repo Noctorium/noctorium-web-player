@@ -4,6 +4,8 @@ import { cls } from '../util';
 import { Empty } from '../components/Common';
 import { PlaylistCard, Shelf, TrackCard } from '../components/Cards';
 import { go } from '../router';
+import { HOSTED } from '../mode';
+import { HostedWelcome } from '../hosted/Welcome';
 
 function greeting() {
   const hour = new Date().getHours();
@@ -26,7 +28,8 @@ export function Home() {
         ))}
         <button className="chip" aria-label="Refresh" onClick={() => send('refreshHome')}><RefreshCw size={14} /></button>
       </div>
-      {!signedIn && settings && (
+      {HOSTED && <HostedWelcome />}
+      {!HOSTED && !signedIn && settings && (
         <div className="banner">
           <span>Sign in to YouTube Music or SoundCloud to see your own playlists, likes and mixes here.</span>
           <button className="button small primary" style={{ marginLeft: 'auto' }} onClick={() => go('/settings')}>Sign in</button>
@@ -45,7 +48,7 @@ export function Home() {
           {Array.from({ length: 10 }, (_, i) => <div key={i} className="skeleton" style={{ aspectRatio: '1' }} />)}
         </div>
       ) : (
-        <Empty icon={<Disc3 size={44} />} title="Nothing here yet">{home.error ?? 'Search for something to play, or sign in to see your own music.'}</Empty>
+        <Empty icon={<Disc3 size={44} />} title="Nothing here yet">{home.error ?? (HOSTED ? 'Search for something to play.' : 'Search for something to play, or sign in to see your own music.')}</Empty>
       ))}
     </>
   );

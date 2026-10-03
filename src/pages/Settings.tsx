@@ -4,7 +4,9 @@ import { send, usePart } from '../live';
 import { cls } from '../util';
 import { Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
-import type { Account, Service } from '../types';
+import type { Account, Service, Settings } from '../types';
+import { HOSTED } from '../mode';
+import { HostedSettings } from '../hosted/Settings';
 
 const seekBars = [['MINIMAL', 'Minimal'], ['MATERIAL', 'Material'], ['WAVE', 'Wave'], ['SEGMENTS', 'Segments'], ['CAPSULE', 'Capsule'], ['CLASSIC', 'Classic']];
 const accents: Record<string, [string, string | null]> = {
@@ -22,7 +24,7 @@ function statusText(account: Account) {
   }
 }
 
-function serviceText(service: Service) {
+export function serviceText(service: Service) {
   switch (service.status) {
     case 'connected': return `Scrobbling as ${service.username ?? ''}`;
     case 'awaiting_approval': return 'Approve it in the tab that opened, then press Finish';
@@ -60,7 +62,7 @@ function PhoneSignIn() {
   );
 }
 
-function Row({ title, detail, children }: { title: string; detail?: React.ReactNode; children?: React.ReactNode }) {
+export function Row({ title, detail, children }: { title: string; detail?: React.ReactNode; children?: React.ReactNode }) {
   return (
     <div className="setting">
       <div className="label"><strong>{title}</strong>{detail && <small>{detail}</small>}</div>
@@ -69,7 +71,48 @@ function Row({ title, detail, children }: { title: string; detail?: React.ReactN
   );
 }
 
+/** The theme, the accent and the seek bar: the same in every Noctorium, hosted or not. */
+export function LookSettings({ settings }: { settings: Settings }) {
+  return (
+      <section>
+        <h2>Theme</h2>
+        <div className="themes">
+          {settings.themes.map((t) => (
+            <button key={t.name} className={cls('theme', settings.theme === t.name && 'on')} style={{ background: t.card, color: t.text }} onClick={() => send('theme', { name: t.name })}>
+              <div className="swatch"><i style={{ background: t.background }} /><i style={{ background: t.panel }} /><i style={{ background: t.card }} /><i style={{ background: t.accent }} /></div>
+              {t.title.startsWith(t.family) ? t.title : t.title}
+              <small>{t.family}</small>
+            </button>
+          ))}
+        </div>
+        <h2>Accent</h2>
+        <div className="chips">
+          {settings.accents.map((a) => (
+            <button key={a} className={cls('chip', settings.accent === a && 'on')} onClick={() => send('accent', { name: a })}>
+              {accents[a]?.[1] && <span style={{ width: 12, height: 12, borderRadius: '50%', background: accents[a][1]! }} />}
+              {accents[a]?.[0] ?? a}
+            </button>
+          ))}
+        </div>
+        <h2>Seek bar</h2>
+        <div className="chips">
+          {seekBars.map(([id, label]) => <button key={id} className={cls('chip', settings.progressBarStyle === id && 'on')} onClick={() => send('seekBar', { name: id })}>{label}</button>)}
+        </div>
+        <Row title="The figure on the right of the seek bar">
+          <div className="chips" style={{ margin: 0 }}>
+            {[['TOTAL', 'Total length'], ['REMAINING', 'Time left']].map(([id, label]) => <button key={id} className={cls('chip', settings.timeDisplay === id && 'on')} onClick={() => send('timeDisplay', { name: id })}>{label}</button>)}
+          </div>
+        </Row>
+        <Row title="Animations" detail="Pages ease in and covers lift. Off makes every change instant.">
+          <Switch on={settings.animations} change={(on) => send('animations', { on })} label="Animations" />
+        </Row>
+      </section>
+  );
+}
+
 export function SettingsPage() {
+  // A constant of the build, so the hooks below are always either all called or never.
+  if (HOSTED) return <HostedSettings />;
   const settings = usePart('settings');
   const likes = usePart('likes');
   const account = usePart('account');
@@ -118,39 +161,7 @@ export function SettingsPage() {
         {settings.scrobbles > 0 && <p className="muted" style={{ fontSize: 13 }}>{settings.scrobbles} scrobbled this session.</p>}
       </section>
 
-      <section>
-        <h2>Theme</h2>
-        <div className="themes">
-          {settings.themes.map((t) => (
-            <button key={t.name} className={cls('theme', settings.theme === t.name && 'on')} style={{ background: t.card, color: t.text }} onClick={() => send('theme', { name: t.name })}>
-              <div className="swatch"><i style={{ background: t.background }} /><i style={{ background: t.panel }} /><i style={{ background: t.card }} /><i style={{ background: t.accent }} /></div>
-              {t.title.startsWith(t.family) ? t.title : t.title}
-              <small>{t.family}</small>
-            </button>
-          ))}
-        </div>
-        <h2>Accent</h2>
-        <div className="chips">
-          {settings.accents.map((a) => (
-            <button key={a} className={cls('chip', settings.accent === a && 'on')} onClick={() => send('accent', { name: a })}>
-              {accents[a]?.[1] && <span style={{ width: 12, height: 12, borderRadius: '50%', background: accents[a][1]! }} />}
-              {accents[a]?.[0] ?? a}
-            </button>
-          ))}
-        </div>
-        <h2>Seek bar</h2>
-        <div className="chips">
-          {seekBars.map(([id, label]) => <button key={id} className={cls('chip', settings.progressBarStyle === id && 'on')} onClick={() => send('seekBar', { name: id })}>{label}</button>)}
-        </div>
-        <Row title="The figure on the right of the seek bar">
-          <div className="chips" style={{ margin: 0 }}>
-            {[['TOTAL', 'Total length'], ['REMAINING', 'Time left']].map(([id, label]) => <button key={id} className={cls('chip', settings.timeDisplay === id && 'on')} onClick={() => send('timeDisplay', { name: id })}>{label}</button>)}
-          </div>
-        </Row>
-        <Row title="Animations" detail="Pages ease in and covers lift. Off makes every change instant.">
-          <Switch on={settings.animations} change={(on) => send('animations', { on })} label="Animations" />
-        </Row>
-      </section>
+      <LookSettings settings={settings} />
 
       <section>
         <h2>Playing</h2>

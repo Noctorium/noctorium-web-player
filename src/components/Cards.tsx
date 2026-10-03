@@ -7,6 +7,7 @@ import { openMenu } from '../ui';
 import { bigArtwork, plural, providerName } from '../util';
 import { Badge, Cover } from './Common';
 import { TrackMenu } from './Tracks';
+import { HOSTED } from '../mode';
 
 export function Shelf({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
@@ -63,7 +64,7 @@ export function LocalCard({ playlist }: { playlist: LocalPlaylist }) {
       <Cover url={bigArtwork(playlist.artworkUrl, 352)} />
       <div className="card-title ellipsis">{playlist.title}</div>
       <div className="card-sub ellipsis" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <Badge provider="LOCAL" /> {plural(playlist.tracks.length, 'track')}
+        {!HOSTED && <Badge provider="LOCAL" />} {plural(playlist.tracks.length, 'track')}
       </div>
     </div>
   );

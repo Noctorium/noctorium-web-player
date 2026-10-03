@@ -2,12 +2,14 @@
   "name": "noctorium-web-player",
   "private": true,
   "version": "0.7.0",
-  "description": "Noctorium in a browser: the page `noctorium web` serves to the devices in the house.",
+  "description": "Noctorium in a browser: the page `noctorium web` serves to the devices in the house, and the hosted player.",
   "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:hosted": "vite --mode hosted",
     "build": "tsc --noEmit && vite build",
+    "build:hosted": "tsc --noEmit && tsc --noEmit -p api && vite build --mode hosted",
     "preview": "vite preview"
   },
   "dependencies": {

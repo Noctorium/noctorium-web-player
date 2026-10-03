@@ -7,6 +7,7 @@ import { Badge, Cover, Empty, Spinner } from '../components/Common';
 import { PlaylistCard, Shelf } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
 import type { Search as SearchState } from '../types';
+import { HOSTED } from '../mode';
 
 const modes: [SearchState['mode'], string][] = [['HYBRID', 'Both'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos']];
 
@@ -32,7 +33,7 @@ export function Search() {
         {search?.loading && <Spinner />}
       </div>
       {top && (
-        <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)', gap: 28, marginTop: 24 }} className="top-result">
+        <section className="top-result">
           <div className="card" style={{ background: 'var(--card)', padding: 20, margin: 0 }} role="button" tabIndex={0}
             onClick={() => send('play', { track: top, list: search!.tracks, origin: 'SEARCH' })}>
             <Cover url={bigArtwork(top.artworkUrl, 352)} className="" />
@@ -56,7 +57,11 @@ export function Search() {
       {search?.albums.length ? (
         <Shelf title="Albums">
           {search.albums.map((a) => (
-            <div key={a.id} className="card" role="button" tabIndex={0} onClick={() => go(`/search?q=${encodeURIComponent(`${a.title} ${a.artists[0]?.name ?? ''}`.trim())}`)}>
+            <div key={a.id} className="card" role="button" tabIndex={0} onClick={() => {
+              // The hosted player opens an album as the playlist YouTube Music keeps of its songs.
+              if (HOSTED) { send('openPlaylist', { key: a.id }); go(`/playlist/${encodeURIComponent(a.id)}`); }
+              else go(`/search?q=${encodeURIComponent(`${a.title} ${a.artists[0]?.name ?? ''}`.trim())}`);
+            }}>
               <Cover url={bigArtwork(a.artworkUrl, 352)} />
               <div className="card-title ellipsis">{a.title}</div>
               <div className="card-sub ellipsis">{a.artists.map((x) => x.name).join(', ') || providerName[a.provider]}</div>

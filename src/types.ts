@@ -150,6 +150,8 @@ export interface Settings {
   desktopSoundCloud: boolean;
   message?: string;
   version: string;
+  /** The hosted player only: carry on with similar songs when the queue runs out. */
+  autoplay?: boolean;
 }
 
 export interface Download { track: Track; bytes: number; at: number }

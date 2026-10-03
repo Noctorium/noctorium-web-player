@@ -7,6 +7,7 @@ import { Badge, Cover, Empty, Spinner } from './Common';
 import { Controls, LikeButton, SeekBar, usePosition } from './Player';
 import { TrackList } from './Tracks';
 import { Mic2 } from 'lucide-react';
+import { HOSTED } from '../mode';
 
 /**
  * The record: a large cover over a blur of itself, and beside it what is up next or the lyrics, lit up line by
@@ -40,7 +41,10 @@ export function NowPlaying() {
       <div className="backdrop" style={{ backgroundImage: big ? `url("${big}")` : undefined }} />
       <button className="round-button np-close" aria-label="Close" onClick={closeNowPlaying}><ChevronDown size={24} /></button>
       <div className="np-hero">
-        <Cover url={big} />
+        {HOSTED && (track.provider === 'YOUTUBE_MUSIC' || track.provider === 'YOUTUBE_VIDEO')
+          // YouTube's own player is laid over this spot; see hosted/Stage.tsx.
+          ? <div className="cover yt-slot" />
+          : <Cover url={big} />}
         <div className="words">
           <h1>{track.title}</h1>
           <div className="artist">{track.artistLine}</div>
@@ -52,7 +56,7 @@ export function NowPlaying() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <LikeButton size={22} />
           <Controls big />
-          <button className="round-button" aria-label="Follow the artist" title="Follow the artist" onClick={() => send('follow')}><UserPlus size={20} /></button>
+          {!HOSTED && <button className="round-button" aria-label="Follow the artist" title="Follow the artist" onClick={() => send('follow')}><UserPlus size={20} /></button>}
         </div>
         {playback?.status === 'error' && <div className="banner">{playback.error}</div>}
       </div>

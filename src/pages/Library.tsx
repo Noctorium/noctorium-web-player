@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Download, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from 'lucide-react';
+import { BookmarkCheck, BookmarkPlus, Download, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from 'lucide-react';
 import { send, usePart } from '../live';
 import { go, useRoute } from '../router';
 import { bigArtwork, plural, providerName, totalTime } from '../util';
@@ -9,6 +9,7 @@ import { TrackList } from '../components/Tracks';
 import { closeDialog, openDialog } from '../ui';
 import { useState } from 'react';
 import type { Provider } from '../types';
+import { HOSTED } from '../mode';
 
 export function Library() {
   const library = usePart('library');
@@ -20,8 +21,10 @@ export function Library() {
         <h1 className="page-title">Your library</h1>
         <span style={{ flex: 1 }} />
         {library?.loading && <Spinner />}
-        <button className="button small" onClick={() => send('refreshLibrary', { force: true })}><RefreshCw size={15} /> Refresh</button>
-        <button className="button small primary" onClick={() => openDialog(<NewPlaylist />)}><Plus size={15} /> New playlist</button>
+        {!HOSTED && <button className="button small" onClick={() => send('refreshLibrary', { force: true })}><RefreshCw size={15} /> Refresh</button>}
+        <button className="button small primary" onClick={() => openDialog(HOSTED
+          ? <Prompt title="New playlist" hint="Kept in this browser." action="Make it" submit={(title) => send('createPlaylist', { title, provider: 'LOCAL' })} />
+          : <NewPlaylist />)}><Plus size={15} /> New playlist</button>
       </div>
       {library?.needsSoundCloudUsername && (
         <div className="banner">SoundCloud finds your playlists by your profile name.
@@ -44,14 +47,14 @@ export function Library() {
       })}
       {library?.local.length ? (
         <section>
-          <h2 className="shelf-title">On the computer</h2>
-          <p className="shelf-subtitle">Kept in Noctorium, not on a service</p>
+          <h2 className="shelf-title">{HOSTED ? 'Yours' : 'On the computer'}</h2>
+          <p className="shelf-subtitle">{HOSTED ? 'Kept in this browser' : 'Kept in Noctorium, not on a service'}</p>
           <div className="grid">{library.local.map((p) => <LocalCard key={p.id} playlist={p} />)}</div>
         </section>
       ) : null}
       {library && !library.loading && !library.playlists.length && !library.local.length && (
         <Empty icon={<LibraryIcon size={44} />} title="No playlists yet">
-          Sign in under <a href="/settings" onClick={(e) => { e.preventDefault(); go('/settings'); }}>Settings</a> to see yours, or make one here.
+          {HOSTED ? 'Make one here, or save one you find in Search.' : <>Sign in under <a href="/settings" onClick={(e) => { e.preventDefault(); go('/settings'); }}>Settings</a> to see yours, or make one here.</>}
         </Empty>
       )}
     </>
@@ -100,7 +103,7 @@ export function PlaylistPage() {
       <div className="hero">
         <Cover url={bigArtwork(playlist.artworkUrl ?? tracks[0]?.artworkUrl)} />
         <div style={{ minWidth: 0 }}>
-          <div className="kind">Playlist</div>
+          <div className="kind">{playlist.id.startsWith('OLAK') || playlist.id.startsWith('MPRE') ? 'Album' : 'Playlist'}</div>
           <h1>{playlist.title}</h1>
           <div className="meta">
             <Badge provider={playlist.provider} />
@@ -114,7 +117,10 @@ export function PlaylistPage() {
       <div className="toolbar">
         <button className="play-fab" aria-label="Play" onClick={() => send('playPlaylist', { key: playlist.key })}><Play size={24} fill="currentColor" /></button>
         <button className="button" onClick={() => send('playPlaylist', { key: playlist.key, shuffle: true })}><Shuffle size={16} /> Shuffle</button>
-        <button className="button" disabled={!tracks.length} onClick={() => send('download', { tracks })}><Download size={16} /> Download</button>
+        {!HOSTED && <button className="button" disabled={!tracks.length} onClick={() => send('download', { tracks })}><Download size={16} /> Download</button>}
+        {HOSTED && (library?.playlists.some((p) => p.key === playlist.key)
+          ? <button className="button" onClick={() => send('unsavePlaylist', { key: playlist.key })}><BookmarkCheck size={16} /> In your library</button>
+          : <button className="button" disabled={!open} onClick={() => send('savePlaylist', { playlist: open })}><BookmarkPlus size={16} /> Save to your library</button>)}
         {playlist.editable && (
           <>
             <button className="button" onClick={() => openDialog(<Prompt title="Rename" hint={`Renamed on ${providerName[playlist.provider]} too.`} initial={playlist.title} submit={(title) => send('renamePlaylist', { key: playlist.key, title })} />)}><Pencil size={16} /> Rename</button>
@@ -144,7 +150,7 @@ export function LocalPage() {
       <div className="hero">
         <Cover url={bigArtwork(playlist.artworkUrl)} />
         <div style={{ minWidth: 0 }}>
-          <div className="kind">On the computer</div>
+          <div className="kind">{HOSTED ? (id === 'liked' ? 'Your likes' : 'Playlist') : 'On the computer'}</div>
           <h1>{playlist.title}</h1>
           <div className="meta"><span>{plural(playlist.tracks.length, 'track')}</span>{playlist.tracks.length > 0 && <span>· {totalTime(playlist.tracks)}</span>}</div>
         </div>
@@ -152,10 +158,14 @@ export function LocalPage() {
       <div className="toolbar">
         <button className="play-fab" aria-label="Play" disabled={!playlist.tracks.length} onClick={() => send('playLocal', { id })}><Play size={24} fill="currentColor" /></button>
         <button className="button" onClick={() => send('playLocal', { id, shuffle: true })}><Shuffle size={16} /> Shuffle</button>
-        <button className="button" onClick={() => openDialog(<Prompt title="Rename" initial={playlist.title} submit={(title) => send('renamePlaylist', { localId: id, title })} />)}><Pencil size={16} /> Rename</button>
-        <button className="button danger" onClick={() => openDialog(<Confirm title={`Delete “${playlist.title}”?`} action="Delete" danger yes={() => { send('deletePlaylist', { localId: id }); go('/library'); }} />)}><Trash2 size={16} /> Delete</button>
+        {id !== 'liked' && (
+          <>
+            <button className="button" onClick={() => openDialog(<Prompt title="Rename" initial={playlist.title} submit={(title) => send('renamePlaylist', { localId: id, title })} />)}><Pencil size={16} /> Rename</button>
+            <button className="button danger" onClick={() => openDialog(<Confirm title={`Delete “${playlist.title}”?`} action="Delete" danger yes={() => { send('deletePlaylist', { localId: id }); go('/library'); }} />)}><Trash2 size={16} /> Delete</button>
+          </>
+        )}
       </div>
-      {playlist.tracks.length ? <TrackList tracks={playlist.tracks} context={{ kind: 'local', playlist }} /> : <Empty icon={<Plus size={40} />} title="Nothing in it yet">Add tracks from any list with the ⋯ menu.</Empty>}
+      {playlist.tracks.length ? <TrackList tracks={playlist.tracks} context={{ kind: 'local', playlist }} /> : <Empty icon={<Plus size={40} />} title="Nothing in it yet">{id === 'liked' ? 'The heart on any track puts it here.' : 'Add tracks from any list with the ⋯ menu.'}</Empty>}
     </>
   );
 }

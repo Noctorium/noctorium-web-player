@@ -9,6 +9,7 @@ import { openMenu, openNowPlaying, useUi, closeNowPlaying } from '../ui';
 import { canLike, cls, formatTime, isLiked } from '../util';
 import { Cover, Spinner } from './Common';
 import type { Playback } from '../types';
+import { HOSTED } from '../mode';
 
 /** Where the track is now, carried forward between the updates Noctorium sends, or read from this tab's own audio. */
 export function usePosition(playback?: Playback): number {
@@ -180,13 +181,13 @@ export function PlayerBar() {
         <SeekBar playback={playback} />
       </div>
       <div className="right">
-        {playback?.output === 'browser' && audio.active && <span className="output-chip hide-small"><Smartphone size={13} /> This browser</span>}
-        {playback?.output === 'computer' && <span className="output-chip hide-small"><Monitor size={13} /> The computer</span>}
+        {!HOSTED && playback?.output === 'browser' && audio.active && <span className="output-chip hide-small"><Smartphone size={13} /> This browser</span>}
+        {!HOSTED && playback?.output === 'computer' && <span className="output-chip hide-small"><Monitor size={13} /> The computer</span>}
         {sleeping && <span className="output-chip"><Moon size={13} /> {sleeping.kind === 'endOfTrack' ? 'End of track' : formatTime(sleeping.remainingMs)}</span>}
         <button className="round-button" aria-label="Sleep timer" onClick={(e) => openMenu(e, <SleepMenu />)}><Moon size={18} /></button>
         <button className="round-button" aria-label="Lyrics" onClick={() => openNowPlaying('lyrics')}><Mic2 size={18} /></button>
         <button className="round-button" aria-label="Queue" onClick={() => openNowPlaying('queue')}><ListMusic size={18} /></button>
-        <button className="round-button" aria-label="Where it plays" onClick={(e) => openMenu(e, <OutputMenu />)}><MonitorSpeaker size={18} /></button>
+        {!HOSTED && <button className="round-button" aria-label="Where it plays" onClick={(e) => openMenu(e, <OutputMenu />)}><MonitorSpeaker size={18} /></button>}
         <button className="round-button" aria-label="Mute" onClick={() => send('mute')}><VolumeIcon size={18} /></button>
         <input
           className="bar volume"
