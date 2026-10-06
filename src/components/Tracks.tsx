@@ -57,7 +57,7 @@ export function TrackList({ tracks, context, numbered = true, startIndex = 0, co
   // the like, which is still in its menu.
   const suggested = context.kind === 'suggestions';
   return (
-    <div className={cls('tracks', suggested && 'suggested')} role="list">
+    <div className={cls('tracks', suggested && 'suggested', compact && 'compact')} role="list">
       {tracks.map((track, i) => {
         const index = i + startIndex;
         const playing = suggested ? false : context.kind === 'queue' ? index === queue?.currentIndex : playback?.track?.key === track.key;

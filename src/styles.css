@@ -419,6 +419,13 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 .tracks.suggested .track { opacity: 0.6; grid-template-columns: 32px 44px minmax(0, 1fr) minmax(0, 0.7fr) 34px 56px 104px; }
 .tracks.suggested .track:hover, .tracks.suggested .track:focus-within { opacity: 1; }
 
+/*
+ * A compact list -- the one beside Search's top result -- has no number, album, service or length, so its rows
+ * need columns of their own: in the full row's seven, the cover fell into the number's 32px and the title into
+ * the cover's 44px.
+ */
+.tracks.compact .track { grid-template-columns: 44px minmax(0, 1fr) auto; }
+
 .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 14px; }
 .eq i { width: 3px; background: currentColor; border-radius: 1px; animation: eq 0.9s ease-in-out infinite; }
 .eq i:nth-child(2) { animation-delay: -0.3s; }
