@@ -710,9 +710,9 @@
 .skin-98 .lyrics-sources { padding: 6px 6px 8px; gap: 4px; }
 .skin-98 .lyrics-sources .chip { height: 21px; font-size: 11px; border-radius: 0; padding: 0 7px; }
 
-/* A download on its way is a progress bar of the time: navy blocks in a sunken well. */
-.skin-98 .setting > .label + div:has(> div:only-child) { height: 16px !important; padding: 2px; border-radius: 0 !important; background: #fff !important; box-shadow: var(--w-thin-sunken); }
-.skin-98 .setting > .label + div:has(> div:only-child) > div { background: repeating-linear-gradient(to right, #000080 0 8px, transparent 8px 10px) !important; }
+/* A download on its way -- the Downloads page draws its bar inline -- is a progress bar of the time: navy blocks in a sunken well. */
+.skin-98 .setting > .label + div[style]:has(> div[style]:only-child) { height: 16px !important; padding: 2px; border-radius: 0 !important; background: #fff !important; box-shadow: var(--w-thin-sunken); }
+.skin-98 .setting > .label + div[style]:has(> div[style]:only-child) > div { background: repeating-linear-gradient(to right, #000080 0 8px, transparent 8px 10px) !important; }
 
 /* ------------------------------------------------ YouTube's player, in a window of its own */
 
@@ -1370,8 +1370,8 @@
 .skin-xp .lyrics-sources .chip { height: 21px; padding: 0 7px; }
 
 /* A download on its way is XP's progress bar: green blocks in a rounded white well. */
-.skin-xp .setting > .label + div:has(> div:only-child) { height: 14px !important; padding: 2px; border: 1px solid #686868; border-radius: 3px !important; background: #fff !important; }
-.skin-xp .setting > .label + div:has(> div:only-child) > div { background: repeating-linear-gradient(to right, transparent 0 6px, #fff 6px 8px), linear-gradient(to bottom, #acedad, #2ed330 40%, #2ed330 60%, #acedad) !important; }
+.skin-xp .setting > .label + div[style]:has(> div[style]:only-child) { height: 14px !important; padding: 2px; border: 1px solid #686868; border-radius: 3px !important; background: #fff !important; }
+.skin-xp .setting > .label + div[style]:has(> div[style]:only-child) > div { background: repeating-linear-gradient(to right, transparent 0 6px, #fff 6px 8px), linear-gradient(to bottom, #acedad, #2ed330 40%, #2ed330 60%, #acedad) !important; }
 
 /* ------------------------------------------------ YouTube's player, in a window of its own */
 
