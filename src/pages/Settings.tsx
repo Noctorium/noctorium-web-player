@@ -7,8 +7,8 @@ import { closeDialog, openDialog } from '../ui';
 import type { Account, Bandcamp, Provider, Service, Settings, Spotify, Vk } from '../types';
 import { HOSTED } from '../mode';
 import { HostedSettings } from '../hosted/Settings';
+import { seekBarStyles } from '../seekbar';
 
-const seekBars = [['MINIMAL', 'Minimal'], ['MATERIAL', 'Material'], ['WAVE', 'Wave'], ['SEGMENTS', 'Segments'], ['CAPSULE', 'Capsule'], ['CLASSIC', 'Classic']];
 const accents: Record<string, [string, string | null]> = {
   THEME: ['Theme’s own', null], VIOLET: ['Violet', '#b47cff'], MAGENTA: ['Magenta', '#ff6ec7'], EMBER: ['Ember', '#ff9757'],
   AZURE: ['Azure', '#5ab2ff'], MINT: ['Mint', '#5fe3b0'], ARTWORK: ['Match the artwork', null],
@@ -98,7 +98,7 @@ export function LookSettings({ settings }: { settings: Settings }) {
         </div>
         <h2>Seek bar</h2>
         <div className="chips">
-          {seekBars.map(([id, label]) => <button key={id} className={cls('chip', settings.progressBarStyle === id && 'on')} onClick={() => send('seekBar', { name: id })}>{label}</button>)}
+          {seekBarStyles.map(([id, label]) => <button key={id} className={cls('chip', settings.progressBarStyle === id && 'on')} onClick={() => send('seekBar', { name: id })}>{label}</button>)}
         </div>
         <Row title="The figure on the right of the seek bar">
           <div className="chips" style={{ margin: 0 }}>

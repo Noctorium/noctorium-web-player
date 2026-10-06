@@ -4,6 +4,7 @@ import type {
 import { audio } from '../audio';
 import { go } from '../router';
 import { likeKey } from '../util';
+import { seekBarStyles } from '../seekbar';
 import { version } from '../../package.json';
 import { ask } from './api';
 import { choose, findLyrics } from './lyrics';
@@ -325,7 +326,11 @@ export class HostedEngine {
         this.prefs.accent = String(c.name);
         this.savePrefs();
         return this.refreshAccent();
-      case 'seekBar': this.prefs.progressBarStyle = String(c.name); this.savePrefs(); return this.emitSettings();
+      case 'seekBar':
+        if (!seekBarStyles.some(([name]) => name === c.name)) throw new Problem('No such seek bar');
+        this.prefs.progressBarStyle = String(c.name);
+        this.savePrefs();
+        return this.emitSettings();
       case 'timeDisplay': this.prefs.timeDisplay = String(c.name); this.savePrefs(); return this.emitSettings();
       case 'animations': this.prefs.animations = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'autoplay': this.prefs.autoplay = !!c.on; this.savePrefs(); return this.emitSettings();

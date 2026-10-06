@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import {
   ChevronUp, Heart, ListMusic, Mic2, Monitor, MonitorSpeaker, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack,
   SkipForward, Smartphone, Volume1, Volume2, VolumeX, Moon,
@@ -10,6 +10,7 @@ import { canLike, cls, formatTime, isLiked } from '../util';
 import { Cover, Spinner } from './Common';
 import type { Playback } from '../types';
 import { HOSTED } from '../mode';
+import { BARS_HEIGHT, BARS_PITCH, BARS_WIDTH, BEAD_HEAD_RADIUS, BEAD_PITCH, BEAD_RADIUS, RULER_MAJOR_TICK, RULER_POINTER, RULER_TICK, barHeights, rulerTicks } from '../seekbar';
 
 /** Where the track is now, carried forward between the updates Noctorium sends, or read from this tab's own audio. */
 export function usePosition(playback?: Playback): number {
@@ -28,7 +29,13 @@ export function usePosition(playback?: Playback): number {
   return Math.min(playback.positionMs + (performance.now() - live.playbackAt), playback.durationMs || Infinity);
 }
 
-/** The seek bar, in whichever of Noctorium's six styles is chosen. */
+/**
+ * The styles drawn rather than painted on the range input's own track. The input is still there, see-through and
+ * over the drawing, so they seek by click, by drag and by keyboard exactly as the others do.
+ */
+const drawn = new Set(['BARS', 'BEADS', 'NEON', 'RULER', 'LUNA']);
+
+/** The seek bar, in whichever of Noctorium's eleven styles is chosen. */
 export function SeekBar({ playback, compact }: { playback?: Playback; compact?: boolean }) {
   const settings = usePart('settings');
   const position = usePosition(playback);
@@ -40,7 +47,7 @@ export function SeekBar({ playback, compact }: { playback?: Playback; compact?: 
   const remaining = settings?.timeDisplay === 'REMAINING';
   const input = (
     <input
-      className={cls('bar', style)}
+      className={cls('bar', !drawn.has(style) && style)}
       type="range"
       min={0}
       max={Math.max(duration, 1)}
@@ -67,6 +74,8 @@ export function SeekBar({ playback, compact }: { playback?: Playback; compact?: 
           </svg>
           {input}
         </div>
+      ) : drawn.has(style) ? (
+        <Drawing style={style} fraction={fraction} durationMs={duration} seed={playback?.track?.key}>{input}</Drawing>
       ) : input}
       {!compact && <span className="time">{remaining && duration > 0 ? `-${formatTime(duration - shown)}` : formatTime(duration)}</span>}
     </div>
@@ -77,6 +86,140 @@ function wave() {
   let d = 'M0 8';
   for (let x = 0; x <= 140; x += 5) d += ` Q${x + 2.5} ${x % 10 === 0 ? 4 : 12} ${x + 5} 8`;
   return d;
+}
+
+/** How wide an element is, in whole pixels, kept up to date as the window changes. */
+function useWidth<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    setWidth(element.clientWidth);
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.floor(entry.contentRect.width)));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, width] as const;
+}
+
+/**
+ * One of the drawn seek bars, under the input that seeks. The played part is the same drawing again in the
+ * accent, cut off at --fill, so the colour changes exactly at the song's place, mid-bar if need be.
+ */
+function Drawing({ style, fraction, durationMs, seed, children }: { style: string; fraction: number; durationMs: number; seed?: string; children: ReactNode }) {
+  const [box, width] = useWidth<HTMLDivElement>();
+  // Where the pointer is over the bars, which SoundCloud's player lights up to show where a click would go.
+  const hover = (e: PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty('--seek-hover', `${Math.max(0, Math.min(r.width, e.clientX - r.left))}px`);
+  };
+  return (
+    <div
+      ref={box}
+      className={cls('drawn', style)}
+      style={{ ['--fill' as string]: `${fraction * 100}%` }}
+      onPointerMove={style === 'BARS' ? hover : undefined}
+      onPointerLeave={style === 'BARS' ? (e) => e.currentTarget.style.removeProperty('--seek-hover') : undefined}
+    >
+      {width > 0 && style === 'BARS' && <Bars width={width} seed={seed} />}
+      {width > 0 && style === 'BEADS' && <Beads width={width} fraction={fraction} going={durationMs > 0} />}
+      {width > 0 && style === 'RULER' && <Ruler width={width} durationMs={durationMs} />}
+      {style === 'NEON' && <div className="neon" aria-hidden><i className="neon-rest" /><i className="neon-line" /><i className="neon-spark" /></div>}
+      {style === 'LUNA' && <Luna />}
+      {children}
+    </div>
+  );
+}
+
+/** How far a reflection hangs below the bars, as a part of each bar's height, and how much of the row it takes. */
+const REFLECTION = 0.3;
+const BARS_ROW = BARS_HEIGHT + 1 + Math.ceil(BARS_HEIGHT * REFLECTION);
+
+/** A row of bars the song keeps, rising from a line with a short reflection under it, as SoundCloud draws a waveform. */
+function Bars({ width, seed }: { width: number; seed?: string }) {
+  const count = Math.max(0, Math.floor((width + BARS_PITCH - BARS_WIDTH) / BARS_PITCH));
+  const [bars, reflections] = useMemo(() => {
+    // Nothing playing has no pattern: a row of the shortest bars says so.
+    const heights = seed ? barHeights(seed, count) : new Array<number>(count).fill(0.18);
+    let up = '';
+    let down = '';
+    heights.forEach((fraction, i) => {
+      const x = i * BARS_PITCH;
+      const h = Math.max(1, Math.round(fraction * BARS_HEIGHT));
+      up += `M${x} ${BARS_HEIGHT - h}h${BARS_WIDTH}v${h}h-${BARS_WIDTH}z`;
+      down += `M${x} ${BARS_HEIGHT + 1}h${BARS_WIDTH}v${Math.max(1, Math.round(h * REFLECTION))}h-${BARS_WIDTH}z`;
+    });
+    return [up, down];
+  }, [seed, count]);
+  const drawing = <svg width={width} height={BARS_ROW} aria-hidden><path d={bars} /><path className="reflection" d={reflections} /></svg>;
+  return (
+    <>
+      {drawing}
+      <div className="hovered">{drawing}</div>
+      <div className="played">{drawing}</div>
+    </>
+  );
+}
+
+/** A string of dots, the ones played filled in and the one the song has reached larger, in a halo. */
+function Beads({ width, fraction, going }: { width: number; fraction: number; going: boolean }) {
+  const count = Math.max(2, Math.floor(width / BEAD_PITCH));
+  const pitch = width / count;
+  const head = going ? Math.min(count - 1, Math.floor(fraction * count)) : -1;
+  const middle = BEAD_HEAD_RADIUS * 2 - 1;
+  return (
+    <svg width={width} height={middle * 2} aria-hidden>
+      {head >= 0 && <circle className="halo" cx={(head + 0.5) * pitch} cy={middle} r={BEAD_HEAD_RADIUS + 4} />}
+      {Array.from({ length: count }, (_, i) => (
+        <circle key={i} className={cls(i < head && 'played', i === head && 'head')} cx={(i + 0.5) * pitch} cy={middle} r={i === head ? BEAD_HEAD_RADIUS : BEAD_RADIUS} />
+      ))}
+    </svg>
+  );
+}
+
+/** The fewest pixels between two of the ruler's ticks: closer than this, it takes a longer step. */
+const RULER_SPACING = 8;
+
+/** A hairline marked every few seconds and longer each minute, with a pointer above the song's place. */
+function Ruler({ width, durationMs }: { width: number; durationMs: number }) {
+  const ticks = useMemo(() => rulerTicks(durationMs, Math.floor(width / RULER_SPACING)), [durationMs, width]);
+  const line = RULER_POINTER + 1;
+  const d = ticks.map((t) => `M${Math.round(t.fraction * width) + 0.5} ${line + 1}v${t.major ? RULER_MAJOR_TICK : RULER_TICK}`).join('');
+  const drawing = (
+    <svg width={width} height={line + 1 + RULER_MAJOR_TICK} aria-hidden>
+      <path d={`M0 ${line + 0.5}H${width}${d}`} />
+    </svg>
+  );
+  return (
+    <>
+      {drawing}
+      <div className="played">{drawing}</div>
+      <i className="ruler-pointer" />
+    </>
+  );
+}
+
+/** Windows XP's progress bar: green blocks filling a white well, under its trackbar's pointed handle. */
+function Luna() {
+  // The player bar and the now playing screen can both show one, and an id is for one element only.
+  const face = useId();
+  return (
+    <div className="luna" aria-hidden>
+      <div className="luna-well"><i /></div>
+      <svg className="luna-thumb" width="11" height="21" viewBox="0 0 11 21">
+        <defs>
+          <linearGradient id={face} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="0.6" stopColor="#f3f2ee" />
+            <stop offset="1" stopColor="#d6d0c5" />
+          </linearGradient>
+        </defs>
+        <path className="face" fill={`url(#${face})`} d="M1.5 0.5h8a1 1 0 0 1 1 1v13.3l-5 5.2-5-5.2V1.5a1 1 0 0 1 1-1z" />
+        <path className="foot" d="M1.5 13.6v1l4 4.1 4-4.1v-1" />
+      </svg>
+    </div>
+  );
 }
 
 export function Controls({ big }: { big?: boolean }) {
