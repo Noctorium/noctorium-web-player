@@ -1,4 +1,4 @@
-import type { Provider, Track, Likes } from './types';
+import type { Playlist, Provider, Track, Likes } from './types';
 import { HOSTED } from './mode';
 
 export function formatTime(ms?: number): string {
@@ -39,6 +39,35 @@ export function canLike(likes: Likes | undefined, track: Track) {
   if (track.provider === 'SOUNDCLOUD') return likes.soundCloudReady;
   if (track.provider === 'YOUTUBE_MUSIC' || track.provider === 'YOUTUBE_VIDEO') return likes.youTubeReady;
   return false;
+}
+
+/**
+ * The address of a track's own page, to open or pass on. For a Bandcamp song Noctorium writes what it needs
+ * to play it after a `#` on its page's address, which means nothing to anybody else, so it is left off here.
+ */
+export function pageUrl(track: Track): string {
+  return track.sourceUrl.replace(/#bandcamp-track=.*$/, '');
+}
+
+/**
+ * Whether a track may be downloaded or saved. Not Bandcamp's: what it streams is there to be heard on the way to
+ * being bought, and the file is the artist's to sell.
+ */
+export function canKeep(track: Track): boolean {
+  return track.provider !== 'BANDCAMP';
+}
+
+/** A Bandcamp artist, which opens as a playlist of everything they put out. */
+export function isArtist(playlist: Playlist): boolean {
+  return playlist.provider === 'BANDCAMP' && playlist.id.startsWith('band:');
+}
+
+/** What a playlist is, for the line above its name: Bandcamp's open albums and artists as playlists. */
+export function playlistKind(playlist: Playlist): string {
+  if (isArtist(playlist)) return 'Artist';
+  if (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('album:')) return 'Album';
+  if (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('track:')) return 'Single';
+  return playlist.id.startsWith('OLAK') || playlist.id.startsWith('MPRE') ? 'Album' : 'Playlist';
 }
 
 export const providerName: Record<Provider, string> = {

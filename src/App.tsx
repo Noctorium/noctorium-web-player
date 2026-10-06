@@ -146,7 +146,7 @@ function TopBar() {
   function submit() {
     const q = text.trim();
     if (!q) return;
-    if (/^https?:\/\//.test(q) || /^(music\.youtube\.com|soundcloud\.com|youtu\.be)/.test(q)) {
+    if (/^https?:\/\//.test(q) || /^(music\.youtube\.com|soundcloud\.com|youtu\.be)/.test(q) || (!HOSTED && /^[\w-]+\.bandcamp\.com\//.test(q))) {
       send('openLink', { text: q }).then((e) => !e && live.notice('Opening the link…'));
       return;
     }

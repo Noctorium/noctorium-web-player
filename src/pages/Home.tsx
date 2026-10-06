@@ -7,6 +7,11 @@ import { go } from '../router';
 import { HOSTED } from '../mode';
 import { HostedWelcome } from '../hosted/Welcome';
 
+/** Which service's rows Home shows, by core's names for them. Bandcamp is read by Noctorium, so not hosted. */
+const filters = HOSTED
+  ? [['all', 'Both services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud']]
+  : [['all', 'All services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud'], ['bandcamp', 'Bandcamp']];
+
 function greeting() {
   const hour = new Date().getHours();
   if (hour < 5) return 'Up late';
@@ -23,7 +28,7 @@ export function Home() {
     <>
       <h1 className="page-title">{greeting()}</h1>
       <div className="chips">
-        {[['all', 'Both services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud']].map(([id, label]) => (
+        {filters.map(([id, label]) => (
           <button key={id} className={cls('chip', home?.filter === id && 'on')} onClick={() => send('filter', { filter: id })}>{label}</button>
         ))}
         <button className="chip" aria-label="Refresh" onClick={() => send('refreshHome')}><RefreshCw size={14} /></button>

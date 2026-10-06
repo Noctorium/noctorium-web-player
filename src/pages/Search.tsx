@@ -2,14 +2,17 @@ import { useEffect } from 'react';
 import { Play, Search as SearchIcon, User } from 'lucide-react';
 import { send, usePart } from '../live';
 import { useRoute, go } from '../router';
-import { bigArtwork, cls, providerName } from '../util';
+import { bigArtwork, cls, isArtist, providerName } from '../util';
 import { Badge, Cover, Empty, Spinner } from '../components/Common';
 import { PlaylistCard, Shelf } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
 import type { Search as SearchState } from '../types';
 import { HOSTED } from '../mode';
 
-const modes: [SearchState['mode'], string][] = [['HYBRID', 'Both'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos']];
+/** Bandcamp is read by Noctorium itself, so the hosted player, which has none behind it, searches the other two. */
+const modes: [SearchState['mode'], string][] = HOSTED
+  ? [['HYBRID', 'Both'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos']]
+  : [['HYBRID', 'All'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos'], ['BANDCAMP', 'Bandcamp']];
 
 export function Search() {
   const route = useRoute();
@@ -21,9 +24,17 @@ export function Search() {
   }, [query]);
 
   if (!query) {
-    return <Empty icon={<SearchIcon size={44} />} title="Find something to play">Both services at once — or paste a link from either.</Empty>;
+    return <Empty icon={<SearchIcon size={44} />} title="Find something to play">{HOSTED ? 'Both services at once — or paste a link from either.' : 'Every service at once — or paste a link from any of them.'}</Empty>;
   }
   const top = search?.tracks[0];
+  // Bandcamp's albums and artists come as playlists, which is how they open, and are shown as what they are.
+  // They come a second time as bare names in `albums` and `artists`, which are left out for them.
+  const playlists = search?.playlists.filter((p) => p.provider !== 'BANDCAMP') ?? [];
+  const releases = search?.playlists.filter((p) => p.provider === 'BANDCAMP' && !isArtist(p)) ?? [];
+  const bands = search?.playlists.filter(isArtist) ?? [];
+  const albums = search?.albums.filter((a) => a.provider !== 'BANDCAMP') ?? [];
+  const artists = search?.artists.filter((a) => a.provider !== 'BANDCAMP') ?? [];
+  const nothing = !search?.tracks.length && !search?.playlists.length && !search?.albums.length && !search?.artists.length;
   return (
     <>
       <div className="chips" style={{ marginTop: 14 }}>
@@ -53,10 +64,11 @@ export function Search() {
           <TrackList tracks={search.tracks.slice(6)} context={{ kind: 'list', origin: 'SEARCH' }} startIndex={6} />
         </>
       )}
-      {search?.playlists.length ? <Shelf title="Playlists">{search.playlists.map((p) => <PlaylistCard key={p.key} playlist={p} />)}</Shelf> : null}
-      {search?.albums.length ? (
+      {playlists.length ? <Shelf title="Playlists">{playlists.map((p) => <PlaylistCard key={p.key} playlist={p} />)}</Shelf> : null}
+      {releases.length || albums.length ? (
         <Shelf title="Albums">
-          {search.albums.map((a) => (
+          {releases.map((p) => <PlaylistCard key={p.key} playlist={p} />)}
+          {albums.map((a) => (
             <div key={a.id} className="card" role="button" tabIndex={0} onClick={() => {
               // The hosted player opens an album as the playlist YouTube Music keeps of its songs.
               if (HOSTED) { send('openPlaylist', { key: a.id }); go(`/playlist/${encodeURIComponent(a.id)}`); }
@@ -69,9 +81,10 @@ export function Search() {
           ))}
         </Shelf>
       ) : null}
-      {search?.artists.length ? (
+      {bands.length || artists.length ? (
         <Shelf title="Artists">
-          {search.artists.map((a) => (
+          {bands.map((p) => <PlaylistCard key={p.key} playlist={p} />)}
+          {artists.map((a) => (
             <div key={`${a.provider}:${a.id}`} className="card" role="button" tabIndex={0} style={{ textAlign: 'center' }} onClick={() => go(`/search?q=${encodeURIComponent(a.name)}`)}>
               <div className="cover" style={{ borderRadius: '50%', display: 'grid', placeItems: 'center' }}><User size={52} className="faint" /></div>
               <div className="card-title ellipsis">{a.name}</div>
@@ -80,8 +93,8 @@ export function Search() {
           ))}
         </Shelf>
       ) : null}
-      {search && !search.loading && search.query === query && !search.tracks.length && !search.playlists.length && (
-        <Empty icon={<SearchIcon size={44} />} title={`Nothing for “${query}”`}>Try fewer words, or the other service.</Empty>
+      {search && !search.loading && search.query === query && nothing && (
+        <Empty icon={<SearchIcon size={44} />} title={`Nothing for “${query}”`}>{HOSTED ? 'Try fewer words, or the other service.' : 'Try fewer words, or another service.'}</Empty>
       )}
     </>
   );

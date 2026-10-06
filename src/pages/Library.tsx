@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { BookmarkCheck, BookmarkPlus, Download, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from 'lucide-react';
+import { BookmarkCheck, BookmarkPlus, Download, ExternalLink, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from 'lucide-react';
 import { send, usePart } from '../live';
 import { go, useRoute } from '../router';
-import { bigArtwork, plural, providerName, totalTime } from '../util';
+import { bigArtwork, canKeep, playlistKind, plural, providerName, totalTime } from '../util';
 import { Badge, Confirm, Cover, Dialog, Empty, Prompt, Spinner } from '../components/Common';
 import { LocalCard, PlaylistCard } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
@@ -13,8 +13,11 @@ import { HOSTED } from '../mode';
 
 export function Library() {
   const library = usePart('library');
+  const settings = usePart('settings');
   useEffect(() => { send('refreshLibrary'); }, []);
-  const groups: [Provider, string][] = [['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube'], ['SOUNDCLOUD', 'SoundCloud'], ['SPOTIFY', 'Spotify']];
+  // Bandcamp's are a fan's collection, a playlist for each release in it, and their wishlist.
+  const groups: [Provider, string][] = [['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube'], ['SOUNDCLOUD', 'SoundCloud'], ['SPOTIFY', 'Spotify'], ['BANDCAMP', 'Bandcamp']];
+  const fan = settings?.bandcamp?.username;
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -40,7 +43,7 @@ export function Library() {
         return (
           <section key={provider}>
             <h2 className="shelf-title">{title}</h2>
-            <p className="shelf-subtitle">{plural(lists.length, 'playlist')}</p>
+            <p className="shelf-subtitle">{provider === 'BANDCAMP' && fan ? `Your collection at bandcamp.com/${fan}` : plural(lists.length, 'playlist')}</p>
             <div className="grid">{lists.map((p) => <PlaylistCard key={p.key} playlist={p} />)}</div>
           </section>
         );
@@ -98,12 +101,13 @@ export function PlaylistPage() {
   const playlist = open ?? listed;
   if (!playlist) return library?.openLoading ? <div style={{ padding: 60, display: 'grid', placeItems: 'center' }}><Spinner /></div> : <Empty icon={<LibraryIcon size={44} />} title="This playlist is not open">It may have been deleted, or the library is still loading.</Empty>;
   const tracks = open?.tracks ?? [];
+  const kind = playlistKind(playlist);
   return (
     <>
       <div className="hero">
         <Cover url={bigArtwork(playlist.artworkUrl ?? tracks[0]?.artworkUrl)} />
         <div style={{ minWidth: 0 }}>
-          <div className="kind">{playlist.id.startsWith('OLAK') || playlist.id.startsWith('MPRE') ? 'Album' : 'Playlist'}</div>
+          <div className="kind">{kind}</div>
           <h1>{playlist.title}</h1>
           <div className="meta">
             <Badge provider={playlist.provider} />
@@ -117,7 +121,15 @@ export function PlaylistPage() {
       <div className="toolbar">
         <button className="play-fab" aria-label="Play" onClick={() => send('playPlaylist', { key: playlist.key })}><Play size={24} fill="currentColor" /></button>
         <button className="button" onClick={() => send('playPlaylist', { key: playlist.key, shuffle: true })}><Shuffle size={16} /> Shuffle</button>
-        {!HOSTED && <button className="button" disabled={!tracks.length} onClick={() => send('download', { tracks })}><Download size={16} /> Download</button>}
+        {/* Bandcamp's songs are for listening here, and bought on its page; see canKeep. */}
+        {!HOSTED && playlist.provider !== 'BANDCAMP' && (
+          <button className="button" disabled={!tracks.some(canKeep)} onClick={() => send('download', { tracks: tracks.filter(canKeep) })}><Download size={16} /> Download</button>
+        )}
+        {playlist.provider === 'BANDCAMP' && playlist.sourceUrl && (
+          <button className="button" onClick={() => window.open(playlist.sourceUrl, '_blank', 'noopener')}>
+            <ExternalLink size={16} /> {kind === 'Album' || kind === 'Single' ? 'Buy it on Bandcamp' : 'On Bandcamp'}
+          </button>
+        )}
         {HOSTED && (library?.playlists.some((p) => p.key === playlist.key)
           ? <button className="button" onClick={() => send('unsavePlaylist', { key: playlist.key })}><BookmarkCheck size={16} /> In your library</button>
           : <button className="button" disabled={!open} onClick={() => send('savePlaylist', { playlist: open })}><BookmarkPlus size={16} /> Save to your library</button>)}

@@ -8,7 +8,7 @@ export function Cover({ url, className, round, alt = '', children }: { url?: str
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [url]);
   return (
-    <div className={cls('cover', className)} style={round ? { borderRadius: '50%' } : undefined}>
+    <div className={cls('cover', round && 'round', className)} style={round ? { borderRadius: '50%' } : undefined}>
       {url && !failed ? (
         <img src={url} alt={alt} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
       ) : (

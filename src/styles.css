@@ -357,6 +357,8 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 }
 
 .card:hover .hover-play, .card:focus-visible .hover-play { opacity: 1; transform: none; }
+/* A round cover -- an artist's -- would cut the corner off the button, so it sits in the middle there. */
+.cover.round .hover-play { right: calc(50% - 22px); bottom: calc(50% - 22px); }
 
 .card-title { margin: 10px 0 2px; font-weight: 640; font-size: 14.5px; }
 .card-sub { color: var(--subtext); font-size: 13px; }

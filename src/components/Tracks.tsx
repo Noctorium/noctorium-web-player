@@ -3,7 +3,7 @@ import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHo
 import { HOSTED } from '../mode';
 import type { LocalPlaylist, Playlist, Track } from '../types';
 import { live, send, usePart } from '../live';
-import { canLike, cls, formatTime, isLiked, providerName } from '../util';
+import { canKeep, canLike, cls, formatTime, isLiked, pageUrl, providerName } from '../util';
 import { Badge, Eq, Prompt } from './Common';
 import { openDialog, openMenu } from '../ui';
 
@@ -134,13 +134,14 @@ export function TrackMenu({ track, context, index }: { track: Track; context?: C
         <button onClick={() => send('like', { track })}><Heart size={17} fill={liked ? 'currentColor' : 'none'} /> {liked ? 'Remove from your likes' : HOSTED ? 'Like' : `Like on ${providerName[track.provider]}`}</button>
       )}
       {HOSTED && <button onClick={() => send('radio', { track })}><Radio size={17} /> Start a radio from it</button>}
-      {live.state.downloads && <button onClick={() => send('download', { track }).then((e) => !e && live.notice(`Downloading ${track.title}…`))}><Download size={17} /> Download to keep</button>}
-      {live.state.downloads?.canSaveAsMp3 && (
+      {/* A Bandcamp song is for listening here; the file is the artist's to sell, from its page below. */}
+      {live.state.downloads && canKeep(track) && <button onClick={() => send('download', { track }).then((e) => !e && live.notice(`Downloading ${track.title}…`))}><Download size={17} /> Download to keep</button>}
+      {live.state.downloads?.canSaveAsMp3 && canKeep(track) && (
         <button onClick={() => send('export', { track }).then((e) => !e && live.notice(`Saving ${track.title} as an MP3…`))}><FileAudio size={17} /> Save as MP3 on the computer</button>
       )}
       <button onClick={() => send('pin', { track })}><Pin size={17} /> Pin to Home</button>
-      <button onClick={() => { navigator.clipboard?.writeText(track.sourceUrl).then(() => live.notice('Link copied', 'good'), () => send('copyLink', { track })); }}><Link2 size={17} /> Copy the link</button>
-      <button onClick={() => window.open(track.sourceUrl, '_blank', 'noopener')}><ExternalLink size={17} /> Open on {providerName[track.provider]}</button>
+      <button onClick={() => { navigator.clipboard?.writeText(pageUrl(track)).then(() => live.notice('Link copied', 'good'), () => send('copyLink', { track })); }}><Link2 size={17} /> Copy the link</button>
+      <button onClick={() => window.open(pageUrl(track), '_blank', 'noopener')}><ExternalLink size={17} /> {track.provider === 'BANDCAMP' ? 'Buy it on Bandcamp' : `Open on ${providerName[track.provider]}`}</button>
       {context?.kind === 'queue' && index != null && (
         <><hr /><button onClick={() => send('removeQueue', { index })}><Trash2 size={17} /> Take out of the queue</button></>
       )}

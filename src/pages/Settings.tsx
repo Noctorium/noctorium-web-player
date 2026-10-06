@@ -4,7 +4,7 @@ import { send, usePart } from '../live';
 import { cls } from '../util';
 import { Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
-import type { Account, Service, Settings } from '../types';
+import type { Account, Bandcamp, Service, Settings } from '../types';
 import { HOSTED } from '../mode';
 import { HostedSettings } from '../hosted/Settings';
 
@@ -147,6 +147,7 @@ export function SettingsPage() {
             ? <button className="button small danger" onClick={() => send('signOut', { service: 'spotify' })}>Disconnect</button>
             : <button className="button small" onClick={() => send('spotify')}>Connect</button>}
         </Row>
+        {settings.bandcamp && <BandcampSettings bandcamp={settings.bandcamp} />}
         <Row title="Last.fm" detail={serviceText(settings.lastfm)}>
           {settings.lastfm.status === 'connected' ? <button className="button small danger" onClick={() => send('signOut', { service: 'lastfm' })}>Disconnect</button>
             : settings.lastfm.status === 'awaiting_approval' ? <button className="button small primary" onClick={() => send('lastfmFinish')}>Finish</button>
@@ -191,12 +192,56 @@ export function SettingsPage() {
 
       <section>
         <h2>About</h2>
-        <Row title={`Noctorium ${settings.version}`} detail="YouTube Music and SoundCloud in one library. Free software under the GPL-3.0.">
+        <Row title={`Noctorium ${settings.version}`} detail="YouTube Music, SoundCloud and Bandcamp in one library. Free software under the GPL-3.0.">
           <button className="button small" onClick={() => send('checkUpdates')}>Check for updates</button>
           <button className="button small" onClick={() => send('diagnostics')}>Diagnostics</button>
         </Row>
       </section>
     </div>
+  );
+}
+
+/**
+ * Bandcamp, which is a name rather than a sign-in: Bandcamp shows a fan's collection and wishlist to anybody, so
+ * the name in their address is all it takes. Noctorium checks it with Bandcamp before keeping it, and says so
+ * here. Below it, the genres Home has a row of Bandcamp's best-sellers for.
+ */
+function BandcampSettings({ bandcamp }: { bandcamp: Bandcamp }) {
+  // Ticked here at once and sent whole each time, so a second tick before the first has come back is not lost.
+  const [genres, setGenres] = useState(bandcamp.genres);
+  useEffect(() => setGenres(bandcamp.genres), [bandcamp.genres.join()]);
+  const toggle = (name: string) => {
+    const next = genres.includes(name) ? genres.filter((g) => g !== name) : [...genres, name];
+    setGenres(next);
+    send('bandcampGenres', { genres: next });
+  };
+  const named = bandcamp.username !== '';
+  const who = bandcamp.fanName && bandcamp.fanName.toLowerCase() !== bandcamp.username.toLowerCase() ? `${bandcamp.fanName} · ` : '';
+  const status = bandcamp.checking ? 'Checking with Bandcamp…' : named ? `${who}bandcamp.com/${bandcamp.username}` : 'Not set';
+  const desktop = bandcamp.desktop && bandcamp.desktop.toLowerCase() !== bandcamp.username.toLowerCase() ? bandcamp.desktop : undefined;
+  return (
+    <>
+      <Row title="Bandcamp collection" detail={<>
+        <span className={cls('status', named && !bandcamp.checking && 'connected')}>{status}</span>
+        {bandcamp.message ? ` · ${bandcamp.message}` : !named ? ' · What you bought there and your wishlist, in the library. Not a sign-in: a collection is public.' : ''}
+      </>}>
+        {desktop && <button className="button small primary" onClick={() => send('copyDesktop', { service: 'bandcamp' })}>Use “{desktop}” from the desktop app</button>}
+        <button className="button small" disabled={bandcamp.checking} onClick={() => openDialog(
+          <Prompt title="Your Bandcamp" hint="The name at the end of your Bandcamp address, bandcamp.com/<name> — or the address itself." initial={bandcamp.username} submit={(name) => send('bandcampUsername', { name })} />,
+        )}>{named ? 'Change' : 'Your name'}</button>
+        {named && <button className="button small danger" onClick={() => openDialog(
+          <Confirm title="Take your Bandcamp collection out of the library?" detail="Nothing changes on Bandcamp; the name is forgotten here." action="Take it out" danger yes={() => send('bandcampUsername', { name: '' })} />,
+        )}>Remove</button>}
+      </Row>
+      <div className="setting" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+        <div className="label"><strong>Bandcamp on Home</strong><small>Its best-selling songs and new releases, and a row of best-sellers for each genre picked here.</small></div>
+        <div className="chips" style={{ margin: 0 }}>
+          {bandcamp.allGenres.map((g) => (
+            <button key={g.name} className={cls('chip', genres.includes(g.name) && 'on')} aria-pressed={genres.includes(g.name)} onClick={() => toggle(g.name)}>{g.title}</button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 

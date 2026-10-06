@@ -4,7 +4,7 @@ import type { LocalPlaylist, Playlist, Track } from '../types';
 import { send } from '../live';
 import { go } from '../router';
 import { openMenu } from '../ui';
-import { bigArtwork, plural, providerName } from '../util';
+import { bigArtwork, isArtist, plural, providerName } from '../util';
 import { Badge, Cover } from './Common';
 import { TrackMenu } from './Tracks';
 import { HOSTED } from '../mode';
@@ -40,9 +40,12 @@ export function TrackCard({ track, list, origin }: { track: Track; list: Track[]
 
 export function PlaylistCard({ playlist }: { playlist: Playlist }) {
   const open = () => { send('openPlaylist', { key: playlist.key }); go(`/playlist/${encodeURIComponent(playlist.key)}`); };
+  // A Bandcamp artist opens as everything they put out: round like an artist, and saying so, with where they are.
+  const artist = isArtist(playlist);
+  const detail = artist ? ['Artist', playlist.ownerName] : [playlist.ownerName, playlist.trackCount != null ? plural(playlist.trackCount, 'track') : null];
   return (
     <div className="card" role="button" tabIndex={0} onClick={open} onKeyDown={(e) => { if (e.key === 'Enter') open(); }}>
-      <Cover url={bigArtwork(playlist.artworkUrl, 352)}>
+      <Cover url={bigArtwork(playlist.artworkUrl, 352)} round={artist}>
         <button className="hover-play" aria-label={`Play ${playlist.title}`}
           onClick={(e) => { e.stopPropagation(); send('playPlaylist', { key: playlist.key }); }}>
           <Play size={20} fill="currentColor" />
@@ -51,7 +54,7 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
       <div className="card-title ellipsis">{playlist.title}</div>
       <div className="card-sub ellipsis" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         <Badge provider={playlist.provider} />
-        <span className="ellipsis">{[playlist.ownerName, playlist.trackCount != null ? plural(playlist.trackCount, 'track') : null].filter(Boolean).join(' · ')}</span>
+        <span className="ellipsis">{detail.filter(Boolean).join(' · ')}</span>
       </div>
     </div>
   );

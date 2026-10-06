@@ -62,7 +62,7 @@ export interface Home { sections: Section[]; loading: boolean; recent: Track[]; 
 
 export interface Search {
   query: string;
-  mode: 'HYBRID' | 'SOUNDCLOUD' | 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO';
+  mode: 'HYBRID' | 'SOUNDCLOUD' | 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'BANDCAMP';
   loading: boolean;
   tracks: Track[];
   playlists: Playlist[];
@@ -108,6 +108,24 @@ export interface Account { status: 'disconnected' | 'checking' | 'connected' | '
 
 export interface Service { status: 'disconnected' | 'connecting' | 'awaiting_approval' | 'connected' | 'error'; username?: string; message?: string }
 
+/** One of Bandcamp's genres, which Home can have a row of best-sellers for. */
+export interface Genre { name: string; title: string }
+
+/** Bandcamp: a name rather than a sign-in, whose collection the library shows, and the genres Home has rows for. */
+export interface Bandcamp {
+  /** The name in bandcamp.com/<name>; blank for none. */
+  username: string;
+  /** What the fan calls themselves, once Bandcamp has confirmed the name since Noctorium started. */
+  fanName: string;
+  checking: boolean;
+  message?: string;
+  /** The genres Home has a row for, by name, in their order. */
+  genres: string[];
+  allGenres: Genre[];
+  /** The name Noctorium on the computer shows, to be offered here too. */
+  desktop?: string;
+}
+
 export interface Theme {
   name: string;
   title: string;
@@ -142,6 +160,8 @@ export interface Settings {
   spotifyConnected: boolean;
   spotifyConnecting: boolean;
   spotifyAccount: string;
+  /** Not from the hosted player, which has no Bandcamp. */
+  bandcamp?: Bandcamp;
   lastfm: Service;
   listenbrainz: Service;
   scrobbles: number;
