@@ -24,6 +24,8 @@ export function likeKey(track: Track): string {
     case 'YOUTUBE_VIDEO': return `yt:${track.id}`;
     case 'SOUNDCLOUD': return `sc:${track.id}`;
     case 'SPOTIFY': return `spotify:${track.id}`;
+    case 'BANDCAMP': return `bc:${track.id}`;
+    case 'VK': return `vk:${track.id}`;
     default: return `local:${track.id}`;
   }
 }
@@ -44,6 +46,8 @@ export const providerName: Record<Provider, string> = {
   YOUTUBE_VIDEO: 'YouTube',
   SOUNDCLOUD: 'SoundCloud',
   SPOTIFY: 'Spotify',
+  BANDCAMP: 'Bandcamp',
+  VK: 'VK Music',
   LOCAL: HOSTED ? 'This browser' : 'This computer',
 };
 
@@ -52,6 +56,8 @@ export const providerBadge: Record<Provider, string> = {
   YOUTUBE_VIDEO: 'YT',
   SOUNDCLOUD: 'SC',
   SPOTIFY: 'SP',
+  BANDCAMP: 'BC',
+  VK: 'VK',
   LOCAL: 'PC',
 };
 

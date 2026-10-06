@@ -374,6 +374,8 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 .badge.YOUTUBE_MUSIC, .badge.YOUTUBE_VIDEO { background: var(--yt); }
 .badge.SOUNDCLOUD { background: var(--sc); }
 .badge.SPOTIFY { background: var(--sp); color: #000; }
+.badge.BANDCAMP { background: #408294; }
+.badge.VK { background: #0077ff; }
 .badge.LOCAL { background: var(--card); color: var(--subtext); }
 
 /* ------------------------------------------------------------------ track rows */

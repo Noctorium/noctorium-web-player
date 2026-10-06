@@ -3,7 +3,7 @@
  * Noctorium-cli field for field; a change there is a change here.
  */
 
-export type Provider = 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'SOUNDCLOUD' | 'SPOTIFY' | 'LOCAL';
+export type Provider = 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'SOUNDCLOUD' | 'SPOTIFY' | 'BANDCAMP' | 'VK' | 'LOCAL';
 
 export interface Artist { id: string; name: string; provider: Provider }
 
