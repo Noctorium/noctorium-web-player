@@ -3,6 +3,7 @@ import { Music2 } from 'lucide-react';
 import type { Provider } from '../types';
 import { closeDialog, closeMenu, useUi } from '../ui';
 import { cls, providerBadge, providerName } from '../util';
+import { useSkin } from './Skin';
 
 export function Cover({ url, className, round, alt = '', children }: { url?: string; className?: string; round?: boolean; alt?: string; children?: ReactNode }) {
   const [failed, setFailed] = useState(false);
@@ -94,9 +95,12 @@ export function Layers() {
 }
 
 export function Dialog({ title, children, buttons }: { title: string; children?: ReactNode; buttons?: ReactNode }) {
+  // In a Windows skin the title is a title bar, and at its end a close button that does what Escape does.
+  const skin = useSkin();
   return (
     <div className="dialog" role="dialog" aria-label={title}>
       <h3>{title}</h3>
+      {skin && <button className="caption-close" aria-label="Close" onClick={closeDialog} />}
       {children}
       {buttons && <div className="buttons">{buttons}</div>}
     </div>

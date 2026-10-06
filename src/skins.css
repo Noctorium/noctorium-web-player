@@ -1,0 +1,1388 @@
+/*
+ * The two Windows themes' skins: the whole page dressed as Windows 98 (.skin-98 on the root) or as XP's Luna
+ * (.skin-xp), from the system colours Base's Windows98Colours and WindowsXpColours keep. Everything here is under
+ * one of those two classes, so every other theme is exactly as styles.css draws it.
+ *
+ * The window is the page: a title bar across the top, the sidebar and the content as a folder window's panes, the
+ * player bar's upper row as the window's control strip and its lower row as the taskbar, with a start button and
+ * a tray with a clock. Dialogs and menus are the windows and menus of the time, the now playing screen the desktop.
+ * The drawings -- glyphs, ticks, arrows, the hill -- are made here, in SVG; nothing is taken from Windows.
+ */
+
+/* ================================================================== both: the window and the taskbar */
+
+.window-title, .start-button, .tray-clock { display: none; }
+
+@media (min-width: 861px) {
+  :is(.skin-98, .skin-xp) .app { grid-template-rows: var(--titlebar) minmax(0, 1fr) var(--player); }
+  :is(.skin-98, .skin-xp) .sidebar, :is(.skin-98, .skin-xp) .main { grid-row: 2; }
+  :is(.skin-98, .skin-xp) .window-title { grid-column: 1 / -1; grid-row: 1; display: flex; align-items: center; min-width: 0; }
+  :is(.skin-98, .skin-xp) .now-playing { top: var(--titlebar); }
+
+  /* The player bar in two rows: the control strip, and under it the taskbar, drawn behind its row. */
+  :is(.skin-98, .skin-xp) .player {
+    grid-row: 3;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) var(--taskbar);
+    gap: 0;
+    padding: 0;
+  }
+  :is(.skin-98, .skin-xp) .player::before { content: ''; grid-row: 2; grid-column: 1 / -1; align-self: stretch; }
+  :is(.skin-98, .skin-xp) .player .middle { grid-row: 1; grid-column: 1 / -1; flex-direction: row; gap: 14px; padding: 0 12px; }
+  :is(.skin-98, .skin-xp) .player .seek { flex: 1; max-width: none; }
+  :is(.skin-98, .skin-xp) .start-button { grid-row: 2; grid-column: 1; display: flex; align-items: center; }
+  /* What plays is the task in front, named as a window was: "Song - Artist". */
+  :is(.skin-98, .skin-xp) .player .now { grid-row: 2; grid-column: 2; justify-self: start; width: min(100%, 300px); }
+  :is(.skin-98, .skin-xp) .player .now .words { display: flex; align-items: baseline; gap: 4px; flex: 1; }
+  :is(.skin-98, .skin-xp) .player .now .title { flex: none; max-width: 65%; }
+  :is(.skin-98, .skin-xp) .player .now .artist { font-size: 11px; }
+  :is(.skin-98, .skin-xp) .player .now .artist::before { content: '- '; }
+  :is(.skin-98, .skin-xp) .player .right { grid-row: 2; grid-column: 3; }
+  :is(.skin-98, .skin-xp) .tray-clock { display: block; white-space: nowrap; }
+}
+
+:is(.skin-98, .skin-xp) .window-title img { width: 16px; height: 16px; flex: none; }
+:is(.skin-98, .skin-xp) .window-title span { flex: 1; }
+:is(.skin-98, .skin-xp) .captions { display: flex; flex: none !important; }
+:is(.skin-98, .skin-xp) .start-menu button svg { width: 24px; height: 24px; flex: none; }
+:is(.skin-98, .skin-xp) .brand { font-size: 0; letter-spacing: 0; }
+:is(.skin-98, .skin-xp) .brand::after { content: 'Noctorium'; font-size: 11px; }
+/* Lists of tracks as a details view: smaller pictures, so a row is about the height of two lines of text. */
+:is(.skin-98, .skin-xp) .track { border-radius: 0; min-height: 0; padding: 2px 4px; gap: 8px; transition: none; grid-template-columns: 28px 32px minmax(0, 1fr) minmax(0, 0.7fr) 30px 46px 56px; }
+:is(.skin-98, .skin-xp) .tracks.suggested .track { grid-template-columns: 28px 32px minmax(0, 1fr) minmax(0, 0.7fr) 30px 46px 80px; }
+@media (max-width: 1100px) {
+  :is(.skin-98, .skin-xp) .track { grid-template-columns: 28px 32px minmax(0, 1fr) 30px 46px 56px; }
+  :is(.skin-98, .skin-xp) .tracks.suggested .track { grid-template-columns: 28px 32px minmax(0, 1fr) 30px 46px 80px; }
+}
+@media (max-width: 860px) {
+  :is(.skin-98, .skin-xp) .track, :is(.skin-98, .skin-xp) .tracks.suggested .track { grid-template-columns: 32px minmax(0, 1fr) auto; }
+  :is(.skin-98, .skin-xp) .track .actions { width: auto; }
+}
+/* A short list -- the search's first tracks, the now playing screen's -- is its picture, its names, its menu. */
+:is(.skin-98, .skin-xp) .track:not(:has(> .number)) { grid-template-columns: 32px minmax(0, 1fr) auto; }
+:is(.skin-98, .skin-xp) .track .thumb { width: 32px; height: 32px; border-radius: 0; }
+:is(.skin-98, .skin-xp) .track .thumb button { border-radius: 0; }
+:is(.skin-98, .skin-xp) .track .title { font-weight: normal; font-size: 11px; }
+:is(.skin-98, .skin-xp) .track .artist, :is(.skin-98, .skin-xp) .track .album, :is(.skin-98, .skin-xp) .track .duration, :is(.skin-98, .skin-xp) .track .number { font-size: 11px; color: #000; }
+:is(.skin-98, .skin-xp) .track:hover *, :is(.skin-98, .skin-xp) .track:focus-within * { color: #fff; }
+:is(.skin-98, .skin-xp) .track.playing .title { color: var(--accent); font-weight: bold; }
+:is(.skin-98, .skin-xp) .track .actions .round-button { width: 22px; height: 20px; }
+:is(.skin-98, .skin-xp) .track .round-button.on { background: none; box-shadow: none; }
+:is(.skin-98, .skin-xp) .now-playing .backdrop { display: none; }
+:is(.skin-98, .skin-xp) .now-playing { animation: none; }
+/* The windows on the desktop are titled; the panel says which of its tabs is open. */
+:is(.skin-98, .skin-xp) .np-hero::before, :is(.skin-98, .skin-xp) .panel::before { content: 'Now Playing'; }
+:is(.skin-98, .skin-xp) .panel::before { content: 'Up next'; position: static; flex: none; }
+:is(.skin-98, .skin-xp) .panel:has(.tabs .chip:nth-child(2).on)::before { content: 'Lyrics'; }
+:is(.skin-98, .skin-xp) .np-close svg { display: none; }
+:is(.skin-98, .skin-xp) .scrim { background: transparent; animation: none; }
+:is(.skin-98, .skin-xp) .lyrics p { transform: none !important; }
+
+/* ================================================================== Windows 98 */
+
+:root.skin-98 {
+  --w-face: #c0c0c0;
+  --w-raised: inset -1px -1px #000, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+  --w-pressed: inset -1px -1px #fff, inset 1px 1px #000, inset -2px -2px #dfdfdf, inset 2px 2px #808080;
+  --w-sunken: inset -1px -1px #fff, inset 1px 1px #808080, inset -2px -2px #dfdfdf, inset 2px 2px #000;
+  /* A window's frame: LIGHT outside and HIGHLIGHT within along the top and the left. */
+  --w-frame: inset -1px -1px #000, inset 1px 1px #dfdfdf, inset -2px -2px #808080, inset 2px 2px #fff;
+  /* The default button: a black line round the raised edge. */
+  --w-default: inset 0 0 0 1px #000, inset -2px -2px #000, inset 2px 2px #fff, inset -3px -3px #808080, inset 3px 3px #dfdfdf;
+  --w-thin-raised: inset -1px -1px #808080, inset 1px 1px #fff;
+  --w-thin-sunken: inset -1px -1px #fff, inset 1px 1px #808080;
+  --w-title: linear-gradient(to right, #000080, #1084d0);
+  /* Half the pixels white: a latched button, a scroll bar's track, the task that is in front. */
+  --w-dither: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><path fill='%23c0c0c0' d='M0 0h1v1H0zM1 1h1v1H1z'/><path fill='%23fff' d='M1 0h1v1H1zM0 1h1v1H0z'/></svg>");
+  --w-check: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='7'><path d='M0 2h1v3H0zM1 3h1v3H1zM2 4h1v3H2zM3 3h1v3H3zM4 2h1v3H4zM5 1h1v3H5zM6 0h1v3H6z'/></svg>");
+  --w-close: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='7'><path d='M0 0h2v1H0zM6 0h2v1H6zM1 1h2v1H1zM5 1h2v1H5zM2 2h4v1H2zM3 3h2v1H3zM2 4h4v1H2zM1 5h2v1H1zM5 5h2v1H5zM0 6h2v1H0zM6 6h2v1H6z'/></svg>");
+  --w-disc: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='7' fill='%23c0c0c0' stroke='%23808080'/><path fill='%23fff' d='M4 5a5 5 0 0 1 4-2.5V5a3 3 0 0 0-2 1z'/><path fill='%23e0e0ff' d='M12 11a5 5 0 0 1-4 2.5V11a3 3 0 0 0 2-1z'/><circle cx='8' cy='8' r='2' fill='%23fff' stroke='%23000'/></svg>");
+  --titlebar: 22px;
+  --taskbar: 28px;
+  --radius: 0px;
+  --shadow: none;
+  font-family: 'Microsoft Sans Serif', 'MS Sans Serif', Tahoma, Arial, sans-serif;
+  font-size: 11px;
+}
+
+.skin-98 body { background: var(--w-face); color: #000; }
+.skin-98 ::selection { background: #000080; color: #fff; }
+.skin-98 :focus-visible { outline: 1px dotted #000; outline-offset: -4px; border-radius: 0; }
+.skin-98 input:focus-visible, .skin-98 textarea:focus-visible, .skin-98 select:focus-visible { outline: 0; }
+.skin-98 a { color: #0000ff; }
+
+/* ------------------------------------------------ scroll bars: square, with arrows, on a chequered track */
+
+.skin-98 * { scrollbar-width: auto; scrollbar-color: auto; }
+@supports not selector(::-webkit-scrollbar) {
+  .skin-98 * { scrollbar-color: #c0c0c0 #e0e0e0; }
+}
+.skin-98 ::-webkit-scrollbar { width: 16px; height: 16px; }
+.skin-98 ::-webkit-scrollbar-track { background: var(--w-dither); }
+.skin-98 ::-webkit-scrollbar-thumb { background: var(--w-face); box-shadow: var(--w-frame); }
+.skin-98 ::-webkit-scrollbar-corner { background: var(--w-face); }
+.skin-98 ::-webkit-scrollbar-button:single-button { display: block; width: 16px; height: 16px; background: var(--w-face) no-repeat center; box-shadow: var(--w-frame); }
+.skin-98 ::-webkit-scrollbar-button:single-button:active { box-shadow: inset 0 0 0 1px #808080; background-position: calc(50% + 1px) calc(50% + 1px); }
+.skin-98 ::-webkit-scrollbar-button:single-button:vertical:decrement { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='4'><path d='M3 0h1v1H3zM2 1h3v1H2zM1 2h5v1H1zM0 3h7v1H0z'/></svg>"); }
+.skin-98 ::-webkit-scrollbar-button:single-button:vertical:increment { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='4'><path d='M0 0h7v1H0zM1 1h5v1H1zM2 2h3v1H2zM3 3h1v1H3z'/></svg>"); }
+.skin-98 ::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='7'><path d='M3 0h1v7H3zM2 1h1v5H2zM1 2h1v3H1zM0 3h1v1H0z'/></svg>"); }
+.skin-98 ::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='7'><path d='M0 0h1v7H0zM1 1h1v5H1zM2 2h1v3H2zM3 3h1v1H3z'/></svg>"); }
+
+/* ------------------------------------------------ the title bar and its three buttons */
+
+@media (min-width: 861px) {
+  .skin-98 .window-title { gap: 3px; height: 18px; margin: 2px; padding: 0 2px 0 3px; background: var(--w-title); color: #fff; font-weight: bold; }
+}
+.skin-98 .captions i, .skin-98 .caption-close {
+  width: 16px;
+  height: 14px;
+  background: var(--w-face) no-repeat;
+  box-shadow: var(--w-frame);
+}
+.skin-98 .captions .minimise { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='6' height='2'><path d='M0 0h6v2H0z'/></svg>"); background-position: 4px 9px; }
+.skin-98 .captions .maximise { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9'><path fill-rule='evenodd' d='M0 0h9v9H0zM1 2v6h7V2z'/></svg>"); background-position: 3px 2px; }
+.skin-98 .captions .close, .skin-98 .caption-close { margin-left: 2px; background-image: var(--w-close); background-position: 4px 3px; }
+
+/* ------------------------------------------------ the sidebar: a folder tree in a sunken white pane */
+
+.skin-98 .sidebar {
+  background: #fff;
+  border: 0;
+  margin: 0 0 2px 2px;
+  padding: 6px 4px 6px 6px;
+  gap: 0;
+  box-shadow: var(--w-sunken);
+}
+.skin-98 .brand { padding: 1px 2px; gap: 4px; }
+.skin-98 .brand img { width: 16px; height: 16px; border-radius: 0; }
+.skin-98 .brand::after { font-weight: normal; }
+.skin-98 .nav-item, .skin-98 .sidebar-list {
+  position: relative;
+  gap: 4px;
+  width: auto;
+  margin-left: 21px;
+  padding: 1px 3px 1px 2px;
+  border-radius: 0;
+  color: #000;
+  font-weight: normal;
+  font-size: 11px;
+  transition: none;
+  align-self: flex-start;
+  max-width: calc(100% - 21px);
+}
+.skin-98 .nav-item svg { width: 16px; height: 16px; flex: none; }
+.skin-98 .nav-item:hover, .skin-98 .sidebar-list:hover { background: none; color: #000; }
+.skin-98 .nav-item.active, .skin-98 .sidebar-list.active { background: #000080; color: #fff; outline: 1px dotted #ffff80; outline-offset: -1px; }
+.skin-98 .nav-item.active svg { color: #fff; }
+/* The tree's dotted lines: down the side of each level, and across to every item on it. */
+.skin-98 .nav-item::before, .skin-98 .sidebar-list::before {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: -1px;
+  bottom: 0;
+  border-left: 1px dotted #808080;
+}
+.skin-98 .nav-item::after, .skin-98 .sidebar-list::after {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: 50%;
+  width: 9px;
+  border-top: 1px dotted #808080;
+}
+.skin-98 .nav-item:has(+ :not(.nav-item))::before, .skin-98 .sidebar-list:last-child::before { bottom: 50%; }
+.skin-98 .sidebar-heading {
+  margin: 0;
+  padding: 1px 2px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #000;
+}
+.skin-98 .sidebar-heading::before {
+  content: '';
+  width: 16px;
+  height: 14px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='14'><path fill='%23808000' d='M1 1h6l2 2h6v10H1z'/><path fill='%23ffff80' d='M2 2h4l2 2h6v8H2z'/><path fill='%23ffff00' d='M2 5h12v7H2z'/><path fill='%23fff' d='M2 4h5v1H2z'/></svg>") no-repeat;
+}
+.skin-98 .sidebar-lists { margin: 0; padding: 0; display: flex; flex-direction: column; }
+.skin-98 .sidebar-list img, .skin-98 .sidebar-list .art { width: 16px; height: 16px; border-radius: 0; }
+.skin-98 .sidebar-list .art { background: var(--w-disc) no-repeat !important; }
+.skin-98 .sidebar-list .badge { display: none; }
+.skin-98 .sidebar-get {
+  margin: 8px 0 0;
+  border-radius: 0;
+  background: #ffffe1;
+  border: 1px solid #000;
+  color: #000;
+  font-size: 11px;
+}
+.skin-98 .sidebar-get strong { color: #000; font-size: 11px; }
+.skin-98 .sidebar-get:hover { filter: none; }
+
+/* ------------------------------------------------ the toolbar: back and forward, and a search field */
+
+.skin-98 .main { margin: 0 2px 2px 2px; gap: 2px; }
+.skin-98 .topbar {
+  padding: 3px 6px 3px 12px;
+  gap: 2px;
+  box-shadow: var(--w-thin-raised);
+  position: relative;
+}
+/* The band's grip at its left end. */
+.skin-98 .topbar::before { content: ''; position: absolute; left: 3px; top: 3px; bottom: 3px; width: 3px; box-shadow: var(--w-thin-raised); }
+.skin-98 .searchbox {
+  position: relative;
+  margin-left: 52px;
+  height: 22px;
+  max-width: 560px;
+  padding: 0 4px 0 6px;
+  gap: 4px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: var(--w-sunken);
+}
+.skin-98 .searchbox::before { content: 'Search'; position: absolute; left: -46px; top: 4px; }
+.skin-98 .searchbox svg { width: 14px; height: 14px; color: #000; }
+.skin-98 .searchbox input { font-size: 11px; color: #000; }
+.skin-98 .connection { color: #000; font-size: 11px; }
+
+/* ------------------------------------------------ buttons */
+
+.skin-98 .round-button {
+  width: 24px;
+  height: 22px;
+  border-radius: 0;
+  color: #000;
+  transition: none;
+}
+.skin-98 .round-button svg { width: 16px; height: 16px; }
+.skin-98 .round-button:hover { background: none; color: #000; box-shadow: var(--w-thin-raised); }
+.skin-98 .round-button:active { transform: none; box-shadow: var(--w-thin-sunken); }
+.skin-98 .round-button:active svg { transform: translate(1px, 1px); }
+.skin-98 .round-button.on { color: #000; background: var(--w-dither); box-shadow: var(--w-thin-sunken); }
+.skin-98 button:disabled { opacity: 1; color: #808080; text-shadow: 1px 1px #fff; }
+.skin-98 button:disabled svg { filter: drop-shadow(1px 1px 0 #fff); }
+
+.skin-98 .button, .skin-98 .chip, .skin-98 .play-fab, .skin-98 .controls .play, .skin-98 .cover .hover-play, .skin-98 .theme {
+  border: 0;
+  border-radius: 0;
+  background: var(--w-face);
+  color: #000;
+  box-shadow: var(--w-raised);
+  transition: none;
+  filter: none;
+}
+.skin-98 .button {
+  height: 23px;
+  min-width: 75px;
+  padding: 0 10px;
+  justify-content: center;
+  font-weight: normal;
+  font-size: 11px;
+  gap: 5px;
+}
+.skin-98 .button svg { width: 14px; height: 14px; }
+.skin-98 .button.small { height: 23px; padding: 0 8px; font-size: 11px; }
+.skin-98 .button.primary { background: var(--w-face); color: #000; box-shadow: var(--w-default); }
+.skin-98 .button.danger { color: #000; }
+.skin-98 .button:hover, .skin-98 .button.primary:hover, .skin-98 .chip:hover { background: var(--w-face); color: #000; filter: none; }
+.skin-98 .button:active, .skin-98 .chip:active, .skin-98 .play-fab:active, .skin-98 .controls .play:active, .skin-98 .cover .hover-play:active, .skin-98 .theme:active {
+  transform: none;
+  box-shadow: var(--w-pressed);
+  padding-top: 2px;
+  padding-left: 2px;
+}
+.skin-98 .button.primary:active { box-shadow: inset 0 0 0 1px #000, inset 0 0 0 2px #808080; }
+.skin-98 .button:focus-visible, .skin-98 .chip:focus-visible { outline-offset: -5px; }
+
+/* A chip is a button that stays down while it is on, its face chequered as a latched button's was. */
+.skin-98 .chip { height: 23px; padding: 0 9px; font-size: 11px; font-weight: normal; gap: 5px; }
+.skin-98 .chip svg { width: 14px; height: 14px; }
+.skin-98 .chip.on { background: var(--w-dither); color: #000; box-shadow: var(--w-pressed); padding-top: 2px; padding-left: 11px; }
+.skin-98 .chips { gap: 4px; }
+
+.skin-98 .play-fab { width: 40px; height: 34px; }
+.skin-98 .play-fab:hover { transform: none; filter: none; }
+.skin-98 .play-fab svg { width: 18px; height: 18px; }
+
+/* ------------------------------------------------ text */
+
+.skin-98 h1.page-title {
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0;
+  margin: 6px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #808080;
+  box-shadow: 0 1px #fff;
+}
+.skin-98 .page-subtitle, .skin-98 .muted, .skin-98 .faint { color: #000; }
+.skin-98 .page-subtitle { margin-bottom: 12px; }
+.skin-98 h2.shelf-title { font-size: 12px; font-weight: bold; letter-spacing: 0; margin: 18px 0 2px; }
+.skin-98 .shelf-subtitle { color: #404040; font-size: 11px; margin-bottom: 8px; }
+.skin-98 .badge { border-radius: 0; font-size: 9px; padding: 1px 3px; }
+
+/* ------------------------------------------------ the content: a sunken white pane, as a folder's view was */
+
+.skin-98 .content {
+  background: #fff;
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf;
+  padding: 8px 14px 24px;
+  scroll-behavior: auto;
+}
+/* Settings and the devices are a properties sheet: the window's grey, in group boxes. */
+.skin-98 .content:has(.settings) { background: var(--w-face); }
+
+/* Covers and their names, as a folder's large icons: framed, and blue and chequered once pointed at. */
+.skin-98 .card { border-radius: 0; padding: 4px; margin: -4px; transition: none; }
+.skin-98 .card:hover { background: none; }
+.skin-98 .cover { border-radius: 0; box-shadow: none; outline: 1px solid #808080; outline-offset: -1px; }
+.skin-98 .card:hover .cover::after, .skin-98 .card:focus-visible .cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><path fill='%23000080' d='M0 0h1v1H0zM1 1h1v1H1z'/></svg>");
+  opacity: 0.5;
+  pointer-events: none;
+}
+.skin-98 .card-title { display: inline-block; max-width: 100%; margin: 5px 0 1px; padding: 0 2px; font-size: 11px; font-weight: normal; vertical-align: top; }
+.skin-98 .card:hover .card-title, .skin-98 .card:focus-visible .card-title { background: #000080; color: #fff; }
+.skin-98 .card-sub { font-size: 11px; color: #404040; padding: 0 2px; }
+.skin-98 .cover .hover-play { width: 32px; height: 28px; right: 8px; bottom: 8px; transform: none; z-index: 1; }
+.skin-98 .cover.round .hover-play { right: calc(50% - 16px); bottom: calc(50% - 14px); }
+.skin-98 .cover .hover-play svg { width: 16px; height: 16px; }
+.skin-98 .cover.round { outline: 0; }
+.skin-98 .shelf { gap: 14px; grid-auto-columns: 150px; padding-bottom: 6px; }
+.skin-98 .grid { gap: 16px 14px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+/* A navy row under the pointer. */
+.skin-98 .track:hover, .skin-98 .track:focus-within { background: #000080; }
+.skin-98 .track:hover .round-button:hover { box-shadow: inset -1px -1px #000, inset 1px 1px #fff; }
+
+.skin-98 .hero { gap: 16px; padding: 12px 0 14px; }
+.skin-98 .hero .cover { width: 160px; }
+.skin-98 .hero h1 { font-size: 24px; letter-spacing: 0; margin: 4px 0 6px; }
+.skin-98 .hero .meta, .skin-98 .hero .kind { color: #000; }
+.skin-98 .hero .kind { letter-spacing: 0.04em; }
+.skin-98 .toolbar { gap: 6px; margin: 2px 0 10px; }
+
+.skin-98 .banner {
+  border-radius: 0;
+  background: #ffffe1;
+  border: 1px solid #000;
+  color: #000;
+  font-size: 11px;
+  padding: 8px 10px;
+}
+.skin-98 .banner.welcome a { color: #0000ff; }
+.skin-98 .empty { color: #000; }
+.skin-98 .empty h3 { font-size: 13px; }
+.skin-98 .empty svg { color: #808080; }
+
+/* The busy hourglass, turning over, for a spinner. */
+.skin-98 .spinner {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 0;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path d='M2 0h12v2H2zM2 14h12v2H2z'/><path fill='%23fff' stroke='%23000' d='M3.5 2.5h9v1.5L9 8l3.5 4v1.5h-9V12L7 8 3.5 4z'/><path fill='%23000080' d='M5 4h6L8 7zM8 9l3 4H5z'/></svg>") no-repeat center;
+  animation: hourglass 1.6s steps(1) infinite;
+}
+@keyframes hourglass { 50% { transform: rotate(180deg); } }
+.skin-98 .skeleton { background: var(--w-dither); border-radius: 0; animation: none; }
+
+/* ------------------------------------------------ fields, lists and the controls in them */
+
+.skin-98 .field, .skin-98 textarea {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font-size: 11px;
+  padding: 4px 5px;
+  box-shadow: var(--w-sunken);
+}
+/* A box that scrolls keeps its edge in a border, so the scroll bar sits inside it rather than over it. */
+.skin-98 textarea.field {
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf;
+  font-family: inherit;
+  font-size: 11px;
+}
+.skin-98 .select {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 21px;
+  padding: 0 22px 0 4px;
+  border: 0;
+  border-radius: 0;
+  color: #000;
+  font-size: 11px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='17'><path fill='%23c0c0c0' d='M0 0h16v17H0z'/><path fill='%23dfdfdf' d='M0 0h15v1H1v15H0z'/><path fill='%23fff' d='M1 1h13v1H2v13H1z'/><path fill='%23808080' d='M1 15h14V1h1v15z'/><path d='M0 16h16v1H0zM15 0h1v16h-1zM4 6h7v1H4zM5 7h5v1H5zM6 8h3v1H6zM7 9h1v1H7z'/></svg>") no-repeat right 2px center, #fff;
+  box-shadow: var(--w-sunken);
+}
+
+/* The switch is a check box: a sunken white square, ticked. */
+.skin-98 .switch, .skin-98 input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: var(--w-sunken);
+  transition: none;
+  flex: none;
+}
+.skin-98 .switch::after { display: none; }
+.skin-98 .switch.on, .skin-98 input[type='checkbox']:checked { background: var(--w-check) no-repeat 3px 3px, #fff; }
+.skin-98 input[type='radio'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin: 0;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><path fill='%23808080' d='M4 0h4v1H4zM2 1h2v1H2zM8 1h2v1H8zM1 2h1v2H1zM0 4h1v4H0zM1 8h1v2H1z'/><path d='M4 1h4v1H4zM2 2h2v1H2zM8 2h2v1H8zM2 3h1v1H2zM1 4h1v4H1zM2 8h1v1H2z'/><path fill='%23fff' d='M10 2h1v2h-1zM11 4h1v4h-1zM10 8h1v2h-1zM8 10h2v1H8zM2 10h2v1H2zM4 11h4v1H4zM3 2h6v8H3zM2 4h8v4H2z'/><path fill='%23dfdfdf' d='M9 3h1v1H9zM10 4h1v4h-1zM9 8h1v1H9zM8 9h1v1H8zM3 9h1v1H3zM4 10h4v1H4z'/></svg>") no-repeat;
+}
+.skin-98 input[type='radio']:checked { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><path fill='%23808080' d='M4 0h4v1H4zM2 1h2v1H2zM8 1h2v1H8zM1 2h1v2H1zM0 4h1v4H0zM1 8h1v2H1z'/><path d='M4 1h4v1H4zM2 2h2v1H2zM8 2h2v1H8zM2 3h1v1H2zM1 4h1v4H1zM2 8h1v1H2z'/><path fill='%23fff' d='M10 2h1v2h-1zM11 4h1v4h-1zM10 8h1v2h-1zM8 10h2v1H8zM2 10h2v1H2zM4 11h4v1H4zM3 2h6v8H3zM2 4h8v4H2z'/><path fill='%23dfdfdf' d='M9 3h1v1H9zM10 4h1v4h-1zM9 8h1v1H9zM8 9h1v1H8zM3 9h1v1H3zM4 10h4v1H4z'/><path d='M5 4h2v4H5zM4 5h4v2H4z'/></svg>"); }
+
+/* The volume is a trackbar: a sunken groove and a raised slab. */
+.skin-98 .bar.volume { height: 22px; }
+.skin-98 .bar.volume::-webkit-slider-runnable-track { height: 4px; border-radius: 0; background: #fff; box-shadow: var(--w-sunken); }
+.skin-98 .bar.volume::-moz-range-track { height: 4px; border-radius: 0; background: #fff; box-shadow: var(--w-sunken); }
+.skin-98 .bar.volume::-webkit-slider-thumb { opacity: 1; width: 11px; height: 21px; margin-top: -9px; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
+.skin-98 .bar.volume::-moz-range-thumb { opacity: 1; width: 11px; height: 21px; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
+
+/* ------------------------------------------------ settings, as a properties sheet of group boxes */
+
+.skin-98 .settings section {
+  position: relative;
+  margin: 22px 0 14px;
+  padding: 16px 12px 8px;
+  border: 1px solid #808080;
+  box-shadow: inset 1px 1px #fff, 1px 1px #fff;
+}
+.skin-98 .settings h2 { margin: 14px 0 6px; font-size: 11px; font-weight: bold; letter-spacing: 0; text-transform: none; color: #000; }
+.skin-98 .settings section > h2:first-child {
+  position: absolute;
+  top: -8px;
+  left: 8px;
+  margin: 0;
+  padding: 0 3px;
+  font-weight: normal;
+  background: var(--w-face);
+}
+.skin-98 .setting { background: none; border: 0; border-radius: 0; padding: 6px 0; margin: 0; gap: 12px; }
+.skin-98 .setting + .setting { border-top: 1px solid #808080; box-shadow: inset 0 1px #fff; }
+.skin-98 .setting .label strong { font-weight: bold; font-size: 11px; }
+.skin-98 .setting .label small { color: #000; font-size: 11px; }
+.skin-98 .status { font-size: 11px; }
+.skin-98 .status.connected { color: #008000; }
+.skin-98 .status.error, .skin-98 .status.warning { color: #800000; }
+.skin-98 .themes { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.skin-98 .theme { padding: 6px; font-size: 11px; font-weight: normal; border: 0; }
+.skin-98 .theme.on { box-shadow: var(--w-pressed); background: var(--w-dither) !important; padding: 7px 5px 5px 7px; outline: 1px dotted #000; outline-offset: -4px; }
+.skin-98 .theme .swatch { border-radius: 0; height: 26px; margin-bottom: 5px; box-shadow: inset 0 0 0 1px #808080; }
+.skin-98 .theme small { font-size: 11px; opacity: 1; }
+
+/* ------------------------------------------------ dialogs, menus and notices */
+
+.skin-98 .dialog {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 3px 13px 12px;
+  border: 0;
+  border-radius: 0;
+  background: var(--w-face);
+  box-shadow: var(--w-frame);
+  animation: none;
+}
+.skin-98 .dialog h3 {
+  margin: 0 -10px 12px;
+  height: 18px;
+  padding: 0 24px 0 4px;
+  background: var(--w-title);
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 18px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.skin-98 .dialog .caption-close { position: absolute; top: 5px; right: 5px; margin: 0; cursor: default; }
+.skin-98 .caption-close:active { box-shadow: var(--w-pressed); background-position: 5px 4px; }
+.skin-98 .dialog p { color: #000; margin: 0 0 12px; line-height: 1.35; }
+.skin-98 .dialog .buttons { margin: 16px 0 0; gap: 6px; }
+.skin-98 .dialog .qr { border-radius: 0; box-shadow: var(--w-sunken); padding: 10px; }
+
+.skin-98 .menu {
+  min-width: 190px;
+  padding: 3px;
+  border: 0;
+  border-radius: 0;
+  background: var(--w-face);
+  box-shadow: var(--w-frame);
+  animation: none;
+}
+.skin-98 .menu button { gap: 8px; padding: 3px 18px 3px 6px; border-radius: 0; font-size: 11px; color: #000; }
+.skin-98 .menu button svg { width: 16px; height: 16px; flex: none; }
+.skin-98 .menu button:hover { background: #000080; color: #fff; }
+.skin-98 .menu hr { margin: 3px 1px; border-top: 1px solid #808080; border-bottom: 1px solid #fff; }
+.skin-98 .menu .heading { padding: 3px 6px 2px; font-size: 11px; color: #000; font-weight: bold; letter-spacing: 0; text-transform: none; }
+
+/* The start menu: a band down its side with the name on it, and its items big and plain. */
+.skin-98 .menu:has(.start-menu) { padding: 3px; min-width: 0; max-width: none; max-height: none; overflow: visible; margin-left: -6px; }
+.skin-98 .start-menu { display: grid; grid-template-columns: 22px minmax(0, 1fr); min-width: 210px; }
+.skin-98 .start-banner { grid-row: 1 / span 2; display: flex; align-items: flex-end; background: linear-gradient(to bottom, #000000, #000080); }
+.skin-98 .start-banner img { display: none; }
+.skin-98 .start-banner span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: 6px 0 4px;
+  color: #fff;
+  font: bold 17px Arial, sans-serif;
+  letter-spacing: 0.02em;
+  line-height: 22px;
+}
+.skin-98 .start-places, .skin-98 .start-foot { display: flex; flex-direction: column; }
+.skin-98 .start-places::before, .skin-98 .start-foot::before { content: ''; margin: 3px 1px; border-top: 1px solid #808080; border-bottom: 1px solid #fff; }
+.skin-98 .start-menu button { gap: 10px; padding: 5px 24px 5px 8px; }
+
+/* Notices are tooltips: pale yellow, a black line round them, nothing else. */
+.skin-98 .notice {
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #ffffe1;
+  color: #000;
+  box-shadow: none;
+  font-size: 11px;
+  padding: 4px 6px;
+  animation: none;
+}
+.skin-98 .notice.bad, .skin-98 .notice.good { border-left-color: #000; }
+
+/* ------------------------------------------------ the player bar: a control strip over the taskbar */
+
+.skin-98 .player { background: var(--w-face); border-top: 0; }
+.skin-98 .controls .play { width: 34px; height: 28px; border-radius: 0; color: #000; }
+.skin-98 .controls .play:hover { transform: none; }
+.skin-98 .controls .play svg { width: 16px; height: 16px; margin: 0 !important; }
+.skin-98 .controls .round-button { width: 28px; height: 26px; }
+.skin-98 .output-chip { border-radius: 0; background: none; color: #000; padding: 0 4px; font-size: 11px; }
+.skin-98 .seek { color: #000; font-size: 11px; }
+
+@media (min-width: 861px) {
+  .skin-98 .player { box-shadow: inset 0 1px #fff; }
+  /* The taskbar: the window's grey with a highlight along its top. */
+  .skin-98 .player::before { background: var(--w-face); box-shadow: inset 0 1px #dfdfdf, inset 0 2px #fff; }
+  .skin-98 .controls { gap: 3px; }
+  .skin-98 .controls .round-button { box-shadow: var(--w-raised); background: var(--w-face); }
+  .skin-98 .controls .round-button:active { box-shadow: var(--w-pressed); }
+  .skin-98 .controls .round-button.on { background: var(--w-dither); box-shadow: var(--w-pressed); }
+  .skin-98 .controls .round-button:disabled { box-shadow: var(--w-raised); }
+
+  .skin-98 .start-button {
+    align-self: end;
+    gap: 3px;
+    height: 22px;
+    margin: 0 2px 2px;
+    padding: 0 6px 0 4px;
+    font-weight: bold;
+    background: var(--w-face);
+    box-shadow: var(--w-raised);
+  }
+  .skin-98 .start-button img { width: 16px; height: 16px; }
+  .skin-98 .start-button.open { box-shadow: var(--w-pressed); padding: 1px 5px 0 5px; outline: 1px dotted #000; outline-offset: -4px; }
+
+  /* The task in front: pressed in, chequered, and in bold. */
+  .skin-98 .player .now {
+    align-self: end;
+    height: 22px;
+    margin: 0 2px 2px 4px;
+    padding: 0 3px 0 4px;
+    gap: 4px;
+    background: var(--w-dither);
+    box-shadow: var(--w-pressed);
+  }
+  .skin-98 .player .now .cover { width: 16px; outline: 0; }
+  .skin-98 .player .now .cover .placeholder svg { width: 12px; height: 12px; }
+  .skin-98 .player .now .title { font-weight: bold; }
+  .skin-98 .player .now .artist { color: #000; }
+  .skin-98 .player .now .round-button, .skin-98 .player .now .round-button.on { width: 18px; height: 18px; background: none; box-shadow: none; }
+  .skin-98 .player .now .round-button svg { width: 13px; height: 13px; }
+
+  /* The tray: sunken, at the right end, with the clock last. */
+  .skin-98 .player .right {
+    align-self: end;
+    height: 22px;
+    margin: 0 2px 2px 4px;
+    padding: 0 2px 0 4px;
+    gap: 1px;
+    box-shadow: var(--w-thin-sunken);
+  }
+  .skin-98 .player .right .round-button { width: 20px; height: 18px; }
+  .skin-98 .player .right .volume { width: 64px; height: 18px; margin: 0 2px; }
+  .skin-98 .player .right .volume::-webkit-slider-thumb { width: 8px; height: 16px; margin-top: -6px; }
+  .skin-98 .player .right .volume::-moz-range-thumb { width: 8px; height: 16px; }
+  .skin-98 .tray-clock { padding: 0 6px 0 8px; }
+}
+
+/* ------------------------------------------------ now playing: windows on the teal desktop */
+
+.skin-98 .now-playing { background: #008080; padding: 16px; gap: 16px; }
+.skin-98 .np-hero, .skin-98 .panel {
+  position: relative;
+  background: var(--w-face);
+  border: 0;
+  border-radius: 0;
+  box-shadow: var(--w-frame);
+  backdrop-filter: none;
+}
+.skin-98 .np-hero { padding: 30px 16px 16px; gap: 12px; }
+.skin-98 .np-hero::before, .skin-98 .panel::before {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  height: 18px;
+  padding: 0 4px 0 22px;
+  background: url('/noctorium.png') no-repeat 3px 1px / 16px 16px, var(--w-title);
+  color: #fff;
+  font-weight: bold;
+  line-height: 18px;
+}
+.skin-98 .panel::before { position: static; margin: 3px 3px 0; }
+.skin-98 .np-hero .cover { border-radius: 0; outline: 0; box-shadow: var(--w-sunken); padding: 2px; background: #fff; width: min(calc(100dvh - var(--player) - 380px), 100%, 420px); }
+.skin-98 .np-hero h1 { font-size: 16px; letter-spacing: 0; }
+.skin-98 .np-hero .artist { color: #000; font-size: 11px; }
+.skin-98 .np-hero .seek { max-width: 460px; }
+.skin-98 .np-hero .controls .round-button { background: var(--w-face); box-shadow: var(--w-raised); }
+.skin-98 .np-hero .controls .round-button.on { background: var(--w-dither); box-shadow: var(--w-pressed); }
+.skin-98 .np-hero .controls .play { width: 44px !important; height: 34px !important; }
+.skin-98 .np-hero .controls .play svg { width: 20px; height: 20px; }
+.skin-98 .np-close { top: 21px; right: 21px; left: auto; z-index: 3; width: 16px; height: 14px; padding: 0; background: var(--w-face) var(--w-close) no-repeat 4px 3px; box-shadow: var(--w-frame); }
+.skin-98 .np-close:hover { background-color: var(--w-face); box-shadow: var(--w-frame); }
+.skin-98 .np-close:active { box-shadow: var(--w-pressed); }
+
+/* Tabs: raised along the top and sides, the one chosen a little taller and joined to the page below it. */
+.skin-98 .panel .tabs { padding: 8px 8px 0; gap: 0; position: relative; z-index: 1; }
+.skin-98 .panel .tabs .chip {
+  height: 20px;
+  padding: 0 10px;
+  margin-top: 2px;
+  background: var(--w-face);
+  box-shadow: inset 1px 1px #fff, inset -1px 0 #000, inset -2px 0 #808080, inset 2px 2px #dfdfdf;
+}
+.skin-98 .panel .tabs .chip.on { height: 23px; margin: 0 -2px -1px; padding: 0 12px 1px; background: var(--w-face); z-index: 1; }
+.skin-98 .panel .tabs .chip:active { padding: 0 10px; }
+.skin-98 .panel .body {
+  margin: 0 8px 8px;
+  padding: 6px;
+  background: var(--w-face);
+  box-shadow: inset -1px -1px #000, inset 1px 1px #fff, inset -2px -2px #808080;
+}
+.skin-98 .panel .body > * { background: #fff; }
+.skin-98 .panel .body .tracks, .skin-98 .panel .body > div { box-shadow: var(--w-sunken); padding: 2px; min-height: 100%; }
+.skin-98 .lyrics { padding: 10px 12px 30vh; }
+.skin-98 .lyrics p { font-size: 15px; font-weight: bold; color: #000; margin: 0 0 8px; padding: 1px 3px; }
+.skin-98 .lyrics p.sung { color: #808080; }
+.skin-98 .lyrics p.active { color: #fff; background: #000080; }
+.skin-98 .lyrics.plain p { font-size: 13px; font-weight: normal; }
+.skin-98 .lyrics-sources { padding: 6px 6px 8px; gap: 4px; }
+.skin-98 .lyrics-sources .chip { height: 21px; font-size: 11px; border-radius: 0; padding: 0 7px; }
+
+/* A download on its way is a progress bar of the time: navy blocks in a sunken well. */
+.skin-98 .setting > .label + div:has(> div:only-child) { height: 16px !important; padding: 2px; border-radius: 0 !important; background: #fff !important; box-shadow: var(--w-thin-sunken); }
+.skin-98 .setting > .label + div:has(> div:only-child) > div { background: repeating-linear-gradient(to right, #000080 0 8px, transparent 8px 10px) !important; }
+
+/* ------------------------------------------------ YouTube's player, in a window of its own */
+
+.skin-98 .yt-stage.floating { border: 0; border-radius: 0; padding: 3px; background: var(--w-face); box-shadow: var(--w-frame); }
+.skin-98 .yt-bar { height: 18px; margin-bottom: 2px; padding: 0 2px 0 4px; background: var(--w-title); color: #fff; font-size: 11px; font-weight: bold; }
+.skin-98 .yt-bar .round-button { width: 16px; height: 14px; margin-left: 2px; background: var(--w-face); box-shadow: var(--w-frame); color: #000; }
+.skin-98 .yt-bar .round-button svg { width: 10px; height: 10px; }
+
+/* ------------------------------------------------ a phone: the taskbar at the bottom, the tabs on it */
+
+@media (max-width: 860px) {
+  .skin-98 .player { box-shadow: inset 0 1px #dfdfdf, inset 0 2px #fff; }
+  .skin-98 .player .now .cover { width: 40px; }
+  .skin-98 .mini-progress { background: #808080; }
+  .skin-98 .tabbar { background: var(--w-face); border-top: 0; box-shadow: inset 0 1px #dfdfdf, inset 0 2px #fff; gap: 2px; padding: 4px 2px; }
+  .skin-98 .tabbar button { flex: 1; color: #000; font-size: 11px; box-shadow: var(--w-raised); padding: 4px 2px; }
+  .skin-98 .tabbar button.active { color: #000; background: var(--w-dither); box-shadow: var(--w-pressed); font-weight: bold; }
+  .skin-98 .tabbar button.active svg { color: #000; }
+  .skin-98 .content { margin: 0; }
+  .skin-98 .now-playing { padding: 12px; }
+  .skin-98 .np-close { top: 17px; right: 17px; }
+}
+
+/* ================================================================== Windows XP */
+
+:root.skin-xp {
+  --x-face: #ece9d8;
+  --x-title: linear-gradient(to bottom, #0997ff, #0053ee 9%, #0050ee 22%, #0058f4 55%, #0066ff 86%, #0062fa 92%, #003dd7);
+  --x-button: linear-gradient(to bottom, #fff, #f7f6f2 40%, #ecebe6 86%, #d6d0c5);
+  --x-button-down: linear-gradient(to bottom, #cdcac3, #e3e3db 14%, #e5e5de 88%, #f2f2f1);
+  /* A button pointed at glows orange inside its edge; the default one, and one with the focus, blue. */
+  --x-hot: inset 0 -2px #f8b636, inset 0 2px #ffe8a8, inset 2px 0 #fbd27c, inset -2px 0 #fbd27c;
+  --x-focus: inset 0 -2px #98b8ea, inset 0 2px #cee2fc, inset 2px 0 #b4cdf3, inset -2px 0 #b4cdf3;
+  --x-caption: linear-gradient(to bottom right, #8eb3fb, #2a6cf0 45%, #1b52dc);
+  --x-caption-close: linear-gradient(to bottom right, #f6ad95, #e0532f 45%, #c0341a);
+  --x-close: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9'><path d='M1 1l7 7M8 1L1 8' stroke='%23fff' stroke-width='2'/></svg>");
+  --x-check: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='7'><path fill='%2321a121' d='M0 2h1v3H0zM1 3h1v3H1zM2 4h1v3H2zM3 3h1v3H3zM4 2h1v3H4zM5 1h1v3H5zM6 0h1v3H6z'/></svg>");
+  --x-field: #7f9db9;
+  --x-pane: #d6dff7;
+  --x-pane-title: #215dc6;
+  /* The task pane's round button that folds a panel away; drawn only, as the panels here do not fold. */
+  --x-fold: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18'><circle cx='9' cy='9' r='8.5' fill='%23fff' stroke='%23b2c3ea'/><path d='M5.5 8.5L9 5l3.5 3.5M5.5 12.5L9 9l3.5 3.5' fill='none' stroke='%23215dc6' stroke-width='1.5'/></svg>");
+  /* The desktop: a blue sky with a few clouds over a rolling green hill. */
+  --x-sky: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 1000' preserveAspectRatio='xMidYMax slice'><defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%233b73d4'/><stop offset='.66' stop-color='%23a8cbf3'/></linearGradient><linearGradient id='h' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%235ca332'/><stop offset='1' stop-color='%232f7d1f'/></linearGradient><radialGradient id='l' cx='.38' cy='.12' r='.55'><stop offset='0' stop-color='%2392d150' stop-opacity='.8'/><stop offset='1' stop-color='%235ca332' stop-opacity='0'/></radialGradient><filter id='b' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur stdDeviation='16'/></filter></defs><rect width='1600' height='1000' fill='url(%23s)'/><g fill='%23fff' filter='url(%23b)'><ellipse cx='300' cy='180' rx='190' ry='34' opacity='.8'/><ellipse cx='450' cy='150' rx='110' ry='28' opacity='.7'/><ellipse cx='1150' cy='110' rx='240' ry='40' opacity='.75'/><ellipse cx='1320' cy='250' rx='150' ry='26' opacity='.6'/><ellipse cx='780' cy='290' rx='120' ry='20' opacity='.55'/></g><path d='M0 700C260 610 560 585 800 615S1300 700 1600 650V1000H0Z' fill='%234a9128'/><path d='M0 780C300 650 640 610 900 650S1380 770 1600 745V1000H0Z' fill='url(%23h)'/><path d='M0 780C300 650 640 610 900 650S1380 770 1600 745V1000H0Z' fill='url(%23l)'/></svg>");
+  --titlebar: 30px;
+  --taskbar: 30px;
+  --radius: 0px;
+  --shadow: none;
+  font-family: Tahoma, Verdana, 'Segoe UI', sans-serif;
+  font-size: 11px;
+}
+
+.skin-xp body { background: #3b73d4; color: #000; }
+.skin-xp .app { background: transparent; }
+.skin-xp ::selection { background: #316ac5; color: #fff; }
+.skin-xp :focus-visible { outline: 1px dotted #000; outline-offset: -4px; border-radius: 0; }
+.skin-xp input:focus-visible, .skin-xp textarea:focus-visible, .skin-xp select:focus-visible { outline: 0; }
+.skin-xp a { color: #215dc6; }
+
+/* ------------------------------------------------ scroll bars: pale blue, rounded, with a grip */
+
+.skin-xp * { scrollbar-width: auto; scrollbar-color: auto; }
+@supports not selector(::-webkit-scrollbar) {
+  .skin-xp * { scrollbar-color: #c8d6fb #f4f3ee; }
+}
+.skin-xp ::-webkit-scrollbar { width: 17px; height: 17px; }
+.skin-xp ::-webkit-scrollbar-track:vertical { background: linear-gradient(to right, #eeede5, #fbfbf8 30%, #f3f1ec); }
+.skin-xp ::-webkit-scrollbar-track:horizontal { background: linear-gradient(to bottom, #eeede5, #fbfbf8 30%, #f3f1ec); }
+.skin-xp ::-webkit-scrollbar-thumb, .skin-xp ::-webkit-scrollbar-button:single-button {
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px #a4b9f1, inset 1px 1px #fff;
+}
+.skin-xp ::-webkit-scrollbar-thumb:vertical {
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M0 .5h7M0 2.5h7M0 4.5h7M0 6.5h7' stroke='%23eef4fe'/><path d='M1 1.5h7M1 3.5h7M1 5.5h7M1 7.5h7' stroke='%238cb0f8'/></svg>") no-repeat center, linear-gradient(to right, #c8d6fb, #bed1fb 50%, #b2c7f7);
+}
+.skin-xp ::-webkit-scrollbar-thumb:horizontal {
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M.5 0v7M2.5 0v7M4.5 0v7M6.5 0v7' stroke='%23eef4fe'/><path d='M1.5 1v7M3.5 1v7M5.5 1v7M7.5 1v7' stroke='%238cb0f8'/></svg>") no-repeat center, linear-gradient(to bottom, #c8d6fb, #bed1fb 50%, #b2c7f7);
+}
+.skin-xp ::-webkit-scrollbar-button:single-button { display: block; width: 17px; height: 17px; background-repeat: no-repeat; background-position: center; }
+.skin-xp ::-webkit-scrollbar-button:single-button:vertical:decrement { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6'><path d='M1 5l3.5-3.5L8 5' fill='none' stroke='%234d6185' stroke-width='2'/></svg>"), linear-gradient(to right, #c8d6fb, #b2c7f7); }
+.skin-xp ::-webkit-scrollbar-button:single-button:vertical:increment { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='6'><path d='M1 1l3.5 3.5L8 1' fill='none' stroke='%234d6185' stroke-width='2'/></svg>"), linear-gradient(to right, #c8d6fb, #b2c7f7); }
+.skin-xp ::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='6' height='9'><path d='M5 1L1.5 4.5 5 8' fill='none' stroke='%234d6185' stroke-width='2'/></svg>"), linear-gradient(to bottom, #c8d6fb, #b2c7f7); }
+.skin-xp ::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='6' height='9'><path d='M1 1l3.5 3.5L1 8' fill='none' stroke='%234d6185' stroke-width='2'/></svg>"), linear-gradient(to bottom, #c8d6fb, #b2c7f7); }
+.skin-xp ::-webkit-scrollbar-thumb:hover, .skin-xp ::-webkit-scrollbar-button:single-button:hover { box-shadow: inset 0 0 0 1px #8fadf2, inset 1px 1px #fff; filter: brightness(1.04); }
+.skin-xp ::-webkit-scrollbar-corner { background: #f3f1ec; }
+
+/* ------------------------------------------------ the title bar: rounded, blue, its buttons too */
+
+@media (min-width: 861px) {
+  .skin-xp .window-title {
+    gap: 6px;
+    height: var(--titlebar);
+    padding: 0 5px 0 7px;
+    border-radius: 8px 8px 0 0;
+    background: var(--x-title);
+    color: #fff;
+    font: bold 13px 'Trebuchet MS', Tahoma, sans-serif;
+    text-shadow: 1px 1px #0f1089;
+  }
+}
+.skin-xp .captions { gap: 2px; }
+.skin-xp .captions i, .skin-xp .caption-close {
+  width: 21px;
+  height: 21px;
+  border: 1px solid #fff;
+  border-radius: 3px;
+  background: var(--x-caption);
+  box-shadow: inset 0 -1px 2px rgb(0 0 60 / 0.35);
+}
+.skin-xp .captions .minimise { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='3'><path fill='%23fff' d='M0 0h7v3H0z'/></svg>") no-repeat 4px 12px, var(--x-caption); }
+.skin-xp .captions .maximise { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9'><path fill='%23fff' fill-rule='evenodd' d='M0 0h9v9H0zM1 3v5h7V3z'/></svg>") no-repeat center, var(--x-caption); }
+.skin-xp .captions .close, .skin-xp .caption-close { background: var(--x-close) no-repeat center, var(--x-caption-close); }
+.skin-xp .caption-close:hover { filter: brightness(1.1); }
+.skin-xp .caption-close:active { filter: brightness(0.9); }
+
+/* ------------------------------------------------ the sidebar: Explorer's blue task pane and its panels */
+
+.skin-xp .sidebar {
+  background: linear-gradient(to bottom, #7ba2e7, #6375d6);
+  border: 0;
+  padding: 12px 12px 10px;
+  gap: 0;
+}
+.skin-xp .brand, .skin-xp .sidebar-heading {
+  flex: none;
+  height: 25px;
+  margin: 0;
+  padding: 0 30px 0 10px;
+  gap: 6px;
+  border-radius: 3px 3px 0 0;
+  font-weight: bold;
+  letter-spacing: 0;
+  text-transform: none;
+  justify-content: flex-start;
+}
+/* The first panel is the special one: a dark blue head with white writing. */
+.skin-xp .brand { color: #fff; background: var(--x-fold) no-repeat right 4px center, linear-gradient(to right, #0d3fbc, #2e6ee2); }
+.skin-xp .brand img { width: 16px; height: 16px; border-radius: 2px; }
+.skin-xp .sidebar-heading { margin-top: 14px; font-size: 11px; color: var(--x-pane-title); background: var(--x-fold) no-repeat right 4px center, linear-gradient(to right, #fff, #c6d3f7); }
+.skin-xp .nav-item, .skin-xp .sidebar-list {
+  gap: 7px;
+  padding: 3px 12px;
+  border-radius: 0;
+  background: var(--x-pane);
+  color: var(--x-pane-title);
+  font-size: 11px;
+  font-weight: normal;
+  transition: none;
+  box-shadow: inset 1px 0 #fff, inset -1px 0 #fff;
+}
+.skin-xp .nav-item svg { width: 16px; height: 16px; flex: none; }
+.skin-xp .nav-item:first-of-type { padding-top: 9px; }
+.skin-xp .nav-item:has(+ :not(.nav-item)) { padding-bottom: 9px; box-shadow: inset 1px 0 #fff, inset -1px 0 #fff, inset 0 -1px #fff; }
+.skin-xp .nav-item:hover, .skin-xp .sidebar-list:hover { background: var(--x-pane); color: #428eff; text-decoration: underline; }
+.skin-xp .nav-item.active, .skin-xp .sidebar-list.active { background: var(--x-pane); color: #0a246a; font-weight: bold; }
+.skin-xp .nav-item.active svg { color: #0a246a; }
+.skin-xp .sidebar-lists {
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 6px 0 8px;
+  background: var(--x-pane);
+  box-shadow: inset 1px 0 #fff, inset -1px 0 #fff, inset 0 -1px #fff;
+}
+.skin-xp .sidebar-list { box-shadow: none; }
+.skin-xp .sidebar-list img, .skin-xp .sidebar-list .art { width: 16px; height: 16px; border-radius: 0; }
+.skin-xp .sidebar-list .art { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='7' fill='%23dde6f8' stroke='%237f9db9'/><path fill='%23fff' d='M4 5a5 5 0 0 1 4-2.5V5a3 3 0 0 0-2 1z'/><circle cx='8' cy='8' r='2' fill='%23fff' stroke='%234d6185'/></svg>") no-repeat !important; }
+.skin-xp .sidebar-list .badge { display: none; }
+.skin-xp .sidebar-get { display: block; margin: 14px 0 0; padding: 0; border-radius: 3px 3px 0 0; background: var(--x-pane); color: #000; font-size: 11px; box-shadow: inset 1px 0 #fff, inset -1px 0 #fff, inset 0 -1px #fff; }
+.skin-xp .sidebar-get strong { display: block; padding: 6px 10px; border-radius: 3px 3px 0 0; background: linear-gradient(to right, #fff, #c6d3f7); color: var(--x-pane-title); font-size: 11px; }
+.skin-xp .sidebar-get span { display: block; padding: 8px 10px 10px; }
+.skin-xp .sidebar-get:hover { filter: none; }
+.skin-xp .sidebar-get:hover strong { color: #428eff; }
+
+/* ------------------------------------------------ the toolbar: green round arrows, and the search box */
+
+.skin-xp .main { background: var(--x-face); }
+.skin-xp .topbar { padding: 4px 8px; gap: 4px; border-bottom: 1px solid #d0d0bf; box-shadow: inset 0 1px #fff; }
+.skin-xp .topbar > .round-button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 45% 30%, #c3ecb5, #63bb4c 38%, #3c9a3c 66%, #2b7a2b);
+  box-shadow: inset 0 0 0 1px #2b7a2b, 0 1px 1px rgb(0 0 0 / 0.2);
+}
+.skin-xp .topbar > .round-button svg { width: 17px; height: 17px; stroke-width: 3; }
+.skin-xp .topbar > .round-button:hover { color: #fff; background: radial-gradient(circle at 45% 30%, #d5f5c9, #74ca5c 38%, #45a845 66%, #2e832e); box-shadow: inset 0 0 0 1px #2b7a2b, 0 1px 1px rgb(0 0 0 / 0.2); }
+.skin-xp .searchbox {
+  position: relative;
+  margin-left: 50px;
+  height: 22px;
+  max-width: 560px;
+  padding: 0 4px;
+  gap: 4px;
+  border: 1px solid var(--x-field);
+  border-radius: 0;
+  background: #fff;
+}
+.skin-xp .searchbox:focus-within { border-color: var(--x-field); }
+.skin-xp .searchbox::before { content: 'Search'; position: absolute; left: -46px; top: 3px; color: #000; }
+.skin-xp .searchbox svg { width: 14px; height: 14px; color: #4d6185; }
+.skin-xp .searchbox input { font-size: 11px; color: #000; }
+.skin-xp .connection { color: #000; font-size: 11px; }
+
+/* ------------------------------------------------ buttons: rounded, edged dark blue, glowing orange */
+
+.skin-xp .round-button { width: 24px; height: 24px; border-radius: 3px; color: #000; transition: none; }
+.skin-xp .round-button svg { width: 16px; height: 16px; }
+.skin-xp .round-button:hover { color: #000; background: linear-gradient(to bottom, #fff, #e3e3db); box-shadow: inset 0 0 0 1px #cecec3; }
+.skin-xp .round-button:active { transform: none; background: #e3e3db; box-shadow: inset 0 0 0 1px #a7a69d, inset 1px 1px 2px rgb(0 0 0 / 0.15); }
+.skin-xp .round-button.on { color: #000; background: linear-gradient(to bottom, #f4f4f0, #e6e5dd); box-shadow: inset 0 0 0 1px #a7a69d; }
+.skin-xp button:disabled { opacity: 1; color: #aca899; }
+
+.skin-xp .button, .skin-xp .chip, .skin-xp .play-fab, .skin-xp .cover .hover-play, .skin-xp .theme {
+  border: 1px solid #003c74;
+  border-radius: 3px;
+  background: var(--x-button);
+  color: #000;
+  box-shadow: none;
+  transition: none;
+  filter: none;
+}
+.skin-xp .button {
+  height: 23px;
+  min-width: 75px;
+  padding: 0 10px;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: normal;
+  gap: 5px;
+}
+.skin-xp .button svg { width: 14px; height: 14px; }
+.skin-xp .button.small { height: 23px; padding: 0 8px; font-size: 11px; }
+.skin-xp .button.primary { background: var(--x-button); color: #000; box-shadow: var(--x-focus); }
+.skin-xp .button.danger { color: #000; }
+.skin-xp .button:hover, .skin-xp .button.primary:hover, .skin-xp .chip:hover, .skin-xp .play-fab:hover, .skin-xp .cover .hover-play:hover, .skin-xp .theme:hover { background: var(--x-button); box-shadow: var(--x-hot); filter: none; transform: none; }
+.skin-xp .button:active, .skin-xp .chip:active, .skin-xp .play-fab:active, .skin-xp .cover .hover-play:active, .skin-xp .theme:active { background: var(--x-button-down); box-shadow: none; transform: none; }
+.skin-xp .button:focus-visible, .skin-xp .chip:focus-visible { box-shadow: var(--x-focus); }
+.skin-xp .chip { height: 23px; padding: 0 9px; font-size: 11px; font-weight: normal; gap: 5px; }
+.skin-xp .chip svg { width: 14px; height: 14px; }
+.skin-xp .chip.on, .skin-xp .chip.on:hover { background: var(--x-button-down); box-shadow: inset 1px 1px 2px rgb(0 0 0 / 0.2); }
+.skin-xp .chips { gap: 4px; }
+.skin-xp .play-fab { width: 40px; height: 34px; }
+.skin-xp .play-fab svg { width: 18px; height: 18px; }
+
+/* ------------------------------------------------ text: headings as Explorer's groups and Control Panel had them */
+
+.skin-xp h1.page-title {
+  font: bold 20px 'Trebuchet MS', Tahoma, sans-serif;
+  color: #0046d5;
+  letter-spacing: 0;
+  margin: 6px 0 12px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(to right, #7ba2e7, #c6d3f7 60%, transparent) 1;
+}
+.skin-xp .page-subtitle, .skin-xp .muted, .skin-xp .faint { color: #000; }
+.skin-xp .page-subtitle { margin-bottom: 12px; }
+.skin-xp h2.shelf-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #0046d5;
+  letter-spacing: 0;
+  margin: 18px 0 3px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(to right, #7ba2e7, transparent 70%) 1;
+}
+.skin-xp .shelf-subtitle { color: #555; font-size: 11px; margin-bottom: 8px; }
+.skin-xp .badge { border-radius: 2px; font-size: 9px; padding: 1px 3px; }
+
+/* ------------------------------------------------ the content: a folder's white view */
+
+.skin-xp .content { background: #fff; padding: 8px 16px 24px; scroll-behavior: auto; }
+.skin-xp .content:has(.settings) { background: var(--x-face); }
+
+/* Covers as thumbnails: in a thin frame, which turns blue with the name when pointed at. */
+.skin-xp .card { border-radius: 0; padding: 4px; margin: -4px; transition: none; }
+.skin-xp .card:hover { background: none; }
+.skin-xp .cover { border-radius: 0; box-shadow: none; outline: 1px solid #d0d0bf; outline-offset: -1px; }
+.skin-xp .card:hover .cover, .skin-xp .card:focus-visible .cover { outline: 2px solid #316ac5; outline-offset: -2px; }
+.skin-xp .card-title { display: inline-block; max-width: 100%; margin: 5px 0 1px; padding: 0 2px; font-size: 11px; font-weight: normal; vertical-align: top; }
+.skin-xp .card:hover .card-title, .skin-xp .card:focus-visible .card-title { background: #316ac5; color: #fff; }
+.skin-xp .card-sub { font-size: 11px; color: #555; padding: 0 2px; }
+.skin-xp .cover .hover-play { width: 34px; height: 30px; right: 8px; bottom: 8px; transform: none; z-index: 1; }
+.skin-xp .cover.round .hover-play { right: calc(50% - 17px); bottom: calc(50% - 15px); }
+.skin-xp .cover .hover-play svg { width: 16px; height: 16px; }
+.skin-xp .cover.round { outline: 0; }
+.skin-xp .shelf { gap: 14px; grid-auto-columns: 150px; padding-bottom: 6px; }
+.skin-xp .grid { gap: 16px 14px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+/* Luna's blue selection under the pointer. */
+.skin-xp .track:hover, .skin-xp .track:focus-within { background: #316ac5; }
+.skin-xp .track:hover .round-button:hover { background: rgb(255 255 255 / 0.2); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.6); }
+
+.skin-xp .hero { gap: 16px; padding: 12px 0 14px; }
+.skin-xp .hero .cover { width: 160px; }
+.skin-xp .hero h1 { font: bold 26px 'Trebuchet MS', Tahoma, sans-serif; color: #0046d5; letter-spacing: 0; margin: 4px 0 6px; }
+.skin-xp .hero .meta, .skin-xp .hero .kind { color: #000; }
+.skin-xp .hero .kind { letter-spacing: 0.04em; }
+.skin-xp .toolbar { gap: 6px; margin: 2px 0 10px; }
+
+.skin-xp .banner { border-radius: 0; background: #ffffe1; border: 1px solid #aca899; color: #000; font-size: 11px; padding: 8px 10px; }
+.skin-xp .empty { color: #000; }
+.skin-xp .empty h3 { font-size: 13px; color: #0046d5; }
+.skin-xp .empty svg { color: #7f9db9; }
+
+.skin-xp .spinner {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 0;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path fill='%23003c74' d='M2 0h12v2H2zM2 14h12v2H2z'/><path fill='%23eef4fe' stroke='%23316ac5' d='M3.5 2.5h9v1.5L9 8l3.5 4v1.5h-9V12L7 8 3.5 4z'/><path fill='%23e2b45a' d='M5 4h6L8 7zM8 9l3 4H5z'/></svg>") no-repeat center;
+  animation: hourglass 1.6s steps(1) infinite;
+}
+.skin-xp .skeleton { background: #f3f1ec; border-radius: 0; animation: none; }
+
+/* ------------------------------------------------ fields and the controls in them */
+
+.skin-xp .field, .skin-xp textarea { border: 1px solid var(--x-field); border-radius: 0; background: #fff; color: #000; font-size: 11px; padding: 3px 5px; }
+.skin-xp .field:focus { border-color: var(--x-field); }
+.skin-xp textarea.field { font-family: inherit; font-size: 11px; }
+.skin-xp .select {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 21px;
+  padding: 0 22px 0 4px;
+  border: 1px solid var(--x-field);
+  border-radius: 0;
+  color: #000;
+  font-size: 11px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='17'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23e1eafe'/><stop offset='1' stop-color='%23b4c8f6'/></linearGradient></defs><rect x='.5' y='.5' width='15' height='16' rx='2' fill='url(%23g)' stroke='%23b2c6f3'/><path d='M4.5 7l3.5 3.5L11.5 7' fill='none' stroke='%234d6185' stroke-width='2'/></svg>") no-repeat right 1px center, #fff;
+}
+.skin-xp .select:hover { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='17'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23f0f5ff'/><stop offset='1' stop-color='%23c6d7fa'/></linearGradient></defs><rect x='.5' y='.5' width='15' height='16' rx='2' fill='url(%23g)' stroke='%23a4b9f1'/><path d='M4.5 7l3.5 3.5L11.5 7' fill='none' stroke='%234d6185' stroke-width='2'/></svg>"); }
+
+/* The switch is a check box: edged dark blue, its tick green. */
+.skin-xp .switch, .skin-xp input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  border: 1px solid #1c5180;
+  border-radius: 0;
+  background: linear-gradient(135deg, #dcdcd7, #fff);
+  box-shadow: none;
+  transition: none;
+  flex: none;
+}
+.skin-xp .switch::after { display: none; }
+.skin-xp .switch.on, .skin-xp input[type='checkbox']:checked { background: var(--x-check) no-repeat center, linear-gradient(135deg, #dcdcd7, #fff); }
+.skin-xp .switch:hover, .skin-xp input[type='checkbox']:hover { box-shadow: inset 0 0 0 1px #fdd889, inset 0 0 0 2px #f8b636; }
+.skin-xp input[type='radio'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  border: 1px solid #1c5180;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dcdcd7, #fff);
+}
+.skin-xp input[type='radio']:checked { background: radial-gradient(circle at 50% 45%, #9fe39f 0, #3ab53a 2px, #21a121 3px, transparent 3.5px), linear-gradient(135deg, #dcdcd7, #fff); }
+
+/* The volume is XP's trackbar: a thin channel and a pointed handle. */
+.skin-xp .bar.volume { height: 22px; }
+.skin-xp .bar.volume::-webkit-slider-runnable-track { height: 4px; border-radius: 1px; background: #ecebe6; box-shadow: inset 1px 1px #9d9c99, inset -1px -1px #fff; }
+.skin-xp .bar.volume::-moz-range-track { height: 4px; border-radius: 1px; background: #ecebe6; box-shadow: inset 1px 1px #9d9c99, inset -1px -1px #fff; }
+.skin-xp .bar.volume::-webkit-slider-thumb {
+  opacity: 1;
+  width: 11px;
+  height: 21px;
+  margin-top: -8px;
+  border-radius: 0;
+  box-shadow: none;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='21'><defs><linearGradient id='f' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff'/><stop offset='.6' stop-color='%23f3f2ee'/><stop offset='1' stop-color='%23d6d0c5'/></linearGradient></defs><path fill='url(%23f)' stroke='%23003c74' d='M1.5.5h8a1 1 0 0 1 1 1v13.3l-5 5.2-5-5.2V1.5a1 1 0 0 1 1-1z'/><path d='M1.5 13.6v1l4 4.1 4-4.1v-1' fill='none' stroke='%232ed330'/></svg>") no-repeat;
+}
+.skin-xp .bar.volume::-moz-range-thumb { opacity: 1; width: 11px; height: 21px; border: 0; border-radius: 2px 2px 0 0; background: var(--x-button); box-shadow: inset 0 0 0 1px #003c74; }
+
+/* ------------------------------------------------ settings: group boxes with blue titles */
+
+.skin-xp .settings section {
+  position: relative;
+  margin: 22px 0 14px;
+  padding: 16px 12px 8px;
+  border: 1px solid #d0d0bf;
+  border-radius: 4px;
+}
+.skin-xp .settings h2 { margin: 14px 0 6px; font-size: 11px; font-weight: bold; letter-spacing: 0; text-transform: none; color: #0046d5; }
+.skin-xp .settings section > h2:first-child {
+  position: absolute;
+  top: -8px;
+  left: 8px;
+  margin: 0;
+  padding: 0 3px;
+  font-weight: normal;
+  background: var(--x-face);
+}
+.skin-xp .setting { background: none; border: 0; border-radius: 0; padding: 6px 0; margin: 0; gap: 12px; }
+.skin-xp .setting + .setting { border-top: 1px solid #e3e1d4; }
+.skin-xp .setting .label strong { font-weight: bold; font-size: 11px; }
+.skin-xp .setting .label small { color: #000; font-size: 11px; }
+.skin-xp .status { font-size: 11px; }
+.skin-xp .status.connected { color: #008000; }
+.skin-xp .status.error, .skin-xp .status.warning { color: #c00000; }
+.skin-xp .themes { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.skin-xp .theme { padding: 6px; font-size: 11px; font-weight: normal; }
+.skin-xp .theme.on { box-shadow: var(--x-focus); outline: 2px solid #316ac5; outline-offset: 1px; }
+.skin-xp .theme .swatch { border-radius: 2px; height: 26px; margin-bottom: 5px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2); }
+.skin-xp .theme small { font-size: 11px; opacity: 1; }
+
+/* ------------------------------------------------ windows, menus and balloons */
+
+.skin-xp .dialog {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 0 13px 13px;
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  background: var(--x-face);
+  box-shadow: inset 3px 0 #0831d9, inset -3px 0 #0831d9, inset 0 -3px #0831d9;
+  animation: none;
+}
+.skin-xp .dialog h3 {
+  margin: 0 -13px 12px;
+  height: var(--titlebar);
+  padding: 0 34px 0 9px;
+  border-radius: 8px 8px 0 0;
+  background: var(--x-title);
+  color: #fff;
+  font: bold 13px/30px 'Trebuchet MS', Tahoma, sans-serif;
+  text-shadow: 1px 1px #0f1089;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.skin-xp .dialog .caption-close { position: absolute; top: 5px; right: 5px; cursor: default; }
+.skin-xp .dialog p { color: #000; margin: 0 0 12px; line-height: 1.35; }
+.skin-xp .dialog .buttons { margin: 16px 0 0; gap: 6px; }
+.skin-xp .dialog .qr { border-radius: 0; border: 1px solid var(--x-field); padding: 10px; }
+
+.skin-xp .menu {
+  min-width: 190px;
+  padding: 2px;
+  border: 1px solid #aca899;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 2px 2px 3px rgb(0 0 0 / 0.3);
+  animation: none;
+}
+.skin-xp .menu button { gap: 8px; padding: 3px 18px 3px 6px; border-radius: 0; font-size: 11px; color: #000; }
+.skin-xp .menu button svg { width: 16px; height: 16px; flex: none; }
+.skin-xp .menu button:hover { background: #316ac5; color: #fff; }
+.skin-xp .menu hr { margin: 3px 1px; border-top: 1px solid #aca899; }
+.skin-xp .menu .heading { padding: 3px 6px 2px; font-size: 11px; color: #000; font-weight: bold; letter-spacing: 0; text-transform: none; }
+
+/* The start menu: a blue head with the name, white and pale blue columns, and a blue foot. */
+.skin-xp .menu:has(.start-menu) {
+  min-width: 0;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  margin-left: -8px;
+  border: 1px solid #0831d9;
+  border-radius: 7px 7px 0 0;
+  background: #fff;
+}
+.skin-xp .start-menu { width: 380px; display: flex; flex-direction: column; }
+.skin-xp .start-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 54px;
+  padding: 0 10px;
+  background: linear-gradient(to bottom, #1d6cdc, #2b72e0 15%, #1658c9 85%, #1b5bcc);
+  border-bottom: 2px solid;
+  border-image: linear-gradient(to right, transparent, #f1a33f 30%, #f1a33f 70%, transparent) 1;
+  color: #fff;
+  font: bold 15px 'Trebuchet MS', Tahoma, sans-serif;
+  text-shadow: 1px 1px 1px rgb(0 0 0 / 0.5);
+}
+.skin-xp .start-banner img { width: 38px; height: 38px; border: 2px solid #fff; border-radius: 3px; background: #fff; }
+.skin-xp .start-columns { display: flex; }
+.skin-xp .start-main { flex: 1; padding: 6px 2px; }
+.skin-xp .start-places { flex: 1; padding: 6px 2px; background: #d3e5fa; border-left: 1px solid #95bdee; }
+.skin-xp .start-menu button { gap: 8px; padding: 5px 8px; }
+.skin-xp .start-places button { font-weight: bold; color: #0a246a; }
+.skin-xp .start-places button svg { width: 20px; height: 20px; color: #316ac5; }
+.skin-xp .start-menu button:hover { color: #fff; }
+.skin-xp .start-menu button:hover svg { color: #fff; }
+.skin-xp .start-main hr { border: 0; height: 1px; margin: 4px 6px; background: linear-gradient(to right, transparent, #c0c0c0, transparent); }
+.skin-xp .start-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 8px;
+  background: linear-gradient(to bottom, #3c83e8, #2464d8 20%, #1e58cc 80%, #1950c2);
+}
+.skin-xp .start-foot button { width: auto; color: #fff; padding: 3px 8px; border-radius: 3px; }
+.skin-xp .start-foot button:hover { background: rgb(255 255 255 / 0.15); }
+.skin-xp .start-foot button svg { width: 20px; height: 20px; }
+
+/* Notices are XP's balloons: pale yellow, rounded, with a shadow. */
+.skin-xp .notice {
+  border: 1px solid #000;
+  border-radius: 6px;
+  background: #ffffe1;
+  color: #000;
+  box-shadow: 2px 2px 3px rgb(0 0 0 / 0.3);
+  font-size: 11px;
+  padding: 6px 10px;
+  animation: none;
+}
+.skin-xp .notice.bad, .skin-xp .notice.good { border-left-color: #000; }
+
+/* ------------------------------------------------ the player bar: a toolbar over XP's blue taskbar */
+
+.skin-xp .player { background: linear-gradient(to bottom, #fbfaf6, var(--x-face)); border-top: 1px solid #d0d0bf; }
+.skin-xp .controls .play {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 50% 28%, #b9d3ff, #3a7af2 42%, #1550d8 72%, #0c3aa8);
+  box-shadow: inset 0 0 0 1px #0a3a9e, 0 1px 2px rgb(0 0 0 / 0.35);
+}
+.skin-xp .controls .play:hover { transform: none; filter: brightness(1.1); }
+.skin-xp .controls .play svg { width: 18px; height: 18px; }
+.skin-xp .controls .round-button { width: 30px; height: 26px; }
+.skin-xp .output-chip { border-radius: 3px; background: none; color: inherit; padding: 0 4px; font-size: 11px; }
+.skin-xp .seek { color: #000; font-size: 11px; }
+
+@media (min-width: 861px) {
+  .skin-xp .player { border-top: 0; box-shadow: inset 0 1px #fff, inset 0 2px #e3e1d4; }
+  .skin-xp .player::before { background: linear-gradient(to bottom, #3168d5, #3e86ed 2px, #2a6ce0 5px, #245dda 10px, #245dda 80%, #1f50c2 92%, #1941a5); }
+  .skin-xp .controls { gap: 4px; }
+  .skin-xp .controls .round-button { border: 1px solid #003c74; background: var(--x-button); }
+  .skin-xp .controls .round-button:hover { background: var(--x-button); box-shadow: var(--x-hot); }
+  .skin-xp .controls .round-button:active, .skin-xp .controls .round-button.on { background: var(--x-button-down); box-shadow: inset 1px 1px 2px rgb(0 0 0 / 0.2); }
+  .skin-xp .controls .round-button:disabled { background: var(--x-button); box-shadow: none; border-color: #c9c7ba; }
+
+  /* The start button: green, round at its right end, the name in italics. */
+  .skin-xp .start-button {
+    align-self: stretch;
+    gap: 5px;
+    padding: 0 22px 0 8px;
+    border-radius: 0 12px 12px 0;
+    background: linear-gradient(to bottom, #3c9a3c, #5db85d 8%, #4caf4c 18%, #3c9a3c 48%, #379237 80%, #2b7a2b);
+    box-shadow: inset 0 1px #79c979, inset -2px 0 rgb(0 0 0 / 0.25), 1px 0 2px rgb(0 0 0 / 0.35);
+    color: #fff;
+    font: italic bold 15px 'Trebuchet MS', Tahoma, sans-serif;
+    text-shadow: 1px 1px 1px rgb(0 0 0 / 0.55);
+  }
+  .skin-xp .start-button img { width: 20px; height: 20px; border-radius: 3px; }
+  .skin-xp .start-button:hover { filter: brightness(1.08); }
+  .skin-xp .start-button.open { background: linear-gradient(to bottom, #2b7a2b, #348c34 30%, #307f30); box-shadow: inset 1px 1px 3px rgb(0 0 0 / 0.5); }
+
+  /* The task in front, pressed into the taskbar. */
+  .skin-xp .player .now {
+    align-self: center;
+    height: 24px;
+    margin: 0 4px 0 10px;
+    padding: 0 6px 0 5px;
+    gap: 5px;
+    border-radius: 3px;
+    background: linear-gradient(to bottom, #1c4fbb, #1e52b7 50%, #2457c3);
+    box-shadow: inset 1px 1px 2px rgb(0 0 0 / 0.5), inset -1px -1px rgb(255 255 255 / 0.12);
+    color: #fff;
+  }
+  .skin-xp .player .now .cover { width: 16px; border-radius: 1px; outline: 0; }
+  .skin-xp .player .now .cover .placeholder svg { width: 12px; height: 12px; }
+  .skin-xp .player .now .title { font-weight: bold; color: #fff; }
+  .skin-xp .player .now .artist { color: #fff; }
+  .skin-xp .player .now .round-button, .skin-xp .player .now .round-button.on { width: 18px; height: 18px; background: none; box-shadow: none; color: #fff; }
+  .skin-xp .player .now .round-button svg { width: 13px; height: 13px; }
+
+  /* The tray: a lighter blue, edged on its left, with white icons and the clock. */
+  .skin-xp .player .right {
+    align-self: stretch;
+    padding: 0 10px 0 12px;
+    gap: 1px;
+    background: linear-gradient(to bottom, #0b77e3, #13a1f6 3px, #0f8bf2 12px, #0f8bf2 75%, #0b6ed9);
+    box-shadow: inset 1px 0 #1042af, inset 2px 0 #4cb7fa;
+    color: #fff;
+  }
+  .skin-xp .player .right .round-button { width: 22px; height: 22px; color: #fff; }
+  .skin-xp .player .right .round-button:hover { background: rgb(255 255 255 / 0.18); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35); }
+  .skin-xp .player .right .round-button:active { background: rgb(0 0 0 / 0.15); }
+  .skin-xp .player .right .output-chip { color: #fff; }
+  .skin-xp .player .right .volume { width: 70px; margin: 0 2px; }
+  .skin-xp .player .right .volume::-webkit-slider-runnable-track { box-shadow: inset 1px 1px #0a4fa8, inset -1px -1px #6cc6ff; background: #0b6ed9; }
+  .skin-xp .tray-clock { padding: 0 2px 0 8px; color: #fff; }
+}
+
+/* ------------------------------------------------ now playing: windows over the hill */
+
+.skin-xp .now-playing { background: var(--x-sky) center bottom / cover no-repeat, #3b73d4; padding: 18px; gap: 18px; }
+.skin-xp .np-hero, .skin-xp .panel {
+  position: relative;
+  background: var(--x-face);
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  box-shadow: inset 3px 0 #0831d9, inset -3px 0 #0831d9, inset 0 -3px #0831d9;
+  backdrop-filter: none;
+}
+.skin-xp .np-hero { padding: 42px 18px 18px; gap: 12px; }
+.skin-xp .np-hero::before, .skin-xp .panel::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--titlebar);
+  padding: 0 34px 0 30px;
+  border-radius: 8px 8px 0 0;
+  background: url('/noctorium.png') no-repeat 8px 7px / 16px 16px, var(--x-title);
+  color: #fff;
+  font: bold 13px/30px 'Trebuchet MS', Tahoma, sans-serif;
+  text-shadow: 1px 1px #0f1089;
+}
+.skin-xp .panel::before { position: static; }
+.skin-xp .np-hero .cover { border-radius: 0; outline: 0; box-shadow: none; border: 1px solid #919b9c; padding: 3px; background: #fff; width: min(calc(100dvh - var(--player) - 400px), 100%, 420px); }
+.skin-xp .np-hero h1 { font: bold 18px 'Trebuchet MS', Tahoma, sans-serif; color: #0046d5; letter-spacing: 0; }
+.skin-xp .np-hero .artist { color: #000; font-size: 11px; }
+.skin-xp .np-hero .seek { max-width: 460px; }
+.skin-xp .np-hero .controls .round-button { border: 1px solid #003c74; background: var(--x-button); }
+.skin-xp .np-hero .controls .round-button.on { background: var(--x-button-down); }
+.skin-xp .np-hero .controls .play { width: 46px !important; height: 46px !important; }
+.skin-xp .np-hero .controls .play svg { width: 20px; height: 20px; }
+.skin-xp .np-close { top: 22px; right: 23px; left: auto; z-index: 3; width: 21px; height: 21px; padding: 0; border: 1px solid #fff; border-radius: 3px; background: var(--x-close) no-repeat center, var(--x-caption-close); box-shadow: inset 0 -1px 2px rgb(60 0 0 / 0.35); }
+.skin-xp .np-close:hover { background: var(--x-close) no-repeat center, var(--x-caption-close); filter: brightness(1.1); }
+
+/* Tabs: an orange line along the top of the one chosen, and of one pointed at. */
+.skin-xp .panel .tabs { padding: 10px 10px 0; gap: 0; position: relative; z-index: 1; }
+.skin-xp .panel .tabs .chip {
+  height: 21px;
+  margin-top: 2px;
+  padding: 0 10px;
+  border: 1px solid #919b9c;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(to bottom, #fff, #ecebe6);
+  box-shadow: none;
+}
+.skin-xp .panel .tabs .chip:hover { box-shadow: inset 0 2px #ffc83c; }
+.skin-xp .panel .tabs .chip.on, .skin-xp .panel .tabs .chip.on:hover { height: 24px; margin: 0 -2px -1px; padding: 0 12px 1px; background: #fcfcfe; box-shadow: inset 0 1px #e68b2c, inset 0 3px #ffc83c; z-index: 1; }
+.skin-xp .panel .body { margin: 0 10px 10px; padding: 8px; background: #fcfcfe; border: 1px solid #919b9c; }
+.skin-xp .panel .body > * { background: #fff; }
+.skin-xp .panel .body .tracks, .skin-xp .panel .body > div { border: 1px solid var(--x-field); padding: 2px; min-height: 100%; }
+.skin-xp .lyrics { padding: 10px 12px 30vh; }
+.skin-xp .lyrics p { font-size: 15px; font-weight: bold; color: #000; margin: 0 0 8px; padding: 1px 3px; }
+.skin-xp .lyrics p.sung { color: #aca899; }
+.skin-xp .lyrics p.active { color: #fff; background: #316ac5; }
+.skin-xp .lyrics.plain p { font-size: 13px; font-weight: normal; }
+.skin-xp .lyrics-sources { padding: 6px 6px 8px; gap: 4px; }
+.skin-xp .lyrics-sources .chip { height: 21px; padding: 0 7px; }
+
+/* A download on its way is XP's progress bar: green blocks in a rounded white well. */
+.skin-xp .setting > .label + div:has(> div:only-child) { height: 14px !important; padding: 2px; border: 1px solid #686868; border-radius: 3px !important; background: #fff !important; }
+.skin-xp .setting > .label + div:has(> div:only-child) > div { background: repeating-linear-gradient(to right, transparent 0 6px, #fff 6px 8px), linear-gradient(to bottom, #acedad, #2ed330 40%, #2ed330 60%, #acedad) !important; }
+
+/* ------------------------------------------------ YouTube's player, in a window of its own */
+
+.skin-xp .yt-stage.floating { border: 0; border-radius: 8px 8px 0 0; padding: 0 3px 3px; background: #0831d9; }
+.skin-xp .yt-bar { height: 26px; margin: 0 -3px; padding: 0 3px 0 8px; border-radius: 8px 8px 0 0; background: var(--x-title); color: #fff; font: bold 12px 'Trebuchet MS', Tahoma, sans-serif; text-shadow: 1px 1px #0f1089; }
+.skin-xp .yt-bar .round-button { width: 19px; height: 19px; margin-left: 2px; border: 1px solid #fff; border-radius: 3px; background: var(--x-caption); color: #fff; }
+.skin-xp .yt-bar .round-button svg { width: 11px; height: 11px; }
+
+/* ------------------------------------------------ a phone: the blue taskbar along the bottom */
+
+@media (max-width: 860px) {
+  .skin-xp .player .now .cover { width: 40px; }
+  .skin-xp .mini-progress { background: #d0d0bf; }
+  .skin-xp .mini-progress i { background: #2ed330; }
+  .skin-xp .tabbar { background: linear-gradient(to bottom, #3168d5, #3e86ed 2px, #2a6ce0 5px, #245dda 10px, #245dda 80%, #1941a5); border-top: 0; gap: 3px; padding: 4px 3px; }
+  .skin-xp .tabbar button { flex: 1; color: #fff; font-size: 11px; padding: 4px 2px; border-radius: 3px; background: linear-gradient(to bottom, #3c81f3, #3375e8 50%, #2f6ee0); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2); }
+  .skin-xp .tabbar button.active { color: #fff; font-weight: bold; background: linear-gradient(to bottom, #1c4fbb, #1e52b7 50%, #2457c3); box-shadow: inset 1px 1px 2px rgb(0 0 0 / 0.5); }
+  .skin-xp .tabbar button.active svg { color: #fff; }
+  .skin-xp .now-playing { padding: 12px; }
+  .skin-xp .np-close { top: 16px; right: 17px; }
+}

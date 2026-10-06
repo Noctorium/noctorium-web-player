@@ -7,6 +7,7 @@ import { cls } from './util';
 import { Badge, Layers } from './components/Common';
 import { MediaSession, PlayerBar } from './components/Player';
 import { NowPlaying } from './components/NowPlaying';
+import { skinOf, useSkin, WindowTitle } from './components/Skin';
 import { Home } from './pages/Home';
 import { Search } from './pages/Search';
 import { Library, LocalPage, PlaylistPage } from './pages/Library';
@@ -30,7 +31,10 @@ const pages = HOSTED ? allPages.filter(([id]) => id !== 'downloads' && id !== 'd
 /** YouTube's player, which only the hosted player shows; left out of the other build. */
 const YouTubeStage = HOSTED ? lazy(() => import('./hosted/Stage')) : null;
 
-/** The theme's colours on the page, so every Noctorium theme is this page's theme too. */
+/**
+ * The theme's colours on the page, so every Noctorium theme is this page's theme too -- and for the two Windows
+ * themes their skin, a class on the root that skins.css dresses the whole page from.
+ */
 function useTheme() {
   const settings = usePart('settings');
   const playback = usePart('playback');
@@ -38,6 +42,7 @@ function useTheme() {
     const c = settings?.colours;
     if (!c) return;
     const root = document.documentElement;
+    const skin = skinOf(settings.theme);
     root.style.setProperty('--bg', c.background);
     root.style.setProperty('--panel', c.panel);
     root.style.setProperty('--card', c.card);
@@ -47,8 +52,10 @@ function useTheme() {
     root.style.setProperty('--on-accent', luminance(c.accent) > 0.6 ? '#111111' : '#ffffff');
     root.classList.toggle('light', c.light);
     root.classList.toggle('no-motion', settings.animations === false);
+    root.classList.toggle('skin-98', skin === '98');
+    root.classList.toggle('skin-xp', skin === 'xp');
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c.panel);
-  }, [settings?.colours, settings?.animations]);
+  }, [settings?.colours, settings?.animations, settings?.theme]);
   useEffect(() => {
     const t = playback?.track;
     document.title = t ? `${t.title} · ${t.artistLine} — Noctorium` : 'Noctorium';
@@ -230,6 +237,7 @@ export function App() {
   const hasState = useLive((l) => !!l.state.settings);
   const { nowPlaying } = useUi();
   const route = useRoute();
+  const skin = useSkin();
 
   if (connection === 'unauthorised') {
     return (
@@ -243,6 +251,7 @@ export function App() {
 
   return (
     <div className="app">
+      {skin && <WindowTitle />}
       <Sidebar />
       <main className="main">
         <TopBar />

@@ -8,6 +8,7 @@ import { live, send, usePart } from '../live';
 import { openMenu, openNowPlaying, useUi, closeNowPlaying } from '../ui';
 import { canLike, cls, formatTime, isLiked } from '../util';
 import { Cover, Spinner } from './Common';
+import { StartButton, TrayClock, useSkin } from './Skin';
 import type { Playback } from '../types';
 import { HOSTED } from '../mode';
 import { BARS_HEIGHT, BARS_PITCH, BARS_WIDTH, BEAD_HEAD_RADIUS, BEAD_PITCH, BEAD_RADIUS, RULER_MAJOR_TICK, RULER_POINTER, RULER_TICK, barHeights, rulerTicks } from '../seekbar';
@@ -302,9 +303,12 @@ export function PlayerBar() {
   const fraction = playback && playback.durationMs > 0 ? position / playback.durationMs : 0;
   const VolumeIcon = playback?.muted || (playback?.volume ?? 1) === 0 ? VolumeX : (playback?.volume ?? 1) < 0.5 ? Volume1 : Volume2;
   const sleeping = playback?.sleep.kind !== 'off' && playback?.sleep;
+  // In a Windows skin the bar's bottom row is a taskbar: a start button at its left and a clock in its tray.
+  const skin = useSkin();
   return (
     <footer className="player">
       <div className="mini-progress"><i style={{ width: `${fraction * 100}%` }} /></div>
+      {skin && <StartButton />}
       <div className="now">
         {track ? (
           <>
@@ -350,6 +354,7 @@ export function PlayerBar() {
         <button className="round-button" aria-label="Now playing" onClick={() => (nowPlaying ? closeNowPlaying() : openNowPlaying())}>
           <ChevronUp size={20} style={{ transform: nowPlaying ? 'rotate(180deg)' : undefined, transition: 'transform .2s' }} />
         </button>
+        {skin && <TrayClock />}
       </div>
     </footer>
   );
