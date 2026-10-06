@@ -67,7 +67,18 @@ export function NowPlaying() {
         </div>
         <div className="body">
           {panel === 'queue' ? (
-            upcoming.length ? <TrackList tracks={upcoming} context={{ kind: 'queue' }} compact /> : <Empty icon={<Mic2 size={34} />} title="The queue is empty" />
+            upcoming.length ? (
+              <>
+                <TrackList tracks={upcoming} context={{ kind: 'queue' }} compact />
+                {/* Then autoplay's songs, dimmer, as the Queue page shows them. */}
+                {!HOSTED && !!queue?.suggestions?.length && (
+                  <>
+                    <div className="faint ellipsis" style={{ fontSize: 13, margin: '14px 4px 6px' }}>Autoplay{queue.suggestionsFrom ? ` · ${queue.suggestionsFrom}` : ''}</div>
+                    <TrackList tracks={queue.suggestions} context={{ kind: 'suggestions' }} compact />
+                  </>
+                )}
+              </>
+            ) : <Empty icon={<Mic2 size={34} />} title="The queue is empty" />
           ) : (
             <LyricsPanel />
           )}

@@ -304,6 +304,25 @@ function ListeningSettings({ settings }: { settings: Settings }) {
       <Row title="Keep playing when the queue runs out" detail="Songs like the last one, as its own service would carry on.">
         <Switch on={settings.autoplay !== false} change={(on) => send('autoplay', { on })} label="Keep playing" />
       </Row>
+      {settings.autoplaySources && (
+        <Row title="Autoplay draws from" detail={settings.autoplaySources.find((s) => s.name === settings.autoplayFrom)?.description}>
+          <div className="chips" style={{ margin: 0 }}>
+            {settings.autoplaySources.map((s) => (
+              <button key={s.name} className={cls('chip', settings.autoplayFrom === s.name && 'on')} onClick={() => send('autoplayFrom', { source: s.name })}>{s.title}</button>
+            ))}
+          </div>
+        </Row>
+      )}
+      {settings.avoidRecent != null && (
+        <Row title="Autoplay skips songs played lately" detail="So it does not bring back what was just heard.">
+          <Switch on={settings.avoidRecent} change={(on) => send('avoidRecent', { on })} label="Skip songs played lately" />
+        </Row>
+      )}
+      {settings.keepQueue != null && (
+        <Row title="Keep the queue between launches" detail="Noctorium on the computer puts it back where it was left when it starts again.">
+          <Switch on={settings.keepQueue} change={(on) => send('keepQueue', { on })} label="Keep the queue" />
+        </Row>
+      )}
       <Row title="The sleep timer fades out" detail="Over its last seconds, rather than stopping at once.">
         <div className="chips" style={{ margin: 0 }}>
           {fades.map(([seconds, label]) => <button key={seconds} className={cls('chip', (settings.sleepFade ?? 0) === seconds && 'on')} onClick={() => send('sleepFade', { seconds })}>{label}</button>)}

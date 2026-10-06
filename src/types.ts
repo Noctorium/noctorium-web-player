@@ -56,7 +56,30 @@ export interface Playback {
   at: number;
 }
 
-export interface Queue { tracks: Track[]; currentIndex: number; shuffle: boolean; repeat: 'off' | 'all' | 'one'; origin?: string }
+/**
+ * What autoplay is doing after the queue, as Noctorium on a computer says it, and its terminal's Queue page with
+ * it: off; the queue repeats; songs lined up; Spotify carrying on by itself; looking; none came back; not yet.
+ */
+export type AutoplayState = 'off' | 'repeating' | 'ready' | 'spotify' | 'waiting' | 'nothing' | 'later';
+
+export interface Queue {
+  tracks: Track[];
+  currentIndex: number;
+  shuffle: boolean;
+  repeat: 'off' | 'all' | 'one';
+  origin?: string;
+  /**
+   * Autoplay's songs, lined up after the queue but not in it until they play or are kept, and where they come
+   * from. These, down to autoplay, come from Noctorium on a computer; the hosted player's radio sends none.
+   */
+  suggestions?: Track[];
+  suggestionsFrom?: string;
+  /** Spotify, playing on Spotify itself, chooses what comes next; next asks it to move on. */
+  continuesElsewhere?: boolean;
+  /** Whether next would go anywhere. */
+  hasNext?: boolean;
+  autoplay?: AutoplayState;
+}
 
 export interface Section { id: string; title: string; subtitle?: string; provider: Provider; tracks: Track[]; playlists: Playlist[] }
 
@@ -121,6 +144,9 @@ export interface Service { status: 'disconnected' | 'connecting' | 'awaiting_app
 
 /** One of Bandcamp's genres, which Home can have a row of best-sellers for. */
 export interface Genre { name: string; title: string }
+
+/** One of a setting's choices, with what it means. */
+export interface Choice { name: string; title: string; description?: string }
 
 /** Bandcamp: a name rather than a sign-in, whose collection the library shows, and the genres Home has rows for. */
 export interface Bandcamp {
@@ -218,6 +244,14 @@ export interface Settings {
   version: string;
   /** Carry on with similar songs when the queue runs out. */
   autoplay?: boolean;
+  /**
+   * Where autoplay's songs come from, by name, and the choices; whether it leaves out what played lately; and
+   * whether the queue is kept between launches. Noctorium on a computer only.
+   */
+  autoplayFrom?: string;
+  autoplaySources?: Choice[];
+  avoidRecent?: boolean;
+  keepQueue?: boolean;
 }
 
 export interface Download { track: Track; bytes: number; at: number }

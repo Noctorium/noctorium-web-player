@@ -1,5 +1,5 @@
-import { useState, type MouseEvent } from 'react';
-import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Radio, Trash2 } from 'lucide-react';
+import { useState, type MouseEvent, type ReactNode } from 'react';
+import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Radio, Trash2, X } from 'lucide-react';
 import { HOSTED } from '../mode';
 import type { LocalPlaylist, Playlist, Track } from '../types';
 import { live, send, usePart } from '../live';
@@ -13,13 +13,23 @@ export type Context =
   | { kind: 'playlist'; playlist: Playlist }
   | { kind: 'local'; playlist: LocalPlaylist }
   | { kind: 'queue' }
+  /** Autoplay's songs, lined up after the queue and not in it until they play or are kept. */
+  | { kind: 'suggestions' }
   | { kind: 'downloads' };
+
+/**
+ * One of autoplay's songs, named by its key as well as where it was: autoplay may have moved on since the list
+ * was drawn, and Noctorium then acts on the song that was shown, or on none.
+ */
+export const suggestion = (track: Track, index: number) => ({ key: track.key, index });
 
 export function playFrom(context: Context, track: Track, list: Track[], index: number) {
   switch (context.kind) {
     case 'playlist': return send('playPlaylist', { key: context.playlist.key, startAt: track.key });
     case 'local': return send('playLocal', { id: context.playlist.id, startAt: track.key });
     case 'queue': return send('jump', { index });
+    // It and the ones before it join the queue, and it plays.
+    case 'suggestions': return send('playSuggestion', suggestion(track, index));
     case 'downloads': return send('playDownloads', { startAt: track.key });
     default: return send('play', { track, list, origin: context.origin });
   }
@@ -43,11 +53,14 @@ export function TrackList({ tracks, context, numbered = true, startIndex = 0, co
     else if (context.kind === 'playlist') send('movePlaylistTrack', { key: context.playlist.key, from, to: target });
   }
 
+  // Autoplay's songs are offered rather than chosen, and drawn dimmer; each has keep and drop at hand, in place of
+  // the like, which is still in its menu.
+  const suggested = context.kind === 'suggestions';
   return (
-    <div className="tracks" role="list">
+    <div className={cls('tracks', suggested && 'suggested')} role="list">
       {tracks.map((track, i) => {
         const index = i + startIndex;
-        const playing = context.kind === 'queue' ? index === queue?.currentIndex : playback?.track?.key === track.key;
+        const playing = suggested ? false : context.kind === 'queue' ? index === queue?.currentIndex : playback?.track?.key === track.key;
         return (
           <TrackRow
             key={`${track.key}:${index}`}
@@ -56,10 +69,16 @@ export function TrackList({ tracks, context, numbered = true, startIndex = 0, co
             playing={playing}
             paused={playback?.status !== 'playing'}
             liked={isLiked(likes, track)}
-            likeable={canLike(likes, track)}
+            likeable={!suggested && canLike(likes, track)}
             compact={compact}
             onPlay={() => (playing ? send('toggle') : playFrom(context, track, tracks, index))}
             onMenu={(e) => openMenu(e, <TrackMenu track={track} context={context} index={index} />)}
+            extra={suggested && !compact ? (
+              <>
+                <button className="round-button" aria-label="Keep it in the queue" title="Keep it in the queue" onClick={() => send('keepSuggestion', suggestion(track, index))}><Plus size={17} /></button>
+                <button className="round-button" aria-label="Drop it" title="Drop it" onClick={() => send('removeSuggestion', suggestion(track, index))}><X size={17} /></button>
+              </>
+            ) : undefined}
             drag={reorderable ? {
               dragging: dragging === i,
               over: over === i && dragging !== i,
@@ -77,9 +96,11 @@ export function TrackList({ tracks, context, numbered = true, startIndex = 0, co
 
 interface Drag { dragging: boolean; over: boolean; start(): void; enter(): void; end(): void; drop(): void }
 
-export function TrackRow({ track, number, playing, paused, liked, likeable, compact, onPlay, onMenu, drag }: {
+export function TrackRow({ track, number, playing, paused, liked, likeable, compact, onPlay, onMenu, drag, extra }: {
   track: Track; number?: number; playing: boolean; paused: boolean; liked: boolean; likeable: boolean; compact?: boolean;
   onPlay(): void; onMenu(e: MouseEvent<HTMLButtonElement>): void; drag?: Drag;
+  /** Buttons of the list's own, before the menu's. */
+  extra?: ReactNode;
 }) {
   return (
     <div
@@ -114,6 +135,7 @@ export function TrackRow({ track, number, playing, paused, liked, likeable, comp
             <Heart size={17} fill={liked ? 'currentColor' : 'none'} />
           </button>
         )}
+        {extra}
         <button className="round-button" aria-label="More" onClick={onMenu}><MoreHorizontal size={18} /></button>
       </div>
     </div>
@@ -124,10 +146,22 @@ export function TrackRow({ track, number, playing, paused, liked, likeable, comp
 export function TrackMenu({ track, context, index }: { track: Track; context?: Context; index?: number }) {
   const likes = live.state.likes;
   const liked = isLiked(likes, track);
+  const offered = context?.kind === 'suggestions' && index != null ? suggestion(track, index) : undefined;
   return (
     <>
-      <button onClick={() => send('playNext', { track })}><ListStart size={17} /> Play next</button>
-      <button onClick={() => send('addToQueue', { track }).then((e) => !e && live.notice('Added to the queue'))}><ListEnd size={17} /> Add to the queue</button>
+      {offered ? (
+        // One of autoplay's songs moves into the queue rather than being copied there, so it is not offered twice.
+        <>
+          <button onClick={() => send('playSuggestion', offered)}><Play size={17} /> Play it now</button>
+          <button onClick={() => send('removeSuggestion', offered).then((e) => { if (!e) send('playNext', { track }); })}><ListStart size={17} /> Play next</button>
+          <button onClick={() => send('keepSuggestion', offered).then((e) => !e && live.notice('Kept in the queue'))}><ListEnd size={17} /> Keep it in the queue</button>
+        </>
+      ) : (
+        <>
+          <button onClick={() => send('playNext', { track })}><ListStart size={17} /> Play next</button>
+          <button onClick={() => send('addToQueue', { track }).then((e) => !e && live.notice('Added to the queue'))}><ListEnd size={17} /> Add to the queue</button>
+        </>
+      )}
       <button data-keep onClick={(e) => openMenu(e, <AddToPlaylist track={track} />)}><ListPlus size={17} /> Add to a playlist…</button>
       <hr />
       {canLike(likes, track) && (
@@ -144,6 +178,9 @@ export function TrackMenu({ track, context, index }: { track: Track; context?: C
       <button onClick={() => window.open(pageUrl(track), '_blank', 'noopener')}><ExternalLink size={17} /> {track.provider === 'BANDCAMP' ? 'Buy it on Bandcamp' : `Open on ${providerName[track.provider]}`}</button>
       {context?.kind === 'queue' && index != null && (
         <><hr /><button onClick={() => send('removeQueue', { index })}><Trash2 size={17} /> Take out of the queue</button></>
+      )}
+      {offered && (
+        <><hr /><button onClick={() => send('removeSuggestion', offered)}><X size={17} /> Drop it</button></>
       )}
       {context?.kind === 'local' && (
         <><hr /><button onClick={() => send('removeFromPlaylist', { localId: context.playlist.id, track })}><Trash2 size={17} /> Take out of this playlist</button></>

@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Download, ListMusic, Monitor, MonitorSpeaker, QrCode, Shuffle, Smartphone, Trash2, Repeat } from 'lucide-react';
+import { Download, ListMusic, ListX, Monitor, MonitorSpeaker, QrCode, RefreshCw, Save, Shuffle, Smartphone, Trash2, Repeat } from 'lucide-react';
 import { live, send, usePart } from '../live';
 import { audio } from '../audio';
 import { cls, plural, totalTime } from '../util';
-import { Confirm, Empty, QrDialog, Spinner, Switch } from '../components/Common';
+import { Confirm, Empty, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { TrackList } from '../components/Tracks';
 import { openDialog } from '../ui';
+import { HOSTED } from '../mode';
+import type { AutoplayState, Queue } from '../types';
 
 export function QueuePage() {
   const queue = usePart('queue');
   if (!queue?.tracks.length) return <Empty icon={<ListMusic size={44} />} title="The queue is empty">Play something and it fills up; the ⋯ menu adds to it.</Empty>;
+  const next = queue.tracks.length - queue.currentIndex - 1;
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -20,8 +23,55 @@ export function QueuePage() {
         <button className={cls('button small', queue.repeat !== 'off' && 'primary')} onClick={() => send('repeat')}><Repeat size={15} /> {queue.repeat === 'one' ? 'This track' : queue.repeat === 'all' ? 'The queue' : 'Repeat'}</button>
         <button className="button small danger" onClick={() => openDialog(<Confirm title="Clear the queue?" detail="Playback stops too." action="Clear" danger yes={() => send('clearQueue')} />)}><Trash2 size={15} /> Clear</button>
       </div>
-      <p className="page-subtitle">Drag to reorder.</p>
+      {HOSTED ? <p className="page-subtitle">Drag to reorder.</p> : (
+        // What Noctorium on the computer does to the queue as a whole; the hosted player's queue is its own.
+        <div className="page-subtitle" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span>Drag to reorder.</span>
+          <span style={{ flex: 1 }} />
+          <button className="button small" disabled={next < 2} onClick={() => send('shuffleUpcoming')}><Shuffle size={15} /> Shuffle what’s next</button>
+          <button className="button small" disabled={next < 1} onClick={() => openDialog(
+            <Confirm title="Clear what’s next?" detail={next === 1 ? 'The song after this one leaves the queue.' : `The ${next} songs after this one leave the queue.`} action="Clear" danger yes={() => send('clearUpcoming')} />,
+          )}><ListX size={15} /> Clear what’s next</button>
+          <button className="button small" onClick={() => openDialog(
+            <Prompt title="Save the queue as a playlist" hint="Kept in Noctorium on the computer, every song once, in the queue’s order." action="Save" submit={(title) => send('saveQueue', { title })} />,
+          )}><Save size={15} /> Save as a playlist…</button>
+        </div>
+      )}
       <TrackList tracks={queue.tracks} context={{ kind: 'queue' }} />
+      {!HOSTED && queue.autoplay && <Autoplay queue={queue} />}
+    </>
+  );
+}
+
+/** What autoplay says it is doing when it has no songs to show. */
+const autoplaySays: Record<AutoplayState, string> = {
+  off: 'Off: the queue stops when it runs out. Turn it on here, or under Settings › Playing.',
+  repeating: 'The queue repeats, so it never runs out and autoplay has nothing to add.',
+  ready: 'Lined up after the queue, and not in it until they play or are kept: play one now, keep it, or drop it.',
+  spotify: 'Spotify chooses what comes next, in your Spotify app; next asks it to move on.',
+  waiting: 'Looking for songs like the last one…',
+  nothing: 'Nothing lined up. Look again for more.',
+  later: 'When the queue is nearly over, songs like its last one are lined up here.',
+};
+
+/**
+ * Autoplay, under the queue: the songs it has lined up, drawn dimmer than the queue's own, or what it is doing
+ * instead. Noctorium on the computer finds them, from the last song's own service or YouTube Music's radio.
+ */
+function Autoplay({ queue }: { queue: Queue }) {
+  const state = queue.autoplay ?? 'later';
+  const suggestions = queue.suggestions ?? [];
+  const ready = state === 'ready' && suggestions.length > 0;
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <h2 className="shelf-title">Autoplay{ready && queue.suggestionsFrom ? ` · ${queue.suggestionsFrom}` : ''}</h2>
+        <span style={{ flex: 1 }} />
+        {state === 'off' && <button className="button small primary" style={{ marginTop: 30 }} onClick={() => send('autoplay', { on: true })}>Turn it on</button>}
+        {(ready || state === 'nothing') && <button className="button small" style={{ marginTop: 30 }} onClick={() => send('refreshSuggestions')}><RefreshCw size={15} /> Look again</button>}
+      </div>
+      <p className="shelf-subtitle">{autoplaySays[state]}</p>
+      {ready && <TrackList tracks={suggestions} context={{ kind: 'suggestions' }} numbered={false} />}
     </>
   );
 }

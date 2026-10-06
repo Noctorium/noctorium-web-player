@@ -19,7 +19,7 @@ One page, built two ways:
 - **The page [`noctorium web`](https://github.com/Noctorium/Noctorium-cli) serves** to the phones, tablets and
   computers in the house, from a Noctorium on your own computer: the same screens, with your own accounts
   behind them — likes and playlists that go to the real account, downloads, the computer's speakers,
-  Connect.
+  Connect, and what autoplay lines up after the queue, shown under it to play, keep or drop.
 
 ## The hosted player
 

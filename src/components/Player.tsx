@@ -90,7 +90,8 @@ export function Controls({ big }: { big?: boolean }) {
       <button className="play" style={big ? { width: 60, height: 60 } : undefined} aria-label={playback?.status === 'playing' ? 'Pause' : 'Play'} onClick={() => send('toggle')}>
         {playback?.status === 'resolving' ? <Spinner /> : playback?.status === 'playing' ? <Pause size={size} fill="currentColor" /> : <Play size={size} fill="currentColor" style={{ marginLeft: 2 }} />}
       </button>
-      <button className="round-button" aria-label="Next" onClick={() => send('next')}><SkipForward size={size} fill="currentColor" /></button>
+      {/* Off where next would go nowhere, as Noctorium on a computer says; the hosted player does not say. */}
+      <button className="round-button" aria-label="Next" disabled={queue?.hasNext === false} onClick={() => send('next')}><SkipForward size={size} fill="currentColor" /></button>
       <button className={cls('round-button hide-small', queue?.repeat !== 'off' && 'on')} aria-label="Repeat" onClick={() => send('repeat')}>
         {queue?.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
       </button>
