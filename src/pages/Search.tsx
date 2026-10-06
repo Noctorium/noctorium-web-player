@@ -9,10 +9,22 @@ import { TrackList } from '../components/Tracks';
 import type { Search as SearchState } from '../types';
 import { HOSTED } from '../mode';
 
-/** Bandcamp is read by Noctorium itself, so the hosted player, which has none behind it, searches the other two. */
+/**
+ * Bandcamp, Spotify and VK are read by Noctorium itself, so the hosted player, which has none behind it,
+ * searches the other two.
+ */
 const modes: [SearchState['mode'], string][] = HOSTED
   ? [['HYBRID', 'Both'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos']]
-  : [['HYBRID', 'All'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos'], ['BANDCAMP', 'Bandcamp']];
+  : [
+    ['HYBRID', 'All'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos'],
+    ['BANDCAMP', 'Bandcamp'], ['SPOTIFY', 'Spotify'], ['VK', 'VK Music'],
+  ];
+
+/**
+ * The services whose search answers with albums and artists as playlists, which is how they open -- and with
+ * the same again as bare names, which are left out for them.
+ */
+const opened = new Set<string>(['BANDCAMP', 'SPOTIFY']);
 
 export function Search() {
   const route = useRoute();
@@ -27,13 +39,13 @@ export function Search() {
     return <Empty icon={<SearchIcon size={44} />} title="Find something to play">{HOSTED ? 'Both services at once — or paste a link from either.' : 'Every service at once — or paste a link from any of them.'}</Empty>;
   }
   const top = search?.tracks[0];
-  // Bandcamp's albums and artists come as playlists, which is how they open, and are shown as what they are.
-  // They come a second time as bare names in `albums` and `artists`, which are left out for them.
-  const playlists = search?.playlists.filter((p) => p.provider !== 'BANDCAMP') ?? [];
-  const releases = search?.playlists.filter((p) => p.provider === 'BANDCAMP' && !isArtist(p)) ?? [];
+  // Bandcamp's and Spotify's albums and artists come as playlists, which is how they open, and are shown as what
+  // they are. They come a second time as bare names in `albums` and `artists`, which are left out for them.
+  const playlists = search?.playlists.filter((p) => !opened.has(p.provider)) ?? [];
+  const releases = search?.playlists.filter((p) => opened.has(p.provider) && !isArtist(p)) ?? [];
   const bands = search?.playlists.filter(isArtist) ?? [];
-  const albums = search?.albums.filter((a) => a.provider !== 'BANDCAMP') ?? [];
-  const artists = search?.artists.filter((a) => a.provider !== 'BANDCAMP') ?? [];
+  const albums = search?.albums.filter((a) => !opened.has(a.provider)) ?? [];
+  const artists = search?.artists.filter((a) => !opened.has(a.provider)) ?? [];
   const nothing = !search?.tracks.length && !search?.playlists.length && !search?.albums.length && !search?.artists.length;
   return (
     <>

@@ -51,6 +51,8 @@ export interface Playback {
   boost: boolean;
   output: 'computer' | 'browser';
   sleep: Sleep;
+  /** A Spotify song the account's own Spotify app is playing, rather than the computer or this tab. */
+  onSpotify?: boolean;
   at: number;
 }
 
@@ -62,7 +64,7 @@ export interface Home { sections: Section[]; loading: boolean; recent: Track[]; 
 
 export interface Search {
   query: string;
-  mode: 'HYBRID' | 'SOUNDCLOUD' | 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'BANDCAMP';
+  mode: 'HYBRID' | 'SOUNDCLOUD' | 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'BANDCAMP' | 'SPOTIFY' | 'VK';
   loading: boolean;
   tracks: Track[];
   playlists: Playlist[];
@@ -86,7 +88,16 @@ export interface Library {
 
 export interface Channel { pageId: string; name: string; authUser: number; photoUrl?: string; handle?: string; selected: boolean }
 
-export interface Likes { keys: string[]; busy: string[]; soundCloudReady: boolean; youTubeReady: boolean; channels: Channel[] }
+export interface Likes {
+  keys: string[];
+  busy: string[];
+  soundCloudReady: boolean;
+  youTubeReady: boolean;
+  channels: Channel[];
+  /** Hearts on Spotify songs go to its Liked Songs, and on VK's to My music. Not in the hosted player. */
+  spotifyReady?: boolean;
+  vkReady?: boolean;
+}
 
 export interface LyricLine { text: string; startMs?: number }
 
@@ -126,6 +137,32 @@ export interface Bandcamp {
   desktop?: string;
 }
 
+export interface SpotifyDevice { id: string; name: string; type: string; active: boolean; restricted: boolean; volume?: number }
+
+/** Spotify's two sign-ins, and where its songs play once the Premium one is made. */
+export interface Spotify {
+  connected: boolean;
+  connecting: boolean;
+  account: string;
+  message?: string;
+  /** The Premium sign-in: Spotify songs can play in the account's own Spotify app. */
+  canPlay: boolean;
+  playsOnSpotify: boolean;
+  /** Where the account's Spotify is open, as last asked; empty until asked. */
+  devices: SpotifyDevice[];
+  /** The device chosen, by Spotify's id; blank for whichever Spotify has active. */
+  device: string;
+}
+
+/** VK, signed in with a browser's session, and what to read before signing in. */
+export interface Vk {
+  connected: boolean;
+  account: string;
+  checking: boolean;
+  message?: string;
+  notice: string[];
+}
+
 export interface Theme {
   name: string;
   title: string;
@@ -160,8 +197,17 @@ export interface Settings {
   spotifyConnected: boolean;
   spotifyConnecting: boolean;
   spotifyAccount: string;
-  /** Not from the hosted player, which has no Bandcamp. */
+  /** These, down to sleepFade, come from Noctorium on a computer; the hosted player has none of them. */
+  spotify?: Spotify;
   bandcamp?: Bandcamp;
+  vk?: Vk;
+  /** How fast it plays, 1 being as recorded, from 0.5 to 2. */
+  playbackSpeed?: number;
+  /** The services a Hybrid search asks, by name, and every one it could. */
+  hybridSearch?: string[];
+  hybridServices?: string[];
+  /** Seconds a sleep timer fades out over; zero for none. */
+  sleepFade?: number;
   lastfm: Service;
   listenbrainz: Service;
   scrobbles: number;
@@ -170,7 +216,7 @@ export interface Settings {
   desktopSoundCloud: boolean;
   message?: string;
   version: string;
-  /** The hosted player only: carry on with similar songs when the queue runs out. */
+  /** Carry on with similar songs when the queue runs out. */
   autoplay?: boolean;
 }
 

@@ -38,36 +38,49 @@ export function canLike(likes: Likes | undefined, track: Track) {
   if (!likes) return false;
   if (track.provider === 'SOUNDCLOUD') return likes.soundCloudReady;
   if (track.provider === 'YOUTUBE_MUSIC' || track.provider === 'YOUTUBE_VIDEO') return likes.youTubeReady;
+  if (track.provider === 'SPOTIFY') return !!likes.spotifyReady;
+  if (track.provider === 'VK') return !!likes.vkReady;
   return false;
 }
 
 /**
- * The address of a track's own page, to open or pass on. For a Bandcamp song Noctorium writes what it needs
- * to play it after a `#` on its page's address, which means nothing to anybody else, so it is left off here.
+ * The address of a track's own page, to open or pass on. For Bandcamp's and VK's songs Noctorium writes what it
+ * needs to play them after a `#` on the page's address, which means nothing to anybody else, so it is left off.
  */
 export function pageUrl(track: Track): string {
-  return track.sourceUrl.replace(/#bandcamp-track=.*$/, '');
+  return track.sourceUrl.replace(/#(bandcamp-track|vk-access)=.*$/, '');
 }
 
 /**
- * Whether a track may be downloaded or saved. Not Bandcamp's: what it streams is there to be heard on the way to
- * being bought, and the file is the artist's to sell.
+ * Whether a service's songs may be downloaded or saved. Not Bandcamp's, which are streamed to be heard on the
+ * way to being bought, and not VK's, which VK licenses for playing and not for keeping.
  */
+export function keepsFiles(provider: Provider): boolean {
+  return provider !== 'BANDCAMP' && provider !== 'VK';
+}
+
 export function canKeep(track: Track): boolean {
-  return track.provider !== 'BANDCAMP';
+  return keepsFiles(track.provider);
 }
 
-/** A Bandcamp artist, which opens as a playlist of everything they put out. */
+/** An artist, which Bandcamp and Spotify open as a playlist of what they put out. */
 export function isArtist(playlist: Playlist): boolean {
-  return playlist.provider === 'BANDCAMP' && playlist.id.startsWith('band:');
+  return (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('band:')) ||
+    (playlist.provider === 'SPOTIFY' && playlist.id.startsWith('artist:'));
 }
 
-/** What a playlist is, for the line above its name: Bandcamp's open albums and artists as playlists. */
-export function playlistKind(playlist: Playlist): string {
+/** What a playlist is, for the line above its name: Bandcamp and Spotify open albums and artists as playlists. */
+export function playlistKind(playlist: Playlist): 'Artist' | 'Album' | 'Single' | 'Playlist' {
   if (isArtist(playlist)) return 'Artist';
   if (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('album:')) return 'Album';
   if (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('track:')) return 'Single';
+  if (playlist.provider === 'SPOTIFY' && playlist.id.startsWith('album:')) return 'Album';
   return playlist.id.startsWith('OLAK') || playlist.id.startsWith('MPRE') ? 'Album' : 'Playlist';
+}
+
+/** A speed as people say it: 1×, 1.25×, 0.75×. */
+export function speedName(speed: number): string {
+  return `${Number(speed.toFixed(2))}×`;
 }
 
 export const providerName: Record<Provider, string> = {

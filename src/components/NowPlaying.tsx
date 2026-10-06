@@ -49,7 +49,7 @@ export function NowPlaying() {
           <h1>{track.title}</h1>
           <div className="artist">{track.artistLine}</div>
           <div className="faint" style={{ fontSize: 13, marginTop: 6, display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
-            <Badge provider={track.provider} /> {track.album?.title ?? providerName[track.provider]}
+            <Badge provider={track.provider} /> {track.album?.title ?? providerName[track.provider]}{playback?.onSpotify ? ' · on Spotify' : ''}
           </div>
         </div>
         <SeekBar playback={playback} />

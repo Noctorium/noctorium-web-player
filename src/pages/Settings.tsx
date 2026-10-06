@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { send, usePart } from '../live';
-import { cls } from '../util';
+import { cls, providerName, speedName } from '../util';
 import { Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
-import type { Account, Bandcamp, Service, Settings } from '../types';
+import type { Account, Bandcamp, Provider, Service, Settings, Spotify, Vk } from '../types';
 import { HOSTED } from '../mode';
 import { HostedSettings } from '../hosted/Settings';
 
@@ -142,12 +142,15 @@ export function SettingsPage() {
           <button className="button small" onClick={() => openDialog(<Prompt title="Your SoundCloud profile" hint="The name in soundcloud.com/<name>, which is how SoundCloud finds your playlists." initial={settings.soundCloudUsername} submit={(name) => send('soundCloudUsername', { name })} />)}>Profile name</button>
           {sc.status === 'connected' && <button className="button small danger" onClick={() => openDialog(<Confirm title="Sign out of SoundCloud here?" action="Sign out" danger yes={() => send('signOut', { service: 'soundcloud' })} />)}>Sign out</button>}
         </Row>
-        <Row title="Spotify library" detail={settings.spotifyConnected ? `Connected${settings.spotifyAccount ? ` as ${settings.spotifyAccount}` : ''}` : settings.spotifyConnecting ? 'Waiting for Spotify…' : 'Your Spotify playlists, played from YouTube Music and SoundCloud. Approve it in a browser on the computer running Noctorium.'}>
-          {settings.spotifyConnected
-            ? <button className="button small danger" onClick={() => send('signOut', { service: 'spotify' })}>Disconnect</button>
-            : <button className="button small" onClick={() => send('spotify')}>Connect</button>}
-        </Row>
+        {settings.spotify ? <SpotifySettings spotify={settings.spotify} /> : (
+          <Row title="Spotify library" detail={settings.spotifyConnected ? `Connected${settings.spotifyAccount ? ` as ${settings.spotifyAccount}` : ''}` : settings.spotifyConnecting ? 'Waiting for Spotify…' : 'Your Spotify playlists, played from YouTube Music and SoundCloud. Approve it in a browser on the computer running Noctorium.'}>
+            {settings.spotifyConnected
+              ? <button className="button small danger" onClick={() => send('signOut', { service: 'spotify' })}>Disconnect</button>
+              : <button className="button small" onClick={() => send('spotify')}>Connect</button>}
+          </Row>
+        )}
         {settings.bandcamp && <BandcampSettings bandcamp={settings.bandcamp} />}
+        {settings.vk && <VkSettings vk={settings.vk} />}
         <Row title="Last.fm" detail={serviceText(settings.lastfm)}>
           {settings.lastfm.status === 'connected' ? <button className="button small danger" onClick={() => send('signOut', { service: 'lastfm' })}>Disconnect</button>
             : settings.lastfm.status === 'awaiting_approval' ? <button className="button small primary" onClick={() => send('lastfmFinish')}>Finish</button>
@@ -168,6 +171,7 @@ export function SettingsPage() {
 
       <section>
         <h2>Playing</h2>
+        <ListeningSettings settings={settings} />
         <Row title="Skip what is not the music in YouTube videos" detail="Intros, outros, sponsor reads and talking, as marked by SponsorBlock's contributors.">
           <Switch on={settings.skipNonMusic} change={(on) => send('skipNonMusic', { on })} label="Skip non-music" />
         </Row>
@@ -192,12 +196,130 @@ export function SettingsPage() {
 
       <section>
         <h2>About</h2>
-        <Row title={`Noctorium ${settings.version}`} detail="YouTube Music, SoundCloud and Bandcamp in one library. Free software under the GPL-3.0.">
+        <Row title={`Noctorium ${settings.version}`} detail="YouTube Music, SoundCloud, Bandcamp, Spotify and VK in one library. Free software under the GPL-3.0.">
           <button className="button small" onClick={() => send('checkUpdates')}>Check for updates</button>
           <button className="button small" onClick={() => send('diagnostics')}>Diagnostics</button>
         </Row>
       </section>
     </div>
+  );
+}
+
+/**
+ * Spotify's two sign-ins. Any account gives the library, likes, search and two rows of Home, its songs played
+ * matched on YouTube Music; Premium also lets the account's own Spotify app play them, wherever it is open, and
+ * then which device does is chosen here. Either sign-in opens Spotify's page in a browser on the computer
+ * running Noctorium, because that is where Spotify sends its answer.
+ */
+function SpotifySettings({ spotify }: { spotify: Spotify }) {
+  // Where Spotify is open changes from minute to minute, so it is asked again each time this is shown.
+  useEffect(() => { if (spotify.canPlay) send('spotifyDevices'); }, [spotify.canPlay]);
+  const device = spotify.devices.find((d) => d.id === spotify.device);
+  const status = spotify.connecting ? 'Waiting for Spotify…'
+    : spotify.connected ? `Connected${spotify.account ? ` as ${spotify.account}` : ''}${spotify.canPlay ? ' · Premium' : ''}` : 'Not connected';
+  const about = spotify.connected
+    ? 'Your playlists, likes and search, and two rows on Home.'
+    : 'Any account: your playlists, likes and search, its songs played from YouTube Music. Approved in a browser on the computer running Noctorium.';
+  return (
+    <>
+      <Row title="Spotify" detail={<><span className={cls('status', spotify.connected && 'connected')}>{status}</span> · {spotify.message ?? about}</>}>
+        {spotify.connected
+          ? <button className="button small danger" onClick={() => openDialog(<Confirm title="Disconnect Spotify?" detail="Your Spotify playlists leave the library, and its songs their hearts." action="Disconnect" danger yes={() => send('signOut', { service: 'spotify' })} />)}>Disconnect</button>
+          : <button className="button small" disabled={spotify.connecting} onClick={() => send('spotify')}>Connect</button>}
+        <button className="button small" disabled={spotify.connecting} onClick={() => send('spotifyPremium')}>{spotify.canPlay ? 'Sign in with Premium again' : 'Connect with Premium'}</button>
+      </Row>
+      {spotify.canPlay && (
+        <Row title="Spotify songs play" detail={spotify.playsOnSpotify ? 'In your Spotify app, wherever it is open: Noctorium tells it what to play.' : 'Matched to the same recording on YouTube Music.'}>
+          <Switch on={spotify.playsOnSpotify} change={(on) => send('spotifyPlayback', { onSpotify: on })} label="Play Spotify songs on Spotify" />
+        </Row>
+      )}
+      {spotify.canPlay && (
+        <Row title="Spotify plays on" detail={device ? `${device.name}${device.active ? ' · playing now' : ''}` : spotify.device ? 'The device chosen before, which Spotify does not list now' : 'Wherever Spotify is active'}>
+          <select className="select" value={spotify.device} onChange={(e) => send('spotifyDevice', { id: e.target.value })}>
+            <option value="">Wherever Spotify is active</option>
+            {spotify.devices.map((d) => <option key={d.id} value={d.id} disabled={d.restricted}>{d.name}{d.type ? ` · ${d.type}` : ''}{d.restricted ? ' · takes no commands' : ''}</option>)}
+            {spotify.device && !device && <option value={spotify.device}>The device chosen before</option>}
+          </select>
+          <button className="button small" onClick={() => send('spotifyDevices')}>Look again</button>
+        </Row>
+      )}
+    </>
+  );
+}
+
+/**
+ * VK, through a browser's vk.ru session: VK offers no music to other apps, so what that means is said before the
+ * two cookies are asked for, every time. Core checks them with VK before keeping them.
+ */
+function VkSettings({ vk }: { vk: Vk }) {
+  const status = vk.checking ? 'Checking with VK…' : vk.connected ? `Signed in as ${vk.account}` : 'Not signed in';
+  return (
+    <Row title="VK Music" detail={<>
+      <span className={cls('status', vk.connected && !vk.checking && 'connected')}>{status}</span>
+      {vk.message ? ` · ${vk.message}` : !vk.connected ? ' · Through a signed-in browser’s vk.ru session; what that means is said first.' : ''}
+    </>}>
+      <button className="button small" disabled={vk.checking} onClick={() => openDialog(<VkSignIn notice={vk.notice} />)}>{vk.connected ? 'Sign in again' : 'Sign in'}</button>
+      {vk.connected && <button className="button small danger" onClick={() => openDialog(<Confirm title="Sign out of VK here?" detail="The session is forgotten on the computer running Noctorium; nothing changes at VK." action="Sign out" danger yes={() => send('signOut', { service: 'vk' })} />)}>Sign out</button>}
+    </Row>
+  );
+}
+
+function VkSignIn({ notice }: { notice: string[] }) {
+  const [text, setText] = useState('');
+  const go = () => { closeDialog(); send('vkSignIn', { text: text.trim() }); };
+  return (
+    <Dialog title="Signing in to VK" buttons={<><button className="button" onClick={closeDialog}>Cancel</button><button className="button primary" disabled={!text.trim()} onClick={go}>Sign in</button></>}>
+      {notice.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+      <textarea className="field" autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="p=…; remixsid=…" spellCheck={false} autoComplete="off" />
+    </Dialog>
+  );
+}
+
+const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+const fades: [number, string][] = [[0, 'Off'], [15, '15 s'], [30, '30 s'], [60, '60 s']];
+
+/**
+ * How it plays, kept by Noctorium on the computer: the speed, carrying on when the queue runs out, the sleep
+ * timer's fade, and which services a search of every service asks.
+ */
+function ListeningSettings({ settings }: { settings: Settings }) {
+  // Ticked here at once, so a second click before the first has come back is not undone by the stale list.
+  const [asked, setAsked] = useState(settings.hybridSearch ?? []);
+  useEffect(() => setAsked(settings.hybridSearch ?? []), [(settings.hybridSearch ?? []).join()]);
+  const toggle = (provider: string) => {
+    const on = !asked.includes(provider);
+    // The last one stays: a search has to ask somebody, and Noctorium keeps one at least.
+    if (!on && asked.length <= 1) return;
+    setAsked(on ? [...asked, provider] : asked.filter((p) => p !== provider));
+    send('hybridSearch', { provider, on });
+  };
+  const speed = settings.playbackSpeed ?? 1;
+  return (
+    <>
+      <Row title="Speed" detail="Slower or faster, keeping the pitch.">
+        <div className="chips" style={{ margin: 0 }}>
+          {speeds.map((s) => <button key={s} className={cls('chip', Math.abs(speed - s) < 0.01 && 'on')} onClick={() => send('speed', { value: s })}>{speedName(s)}</button>)}
+        </div>
+      </Row>
+      <Row title="Keep playing when the queue runs out" detail="Songs like the last one, as its own service would carry on.">
+        <Switch on={settings.autoplay !== false} change={(on) => send('autoplay', { on })} label="Keep playing" />
+      </Row>
+      <Row title="The sleep timer fades out" detail="Over its last seconds, rather than stopping at once.">
+        <div className="chips" style={{ margin: 0 }}>
+          {fades.map(([seconds, label]) => <button key={seconds} className={cls('chip', (settings.sleepFade ?? 0) === seconds && 'on')} onClick={() => send('sleepFade', { seconds })}>{label}</button>)}
+        </div>
+      </Row>
+      {settings.hybridServices && (
+        <div className="setting" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+          <div className="label"><strong>A search of every service asks</strong><small>Spotify only while its songs play on Spotify, and VK once signed in.</small></div>
+          <div className="chips" style={{ margin: 0 }}>
+            {settings.hybridServices.map((p) => (
+              <button key={p} className={cls('chip', asked.includes(p) && 'on')} aria-pressed={asked.includes(p)} onClick={() => toggle(p)}>{providerName[p as Provider] ?? p}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

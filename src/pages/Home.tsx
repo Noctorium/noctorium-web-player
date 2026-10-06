@@ -7,10 +7,16 @@ import { go } from '../router';
 import { HOSTED } from '../mode';
 import { HostedWelcome } from '../hosted/Welcome';
 
-/** Which service's rows Home shows, by core's names for them. Bandcamp is read by Noctorium, so not hosted. */
+/**
+ * Which service's rows Home shows, by core's names for them. Bandcamp, Spotify and VK are read by Noctorium,
+ * so the hosted player has only the two.
+ */
 const filters = HOSTED
   ? [['all', 'Both services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud']]
-  : [['all', 'All services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud'], ['bandcamp', 'Bandcamp']];
+  : [
+    ['all', 'All services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud'], ['bandcamp', 'Bandcamp'],
+    ['spotify', 'Spotify'], ['vk', 'VK Music'],
+  ];
 
 function greeting() {
   const hour = new Date().getHours();
@@ -23,7 +29,8 @@ function greeting() {
 export function Home() {
   const home = usePart('home');
   const settings = usePart('settings');
-  const signedIn = settings?.youtube.status === 'connected' || settings?.soundcloud.status === 'connected';
+  const signedIn = settings?.youtube.status === 'connected' || settings?.soundcloud.status === 'connected' ||
+    settings?.spotifyConnected || !!settings?.vk?.connected || !!settings?.bandcamp?.username;
   return (
     <>
       <h1 className="page-title">{greeting()}</h1>

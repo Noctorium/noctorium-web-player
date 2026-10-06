@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { BookmarkCheck, BookmarkPlus, Download, ExternalLink, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from 'lucide-react';
 import { send, usePart } from '../live';
 import { go, useRoute } from '../router';
-import { bigArtwork, canKeep, playlistKind, plural, providerName, totalTime } from '../util';
+import { bigArtwork, canKeep, keepsFiles, playlistKind, plural, providerName, totalTime } from '../util';
 import { Badge, Confirm, Cover, Dialog, Empty, Prompt, Spinner } from '../components/Common';
 import { LocalCard, PlaylistCard } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
@@ -15,8 +15,12 @@ export function Library() {
   const library = usePart('library');
   const settings = usePart('settings');
   useEffect(() => { send('refreshLibrary'); }, []);
-  // Bandcamp's are a fan's collection, a playlist for each release in it, and their wishlist.
-  const groups: [Provider, string][] = [['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube'], ['SOUNDCLOUD', 'SoundCloud'], ['SPOTIFY', 'Spotify'], ['BANDCAMP', 'Bandcamp']];
+  // Bandcamp's are a fan's collection, a playlist for each release in it, and their wishlist; VK's, My music and
+  // then the account's playlists.
+  const groups: [Provider, string][] = [
+    ['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube'], ['SOUNDCLOUD', 'SoundCloud'], ['SPOTIFY', 'Spotify'],
+    ['BANDCAMP', 'Bandcamp'], ['VK', 'VK Music'],
+  ];
   const fan = settings?.bandcamp?.username;
   return (
     <>
@@ -121,13 +125,13 @@ export function PlaylistPage() {
       <div className="toolbar">
         <button className="play-fab" aria-label="Play" onClick={() => send('playPlaylist', { key: playlist.key })}><Play size={24} fill="currentColor" /></button>
         <button className="button" onClick={() => send('playPlaylist', { key: playlist.key, shuffle: true })}><Shuffle size={16} /> Shuffle</button>
-        {/* Bandcamp's songs are for listening here, and bought on its page; see canKeep. */}
-        {!HOSTED && playlist.provider !== 'BANDCAMP' && (
+        {/* Bandcamp's and VK's songs are for listening here, and their pages are where they live; see keepsFiles. */}
+        {!HOSTED && keepsFiles(playlist.provider) && (
           <button className="button" disabled={!tracks.some(canKeep)} onClick={() => send('download', { tracks: tracks.filter(canKeep) })}><Download size={16} /> Download</button>
         )}
-        {playlist.provider === 'BANDCAMP' && playlist.sourceUrl && (
+        {!keepsFiles(playlist.provider) && playlist.sourceUrl && (
           <button className="button" onClick={() => window.open(playlist.sourceUrl, '_blank', 'noopener')}>
-            <ExternalLink size={16} /> {kind === 'Album' || kind === 'Single' ? 'Buy it on Bandcamp' : 'On Bandcamp'}
+            <ExternalLink size={16} /> {playlist.provider === 'BANDCAMP' && (kind === 'Album' || kind === 'Single') ? 'Buy it on Bandcamp' : `On ${providerName[playlist.provider]}`}
           </button>
         )}
         {HOSTED && (library?.playlists.some((p) => p.key === playlist.key)

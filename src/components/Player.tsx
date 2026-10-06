@@ -20,7 +20,8 @@ export function usePosition(playback?: Playback): number {
     return () => clearInterval(timer);
   }, [playback?.status]);
   if (!playback) return 0;
-  if (audio.active && playback.output === 'browser' && Number.isFinite(audio.element.currentTime) && playback.status !== 'resolving') {
+  // Spotify's own app plays a Spotify song on Spotify, so this tab's audio says nothing about where it is.
+  if (audio.active && playback.output === 'browser' && !playback.onSpotify && Number.isFinite(audio.element.currentTime) && playback.status !== 'resolving') {
     return audio.element.currentTime * 1000;
   }
   if (playback.status !== 'playing') return playback.positionMs;
@@ -167,7 +168,8 @@ export function PlayerBar() {
             <div className="words" onClick={() => (nowPlaying ? closeNowPlaying() : openNowPlaying())}>
               <div className="title ellipsis">{track.title}</div>
               <div className="artist ellipsis">
-                {playback?.status === 'resolving' ? 'Finding the audio…' : playback?.status === 'error' ? (playback.error ?? 'Could not play this') : track.artistLine}
+                {playback?.status === 'resolving' ? 'Finding the audio…' : playback?.status === 'error' ? (playback.error ?? 'Could not play this')
+                  : playback?.onSpotify ? `${track.artistLine} · on Spotify` : track.artistLine}
               </div>
             </div>
             <span className="hide-small"><LikeButton /></span>
@@ -181,8 +183,9 @@ export function PlayerBar() {
         <SeekBar playback={playback} />
       </div>
       <div className="right">
-        {!HOSTED && playback?.output === 'browser' && audio.active && <span className="output-chip hide-small"><Smartphone size={13} /> This browser</span>}
-        {!HOSTED && playback?.output === 'computer' && <span className="output-chip hide-small"><Monitor size={13} /> The computer</span>}
+        {playback?.onSpotify && <span className="output-chip hide-small"><MonitorSpeaker size={13} /> On Spotify</span>}
+        {!HOSTED && !playback?.onSpotify && playback?.output === 'browser' && audio.active && <span className="output-chip hide-small"><Smartphone size={13} /> This browser</span>}
+        {!HOSTED && !playback?.onSpotify && playback?.output === 'computer' && <span className="output-chip hide-small"><Monitor size={13} /> The computer</span>}
         {sleeping && <span className="output-chip"><Moon size={13} /> {sleeping.kind === 'endOfTrack' ? 'End of track' : formatTime(sleeping.remainingMs)}</span>}
         <button className="round-button" aria-label="Sleep timer" onClick={(e) => openMenu(e, <SleepMenu />)}><Moon size={18} /></button>
         <button className="round-button" aria-label="Lyrics" onClick={() => openNowPlaying('lyrics')}><Mic2 size={18} /></button>

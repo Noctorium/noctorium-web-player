@@ -40,9 +40,12 @@ export function TrackCard({ track, list, origin }: { track: Track; list: Track[]
 
 export function PlaylistCard({ playlist }: { playlist: Playlist }) {
   const open = () => { send('openPlaylist', { key: playlist.key }); go(`/playlist/${encodeURIComponent(playlist.key)}`); };
-  // A Bandcamp artist opens as everything they put out: round like an artist, and saying so, with where they are.
+  // An artist opens as what they put out: round like an artist, and saying so -- with where they are, on
+  // Bandcamp; Spotify gives "Artist" as the owner itself.
   const artist = isArtist(playlist);
-  const detail = artist ? ['Artist', playlist.ownerName] : [playlist.ownerName, playlist.trackCount != null ? plural(playlist.trackCount, 'track') : null];
+  const detail = artist
+    ? ['Artist', playlist.ownerName !== 'Artist' ? playlist.ownerName : null]
+    : [playlist.ownerName, playlist.trackCount != null ? plural(playlist.trackCount, 'track') : null];
   return (
     <div className="card" role="button" tabIndex={0} onClick={open} onKeyDown={(e) => { if (e.key === 'Enter') open(); }}>
       <Cover url={bigArtwork(playlist.artworkUrl, 352)} round={artist}>
