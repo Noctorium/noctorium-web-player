@@ -252,6 +252,11 @@ export interface Settings {
   autoplaySources?: Choice[];
   avoidRecent?: boolean;
   keepQueue?: boolean;
+  /**
+   * Whether the taskbar the 98 and XP themes draw shows the clock in its tray. A Noctorium on the computer from
+   * before the switch does not send it, and its clock shows.
+   */
+  taskbarClock?: boolean;
 }
 
 export interface Download { track: Track; bytes: number; at: number }

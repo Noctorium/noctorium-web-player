@@ -77,6 +77,8 @@
 :is(.skin-98, .skin-xp) .np-close svg { display: none; }
 :is(.skin-98, .skin-xp) .scrim { background: transparent; animation: none; }
 :is(.skin-98, .skin-xp) .switch::before { content: ''; position: absolute; inset: -9px; }
+/* The taskbar menu's place for a tick, kept when there is none, so its words line up. */
+:is(.skin-98, .skin-xp) .menu .menu-gap { width: 16px; height: 16px; flex: none; }
 :is(.skin-98, .skin-xp) .lyrics p { transform: none !important; }
 
 /* ================================================================== Windows 98 */

@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent, type ReactElement } from 'react';
-import { Disc3, Download, Home, Library, ListMusic, Mic2, MonitorSpeaker, Music2, Search, Settings } from 'lucide-react';
+import { Check, Disc3, Download, Home, Library, ListMusic, Mic2, MonitorSpeaker, Music2, Search, Settings } from 'lucide-react';
 import { send, usePart } from '../live';
 import { HOSTED } from '../mode';
 import { go } from '../router';
@@ -10,8 +10,8 @@ import { closeNowPlaying, openMenu, openNowPlaying, useUi } from '../ui';
  * The two themes that are more than colours. Base's Windows 98 and XP themes carry a skin -- 98's bevelled grey
  * slabs, navy title bars and teal desktop; XP's rounded blue Luna and its green start button -- which every player
  * draws in its own way. Here the page is dressed by skins.css, from a class on the root, and these are the few
- * pieces a stylesheet cannot add by itself: the window's title bar, the start button and its menu, and the clock
- * in the tray. Only Noctorium's own name and mark are used, never Microsoft's.
+ * pieces a stylesheet cannot add by itself: the window's title bar, the start button and its menu, the clock in the
+ * tray, and the taskbar's own menu. Only Noctorium's own name and mark are used, never Microsoft's.
  */
 
 export type Skin = '98' | 'xp';
@@ -89,12 +89,53 @@ export function StartButton() {
   );
 }
 
-/** The clock in the tray, to the minute, in the listener's own way of writing the time. */
+/**
+ * Whether the taskbar's tray shows the clock: core's taskbarClock, on unless switched off -- and on for a Noctorium
+ * on the computer from before the switch, which does not send it.
+ */
+export function useTaskbarClock(): boolean {
+  return usePart('settings')?.taskbarClock !== false;
+}
+
+/** The clock in the tray, while it is wanted there. */
 export function TrayClock() {
+  return useTaskbarClock() ? <Clock /> : null;
+}
+
+/** The time to the minute, in the listener's own way of writing it. */
+function Clock() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 10_000);
     return () => clearInterval(timer);
   }, []);
   return <time className="tray-clock" dateTime={now.toISOString()}>{now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time>;
+}
+
+/** The taskbar's own menu, as Windows had one: the clock, ticked while it shows, and the settings it is kept in. */
+function TaskbarMenu() {
+  const clock = useTaskbarClock();
+  return (
+    <>
+      <button aria-pressed={clock} onClick={() => send('taskbarClock', { on: !clock })}>
+        {clock ? <Check size={16} /> : <span className="menu-gap" />} Show the clock
+      </button>
+      <hr />
+      <button onClick={() => { closeNowPlaying(); go('/settings'); }}><Settings size={16} /> Properties</button>
+    </>
+  );
+}
+
+/**
+ * Right-clicking the taskbar -- the player bar's bottom row, where a skin draws one -- opens its menu at the pointer,
+ * rising from it as a menu at the foot of the screen does. Anywhere else, the control strip above it included, the
+ * browser's own menu opens as usual.
+ */
+export function taskbarMenu(e: MouseEvent<HTMLElement>) {
+  const bar = e.currentTarget.getBoundingClientRect();
+  const taskbar = parseFloat(getComputedStyle(e.currentTarget).getPropertyValue('--taskbar')) || 30;
+  // A phone has no taskbar: its player bar is the ordinary one.
+  if (!window.matchMedia('(min-width: 861px)').matches || e.clientY < bar.bottom - taskbar) return;
+  e.preventDefault();
+  openMenu({ clientX: e.clientX, clientY: e.clientY + 44 }, <TaskbarMenu />);
 }

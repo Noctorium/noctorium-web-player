@@ -34,6 +34,7 @@ interface Prefs {
   progressBarStyle: string;
   timeDisplay: string;
   animations: boolean;
+  taskbarClock: boolean;
   lyricsProvider?: string;
   autoplay: boolean;
   volume: number;
@@ -44,7 +45,7 @@ interface Prefs {
 
 const DEFAULTS: Prefs = {
   theme: 'NOCTORIUM_NIGHT', accent: 'THEME', progressBarStyle: 'MINIMAL', timeDisplay: 'TOTAL', animations: true,
-  autoplay: true, volume: 0.72, muted: false,
+  taskbarClock: true, autoplay: true, volume: 0.72, muted: false,
 };
 
 const LIKED = 'liked';
@@ -137,7 +138,7 @@ export class HostedEngine {
     const settings: Settings = {
       theme: p.theme, themes, colours: colours(p.theme, p.accent, this.accentFromArtwork), accent: p.accent, accents: Object.keys(accents),
       progressBarStyle: p.progressBarStyle, timeDisplay: p.timeDisplay, skipNonMusic: false, youtubeHistory: false,
-      lyricsProvider: p.lyricsProvider, discord: false, animations: p.animations,
+      lyricsProvider: p.lyricsProvider, discord: false, animations: p.animations, taskbarClock: p.taskbarClock,
       youtube: { status: 'disconnected' }, soundcloud: { status: 'disconnected' }, youtubeChannel: '', soundCloudUsername: '',
       spotifyConnected: false, spotifyConnecting: false, spotifyAccount: '', lastfm: { status: 'disconnected' },
       listenbrainz: this.listenbrainz, scrobbles: this.scrobbles, connectEnabled: false, desktopYouTube: false, desktopSoundCloud: false,
@@ -333,6 +334,7 @@ export class HostedEngine {
         return this.emitSettings();
       case 'timeDisplay': this.prefs.timeDisplay = String(c.name); this.savePrefs(); return this.emitSettings();
       case 'animations': this.prefs.animations = !!c.on; this.savePrefs(); return this.emitSettings();
+      case 'taskbarClock': this.prefs.taskbarClock = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'autoplay': this.prefs.autoplay = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'listenbrainz': return this.connectListenBrainz(String(c.token ?? ''));
       case 'signOut':

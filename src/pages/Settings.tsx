@@ -8,6 +8,7 @@ import type { Account, Bandcamp, Provider, Service, Settings, Spotify, Vk } from
 import { HOSTED } from '../mode';
 import { HostedSettings } from '../hosted/Settings';
 import { seekBarStyles } from '../seekbar';
+import { skinOf } from '../components/Skin';
 
 const accents: Record<string, [string, string | null]> = {
   THEME: ['Theme’s own', null], VIOLET: ['Violet', '#b47cff'], MAGENTA: ['Magenta', '#ff6ec7'], EMBER: ['Ember', '#ff9757'],
@@ -73,7 +74,10 @@ export function Row({ title, detail, children }: { title: string; detail?: React
   );
 }
 
-/** The theme, the accent and the seek bar: the same in every Noctorium, hosted or not. */
+/**
+ * The theme, the accent and the seek bar: the same in every Noctorium, hosted or not. Under a Windows theme, whose
+ * skin draws a taskbar, whether its tray shows the clock.
+ */
 export function LookSettings({ settings }: { settings: Settings }) {
   return (
       <section>
@@ -87,6 +91,11 @@ export function LookSettings({ settings }: { settings: Settings }) {
             </button>
           ))}
         </div>
+        {skinOf(settings.theme) && (
+          <Row title="Show the clock" detail="The time at the right end of the taskbar, in its tray. Off for a screen whose own taskbar already shows it.">
+            <Switch on={settings.taskbarClock !== false} change={(on) => send('taskbarClock', { on })} label="Show the clock" />
+          </Row>
+        )}
         <h2>Accent</h2>
         <div className="chips">
           {settings.accents.map((a) => (
