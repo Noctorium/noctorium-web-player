@@ -1,12 +1,14 @@
-import type { Theme } from '../types';
+import type { Theme, Windows98 } from '../types';
+import { NOCTORIUM_98, STANDARD_98 } from '../windows98';
 
 /*
  * Every Noctorium theme, as Base's Themes.kt has them, for the hosted player, which has no Noctorium to ask.
- * The same six colours and a switch; a change there is a change here.
+ * The same six colours and a switch, and for the Windows ones their skin -- with 98's scheme for the two drawn as
+ * 98; a change there is a change here.
  */
 
-const t = (name: string, title: string, family: string, background: string, panel: string, card: string, text: string, subtext: string, accent: string, light = false): Theme =>
-  ({ name, title, family, background, panel, card, text, subtext, accent, light });
+const t = (name: string, title: string, family: string, background: string, panel: string, card: string, text: string, subtext: string, accent: string, light = false, skin?: string, windows98?: Windows98): Theme =>
+  ({ name, title, family, background, panel, card, text, subtext, accent, light, skin, windows98 });
 
 export const themes: Theme[] = [
   t('NOCTORIUM_NIGHT', 'Night', 'Noctorium', '#000000', '#07050A', '#15101C', '#F8F4FF', '#CFC5DA', '#B47CFF'),
@@ -26,8 +28,9 @@ export const themes: Theme[] = [
   t('TOKYO_NIGHT', 'Tokyo Night', 'Tokyo Night', '#1A1B26', '#16161E', '#24283B', '#C0CAF5', '#A9B1D6', '#7AA2F7'),
   t('SOLARIZED_DARK', 'Solarized Dark', 'Solarized', '#002B36', '#073642', '#0D3D49', '#EEE8D5', '#93A1A1', '#268BD2'),
   t('SOLARIZED_LIGHT', 'Solarized Light', 'Solarized', '#FDF6E3', '#EEE8D5', '#E7E0C9', '#073642', '#586E75', '#268BD2', true),
-  t('WINDOWS_98', '98', 'Windows', '#C0C0C0', '#B4B4B4', '#FFFFFF', '#000000', '#3A3A3A', '#000080', true),
-  t('WINDOWS_XP', 'XP', 'Windows', '#ECE9D8', '#D6DFF7', '#FFFFFF', '#000000', '#4D4D4D', '#245EDC', true),
+  t('WINDOWS_98', '98', 'Windows', '#C0C0C0', '#B4B4B4', '#FFFFFF', '#000000', '#3A3A3A', '#000080', true, 'WINDOWS_98', STANDARD_98),
+  t('WINDOWS_98_NOCTORIUM', 'Noctorium 98', 'Windows', '#231B2E', '#1B1524', '#0B0810', '#F8F4FF', '#CFC5DA', '#B47CFF', false, 'WINDOWS_98', NOCTORIUM_98),
+  t('WINDOWS_XP', 'XP', 'Windows', '#ECE9D8', '#D6DFF7', '#FFFFFF', '#000000', '#4D4D4D', '#245EDC', true, 'WINDOWS_XP'),
 ];
 
 /** Base's AccentPreset: a colour, or null for the theme's own and for the artwork's. */
