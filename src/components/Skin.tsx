@@ -5,23 +5,28 @@ import { HOSTED } from '../mode';
 import { go } from '../router';
 import { cls } from '../util';
 import { closeNowPlaying, openMenu, openNowPlaying, useUi } from '../ui';
+import type { Settings as SettingsPart } from '../types';
 
 /*
- * The two themes that are more than colours. Base's Windows 98 and XP themes carry a skin -- 98's bevelled grey
- * slabs, navy title bars and teal desktop; XP's rounded blue Luna and its green start button -- which every player
- * draws in its own way. Here the page is dressed by skins.css, from a class on the root, and these are the few
- * pieces a stylesheet cannot add by itself: the window's title bar, the start button and its menu, the clock in the
- * tray, and the taskbar's own menu. Only Noctorium's own name and mark are used, never Microsoft's.
+ * The themes that are more than colours. Base's Windows themes carry a skin -- 98's bevelled slabs, gradient title
+ * bars and desktop, in 98's grey or in Noctorium 98's night; XP's rounded blue Luna and its green start button --
+ * which every player draws in its own way. Here the page is dressed by skins.css, from a class on the root, and these
+ * are the few pieces a stylesheet cannot add by itself: the window's title bar, the start button and its menu, the
+ * clock in the tray, and the taskbar's own menu. Only Noctorium's own name and mark are used, never Microsoft's.
  */
 
 export type Skin = '98' | 'xp';
 
-export function skinOf(theme?: string): Skin | undefined {
-  return theme === 'WINDOWS_98' ? '98' : theme === 'WINDOWS_XP' ? 'xp' : undefined;
+/** The theme's skin, as it is sent with its colours, or else as Base gives it to the theme of that name. */
+export function skinOf(settings?: Pick<SettingsPart, 'theme' | 'colours'>): Skin | undefined {
+  const theme = settings?.theme;
+  const skin = settings?.colours?.skin
+    ?? (theme === 'WINDOWS_98' || theme === 'WINDOWS_98_NOCTORIUM' ? 'WINDOWS_98' : theme === 'WINDOWS_XP' ? 'WINDOWS_XP' : undefined);
+  return skin === 'WINDOWS_98' ? '98' : skin === 'WINDOWS_XP' ? 'xp' : undefined;
 }
 
 export function useSkin(): Skin | undefined {
-  return skinOf(usePart('settings')?.theme);
+  return skinOf(usePart('settings'));
 }
 
 /** The bar across the top of a window: what plays, as "Song - Noctorium", and the three buttons, drawn only. */

@@ -91,7 +91,7 @@ export function LookSettings({ settings }: { settings: Settings }) {
             </button>
           ))}
         </div>
-        {skinOf(settings.theme) && (
+        {skinOf(settings) && (
           <Row title="Show the clock" detail="The time at the right end of the taskbar, in its tray. Off for a screen whose own taskbar already shows it.">
             <Switch on={settings.taskbarClock !== false} change={(on) => send('taskbarClock', { on })} label="Show the clock" />
           </Row>

@@ -200,6 +200,36 @@ export interface Theme {
   subtext: string;
   accent: string;
   light: boolean;
+  /** How it is drawn beyond its colours, by Base's ThemeSkin: STANDARD, WINDOWS_98 or WINDOWS_XP. */
+  skin?: string;
+  /** With the 98 skin, the scheme it is drawn in: 98's own grey, or Noctorium 98's night. */
+  windows98?: Windows98;
+}
+
+/**
+ * Base's Windows98Palette: every colour the 98 skin draws its bevels, title bars, lists and desktop in, as 98 drew
+ * them from the scheme chosen in its Display Properties.
+ */
+export interface Windows98 {
+  face: string;
+  highlight: string;
+  light: string;
+  shadow: string;
+  darkShadow: string;
+  window: string;
+  text: string;
+  greyText: string;
+  selection: string;
+  selectionText: string;
+  title: string;
+  titleEnd: string;
+  inactiveTitle: string;
+  inactiveTitleEnd: string;
+  titleText: string;
+  tooltip: string;
+  desktop: string;
+  /** A dark face, on which whatever 98 took to be pale has to be turned round. */
+  dark: boolean;
 }
 
 export interface Settings {

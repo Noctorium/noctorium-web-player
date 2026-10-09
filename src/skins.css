@@ -63,8 +63,8 @@
 :is(.skin-98, .skin-xp) .track .thumb { width: 32px; height: 32px; border-radius: 0; }
 :is(.skin-98, .skin-xp) .track .thumb button { border-radius: 0; }
 :is(.skin-98, .skin-xp) .track .title { font-weight: normal; font-size: 11px; }
-:is(.skin-98, .skin-xp) .track .artist, :is(.skin-98, .skin-xp) .track .album, :is(.skin-98, .skin-xp) .track .duration, :is(.skin-98, .skin-xp) .track .number { font-size: 11px; color: #000; }
-:is(.skin-98, .skin-xp) .track:hover *, :is(.skin-98, .skin-xp) .track:focus-within * { color: #fff; }
+:is(.skin-98, .skin-xp) .track .artist, :is(.skin-98, .skin-xp) .track .album, :is(.skin-98, .skin-xp) .track .duration, :is(.skin-98, .skin-xp) .track .number { font-size: 11px; color: var(--w-text, #000); }
+:is(.skin-98, .skin-xp) .track:hover *, :is(.skin-98, .skin-xp) .track:focus-within * { color: var(--w-selection-text, #fff); }
 :is(.skin-98, .skin-xp) .track.playing .title { color: var(--accent); font-weight: bold; }
 :is(.skin-98, .skin-xp) .track .actions .round-button { width: 22px; height: 20px; }
 :is(.skin-98, .skin-xp) .track .round-button.on { background: none; box-shadow: none; }
@@ -84,21 +84,48 @@
 /* ================================================================== Windows 98 */
 
 :root.skin-98 {
+  /*
+   * The scheme: Base's Windows98Palette, role by role. These are 98's own; App sets the scheme in force over them
+   * (windows98.ts), with the pictures that carry its colours -- --w-dither, --w-selection-dither, --w-check,
+   * --w-close, --w-minimise, --w-maximise, the four --w-arrow-s, --w-select, --w-radio, --w-radio-on and
+   * --w-hourglass -- so Windows 98 is its grey and Noctorium 98 the same at night.
+   */
   --w-face: #c0c0c0;
-  --w-raised: inset -1px -1px #000, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
-  --w-pressed: inset -1px -1px #fff, inset 1px 1px #000, inset -2px -2px #dfdfdf, inset 2px 2px #808080;
-  --w-sunken: inset -1px -1px #fff, inset 1px 1px #808080, inset -2px -2px #dfdfdf, inset 2px 2px #000;
+  --w-highlight: #fff;
+  --w-light: #dfdfdf;
+  --w-shadow: #808080;
+  --w-dark-shadow: #000;
+  --w-window: #fff;
+  --w-text: #000;
+  --w-grey-text: #808080;
+  --w-selection: #000080;
+  --w-selection-text: #fff;
+  --w-title-from: #000080;
+  --w-title-to: #1084d0;
+  --w-inactive-from: #808080;
+  --w-inactive-to: #b5b5b5;
+  --w-title-text: #fff;
+  --w-tooltip: #ffffe1;
+  --w-desktop: #008080;
+  /* What the scheme has no role for: a link, the writing that says all is well or not, and the quieter writing. */
+  --w-link: #0000ff;
+  --w-good: #008000;
+  --w-bad: #800000;
+  --w-quiet: color-mix(in srgb, var(--w-text), var(--w-grey-text));
+  /* Writing that cannot be used is grey, with the highlight a pixel below it and to the right, as if cut into the face. */
+  --w-emboss: var(--w-highlight);
+  /* The dotted rectangle round the item in use, on the selection: 98 inverted the navy into this pale yellow. */
+  --w-selection-focus: #ffff80;
+  --w-raised: inset -1px -1px var(--w-dark-shadow), inset 1px 1px var(--w-highlight), inset -2px -2px var(--w-shadow), inset 2px 2px var(--w-light);
+  --w-pressed: inset -1px -1px var(--w-highlight), inset 1px 1px var(--w-dark-shadow), inset -2px -2px var(--w-light), inset 2px 2px var(--w-shadow);
+  --w-sunken: inset -1px -1px var(--w-highlight), inset 1px 1px var(--w-shadow), inset -2px -2px var(--w-light), inset 2px 2px var(--w-dark-shadow);
   /* A window's frame: LIGHT outside and HIGHLIGHT within along the top and the left. */
-  --w-frame: inset -1px -1px #000, inset 1px 1px #dfdfdf, inset -2px -2px #808080, inset 2px 2px #fff;
-  /* The default button: a black line round the raised edge. */
-  --w-default: inset 0 0 0 1px #000, inset -2px -2px #000, inset 2px 2px #fff, inset -3px -3px #808080, inset 3px 3px #dfdfdf;
-  --w-thin-raised: inset -1px -1px #808080, inset 1px 1px #fff;
-  --w-thin-sunken: inset -1px -1px #fff, inset 1px 1px #808080;
-  --w-title: linear-gradient(to right, #000080, #1084d0);
-  /* Half the pixels white: a latched button, a scroll bar's track, the task that is in front. */
-  --w-dither: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><path fill='%23c0c0c0' d='M0 0h1v1H0zM1 1h1v1H1z'/><path fill='%23fff' d='M1 0h1v1H1zM0 1h1v1H0z'/></svg>");
-  --w-check: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='7'><path d='M0 2h1v3H0zM1 3h1v3H1zM2 4h1v3H2zM3 3h1v3H3zM4 2h1v3H4zM5 1h1v3H5zM6 0h1v3H6z'/></svg>");
-  --w-close: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='7'><path d='M0 0h2v1H0zM6 0h2v1H6zM1 1h2v1H1zM5 1h2v1H5zM2 2h4v1H2zM3 3h2v1H3zM2 4h4v1H2zM1 5h2v1H1zM5 5h2v1H5zM0 6h2v1H0zM6 6h2v1H6z'/></svg>");
+  --w-frame: inset -1px -1px var(--w-dark-shadow), inset 1px 1px var(--w-light), inset -2px -2px var(--w-shadow), inset 2px 2px var(--w-highlight);
+  /* The default button: a line of the darkest shadow round the raised edge. */
+  --w-default: inset 0 0 0 1px var(--w-dark-shadow), inset -2px -2px var(--w-dark-shadow), inset 2px 2px var(--w-highlight), inset -3px -3px var(--w-shadow), inset 3px 3px var(--w-light);
+  --w-thin-raised: inset -1px -1px var(--w-shadow), inset 1px 1px var(--w-highlight);
+  --w-thin-sunken: inset -1px -1px var(--w-highlight), inset 1px 1px var(--w-shadow);
+  --w-title: linear-gradient(to right, var(--w-title-from), var(--w-title-to));
   --w-disc: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='7' fill='%23c0c0c0' stroke='%23808080'/><path fill='%23fff' d='M4 5a5 5 0 0 1 4-2.5V5a3 3 0 0 0-2 1z'/><path fill='%23e0e0ff' d='M12 11a5 5 0 0 1-4 2.5V11a3 3 0 0 0 2-1z'/><circle cx='8' cy='8' r='2' fill='%23fff' stroke='%23000'/></svg>");
   --titlebar: 22px;
   --taskbar: 28px;
@@ -108,33 +135,44 @@
   font-size: 11px;
 }
 
-.skin-98 body { background: var(--w-face); color: #000; }
-.skin-98 ::selection { background: #000080; color: #fff; }
-.skin-98 :focus-visible { outline: 1px dotted #000; outline-offset: -4px; border-radius: 0; }
+/*
+ * A dark scheme: what 98 wrote in green and maroon, and its links' blue, would be lost on its face, so they are lit;
+ * and its highlight is as dark as its grey writing, the two blurring together, so that writing sits on the shadow.
+ */
+:root.skin-98.w98-dark {
+  --w-link: var(--accent);
+  --w-good: var(--good);
+  --w-bad: var(--bad);
+  --w-emboss: var(--w-dark-shadow);
+}
+
+.skin-98 body { background: var(--w-face); color: var(--w-text); }
+.skin-98 ::selection { background: var(--w-selection); color: var(--w-selection-text); }
+.skin-98 :focus-visible { outline: 1px dotted var(--w-text); outline-offset: -4px; border-radius: 0; }
 .skin-98 input:focus-visible, .skin-98 textarea:focus-visible, .skin-98 select:focus-visible { outline: 0; }
-.skin-98 a { color: #0000ff; }
+.skin-98 a { color: var(--w-link); }
 
 /* ------------------------------------------------ scroll bars: square, with arrows, on a chequered track */
 
 .skin-98 * { scrollbar-width: auto; scrollbar-color: auto; }
 @supports not selector(::-webkit-scrollbar) {
-  .skin-98 * { scrollbar-color: #c0c0c0 #e0e0e0; }
+  .skin-98 * { scrollbar-color: var(--w-face) color-mix(in srgb, var(--w-face), var(--w-highlight)); }
 }
 .skin-98 ::-webkit-scrollbar { width: 16px; height: 16px; }
 .skin-98 ::-webkit-scrollbar-track { background: var(--w-dither); }
 .skin-98 ::-webkit-scrollbar-thumb { background: var(--w-face); box-shadow: var(--w-frame); }
 .skin-98 ::-webkit-scrollbar-corner { background: var(--w-face); }
 .skin-98 ::-webkit-scrollbar-button:single-button { display: block; width: 16px; height: 16px; background: var(--w-face) no-repeat center; box-shadow: var(--w-frame); }
-.skin-98 ::-webkit-scrollbar-button:single-button:active { box-shadow: inset 0 0 0 1px #808080; background-position: calc(50% + 1px) calc(50% + 1px); }
-.skin-98 ::-webkit-scrollbar-button:single-button:vertical:decrement { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='4'><path d='M3 0h1v1H3zM2 1h3v1H2zM1 2h5v1H1zM0 3h7v1H0z'/></svg>"); }
-.skin-98 ::-webkit-scrollbar-button:single-button:vertical:increment { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='7' height='4'><path d='M0 0h7v1H0zM1 1h5v1H1zM2 2h3v1H2zM3 3h1v1H3z'/></svg>"); }
-.skin-98 ::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='7'><path d='M3 0h1v7H3zM2 1h1v5H2zM1 2h1v3H1zM0 3h1v1H0z'/></svg>"); }
-.skin-98 ::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='7'><path d='M0 0h1v7H0zM1 1h1v5H1zM2 2h1v3H2zM3 3h1v1H3z'/></svg>"); }
+.skin-98 ::-webkit-scrollbar-button:single-button:active { box-shadow: inset 0 0 0 1px var(--w-shadow); background-position: calc(50% + 1px) calc(50% + 1px); }
+.skin-98 ::-webkit-scrollbar-button:single-button:vertical:decrement { background-image: var(--w-arrow-up); }
+.skin-98 ::-webkit-scrollbar-button:single-button:vertical:increment { background-image: var(--w-arrow-down); }
+.skin-98 ::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: var(--w-arrow-left); }
+.skin-98 ::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: var(--w-arrow-right); }
 
 /* ------------------------------------------------ the title bar and its three buttons */
 
 @media (min-width: 861px) {
-  .skin-98 .window-title { gap: 3px; height: 18px; margin: 2px; padding: 0 2px 0 3px; background: var(--w-title); color: #fff; font-weight: bold; }
+  .skin-98 .window-title { gap: 3px; height: 18px; margin: 2px; padding: 0 2px 0 3px; background: var(--w-title); color: var(--w-title-text); font-weight: bold; }
 }
 .skin-98 .captions i, .skin-98 .caption-close {
   width: 16px;
@@ -142,14 +180,14 @@
   background: var(--w-face) no-repeat;
   box-shadow: var(--w-frame);
 }
-.skin-98 .captions .minimise { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='6' height='2'><path d='M0 0h6v2H0z'/></svg>"); background-position: 4px 9px; }
-.skin-98 .captions .maximise { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9'><path fill-rule='evenodd' d='M0 0h9v9H0zM1 2v6h7V2z'/></svg>"); background-position: 3px 2px; }
+.skin-98 .captions .minimise { background-image: var(--w-minimise); background-position: 4px 9px; }
+.skin-98 .captions .maximise { background-image: var(--w-maximise); background-position: 3px 2px; }
 .skin-98 .captions .close, .skin-98 .caption-close { margin-left: 2px; background-image: var(--w-close); background-position: 4px 3px; }
 
 /* ------------------------------------------------ the sidebar: a folder tree in a sunken white pane */
 
 .skin-98 .sidebar {
-  background: #fff;
+  background: var(--w-window);
   border: 0;
   margin: 0 0 2px 2px;
   padding: 6px 4px 6px 6px;
@@ -166,7 +204,7 @@
   margin-left: 21px;
   padding: 1px 3px 1px 2px;
   border-radius: 0;
-  color: #000;
+  color: var(--w-text);
   font-weight: normal;
   font-size: 11px;
   transition: none;
@@ -174,9 +212,9 @@
   max-width: calc(100% - 21px);
 }
 .skin-98 .nav-item svg { width: 16px; height: 16px; flex: none; }
-.skin-98 .nav-item:hover, .skin-98 .sidebar-list:hover { background: none; color: #000; }
-.skin-98 .nav-item.active, .skin-98 .sidebar-list.active { background: #000080; color: #fff; outline: 1px dotted #ffff80; outline-offset: -1px; }
-.skin-98 .nav-item.active svg { color: #fff; }
+.skin-98 .nav-item:hover, .skin-98 .sidebar-list:hover { background: none; color: var(--w-text); }
+.skin-98 .nav-item.active, .skin-98 .sidebar-list.active { background: var(--w-selection); color: var(--w-selection-text); outline: 1px dotted var(--w-selection-focus); outline-offset: -1px; }
+.skin-98 .nav-item.active svg { color: var(--w-selection-text); }
 /* The tree's dotted lines: down the side of each level, and across to every item on it. */
 .skin-98 .nav-item::before, .skin-98 .sidebar-list::before {
   content: '';
@@ -184,7 +222,7 @@
   left: -11px;
   top: -1px;
   bottom: 0;
-  border-left: 1px dotted #808080;
+  border-left: 1px dotted var(--w-grey-text);
 }
 .skin-98 .nav-item::after, .skin-98 .sidebar-list::after {
   content: '';
@@ -192,7 +230,7 @@
   left: -11px;
   top: 50%;
   width: 9px;
-  border-top: 1px dotted #808080;
+  border-top: 1px dotted var(--w-grey-text);
 }
 .skin-98 .nav-item:has(+ :not(.nav-item))::before, .skin-98 .sidebar-list:last-child::before { bottom: 50%; }
 .skin-98 .sidebar-heading {
@@ -205,7 +243,7 @@
   font-weight: normal;
   letter-spacing: 0;
   text-transform: none;
-  color: #000;
+  color: var(--w-text);
 }
 .skin-98 .sidebar-heading::before {
   content: '';
@@ -220,12 +258,12 @@
 .skin-98 .sidebar-get {
   margin: 8px 0 0;
   border-radius: 0;
-  background: #ffffe1;
-  border: 1px solid #000;
-  color: #000;
+  background: var(--w-tooltip);
+  border: 1px solid var(--w-text);
+  color: var(--w-text);
   font-size: 11px;
 }
-.skin-98 .sidebar-get strong { color: #000; font-size: 11px; }
+.skin-98 .sidebar-get strong { color: var(--w-text); font-size: 11px; }
 .skin-98 .sidebar-get:hover { filter: none; }
 
 /* ------------------------------------------------ the toolbar: back and forward, and a search field */
@@ -248,13 +286,13 @@
   gap: 4px;
   border: 0;
   border-radius: 0;
-  background: #fff;
+  background: var(--w-window);
   box-shadow: var(--w-sunken);
 }
 .skin-98 .searchbox::before { content: 'Search'; position: absolute; left: -46px; top: 4px; }
-.skin-98 .searchbox svg { width: 14px; height: 14px; color: #000; }
-.skin-98 .searchbox input { font-size: 11px; color: #000; }
-.skin-98 .connection { color: #000; font-size: 11px; }
+.skin-98 .searchbox svg { width: 14px; height: 14px; color: var(--w-text); }
+.skin-98 .searchbox input { font-size: 11px; color: var(--w-text); }
+.skin-98 .connection { color: var(--w-text); font-size: 11px; }
 
 /* ------------------------------------------------ buttons */
 
@@ -262,22 +300,22 @@
   width: 24px;
   height: 22px;
   border-radius: 0;
-  color: #000;
+  color: var(--w-text);
   transition: none;
 }
 .skin-98 .round-button svg { width: 16px; height: 16px; }
-.skin-98 .round-button:hover { background: none; color: #000; box-shadow: var(--w-thin-raised); }
+.skin-98 .round-button:hover { background: none; color: var(--w-text); box-shadow: var(--w-thin-raised); }
 .skin-98 .round-button:active { transform: none; box-shadow: var(--w-thin-sunken); }
 .skin-98 .round-button:active svg { transform: translate(1px, 1px); }
-.skin-98 .round-button.on { color: #000; background: var(--w-dither); box-shadow: var(--w-thin-sunken); }
-.skin-98 button:disabled { opacity: 1; color: #808080; text-shadow: 1px 1px #fff; }
-.skin-98 button:disabled svg { filter: drop-shadow(1px 1px 0 #fff); }
+.skin-98 .round-button.on { color: var(--w-text); background: var(--w-dither); box-shadow: var(--w-thin-sunken); }
+.skin-98 button:disabled { opacity: 1; color: var(--w-grey-text); text-shadow: 1px 1px var(--w-emboss); }
+.skin-98 button:disabled svg { filter: drop-shadow(1px 1px 0 var(--w-emboss)); }
 
 .skin-98 .button, .skin-98 .chip, .skin-98 .play-fab, .skin-98 .controls .play, .skin-98 .cover .hover-play, .skin-98 .theme {
   border: 0;
   border-radius: 0;
   background: var(--w-face);
-  color: #000;
+  color: var(--w-text);
   box-shadow: var(--w-raised);
   transition: none;
   filter: none;
@@ -293,9 +331,9 @@
 }
 .skin-98 .button svg { width: 14px; height: 14px; }
 .skin-98 .button.small { height: 23px; padding: 0 8px; font-size: 11px; }
-.skin-98 .button.primary { background: var(--w-face); color: #000; box-shadow: var(--w-default); }
-.skin-98 .button.danger { color: #000; }
-.skin-98 .button:hover, .skin-98 .button.primary:hover, .skin-98 .chip:hover { background: var(--w-face); color: #000; filter: none; }
+.skin-98 .button.primary { background: var(--w-face); color: var(--w-text); box-shadow: var(--w-default); }
+.skin-98 .button.danger { color: var(--w-text); }
+.skin-98 .button:hover, .skin-98 .button.primary:hover, .skin-98 .chip:hover { background: var(--w-face); color: var(--w-text); filter: none; }
 .skin-98 .button:active, .skin-98 .chip:active, .skin-98 .play-fab:active, .skin-98 .controls .play:active, .skin-98 .cover .hover-play:active, .skin-98 .theme:active {
   transform: none;
   box-shadow: var(--w-pressed);
@@ -306,13 +344,13 @@
 .skin-98 .chip:active, .skin-98 .chip.on { padding: 2px 8px 0 10px; }
 .skin-98 .play-fab:active, .skin-98 .controls .play:active, .skin-98 .cover .hover-play:active { padding: 2px 0 0 2px; }
 .skin-98 .theme:active { padding: 7px 5px 5px 7px; }
-.skin-98 .button.primary:active { box-shadow: inset 0 0 0 1px #000, inset 0 0 0 2px #808080; }
+.skin-98 .button.primary:active { box-shadow: inset 0 0 0 1px var(--w-dark-shadow), inset 0 0 0 2px var(--w-shadow); }
 .skin-98 .button:focus-visible, .skin-98 .chip:focus-visible { outline-offset: -5px; }
 
 /* A chip is a button that stays down while it is on, its face chequered as a latched button's was. */
 .skin-98 .chip { height: 23px; padding: 0 9px; font-size: 11px; font-weight: normal; gap: 5px; }
 .skin-98 .chip svg { width: 14px; height: 14px; }
-.skin-98 .chip.on { background: var(--w-dither); color: #000; box-shadow: var(--w-pressed); }
+.skin-98 .chip.on { background: var(--w-dither); color: var(--w-text); box-shadow: var(--w-pressed); }
 /* The accents' colour spots, square as everything was. */
 .skin-98 .chip > span[style] { border-radius: 0 !important; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.4); }
 .skin-98 .chips { gap: 4px; }
@@ -329,22 +367,22 @@
   letter-spacing: 0;
   margin: 6px 0 10px;
   padding-bottom: 6px;
-  border-bottom: 1px solid #808080;
-  box-shadow: 0 1px #fff;
+  border-bottom: 1px solid var(--w-shadow);
+  box-shadow: 0 1px var(--w-highlight);
 }
-.skin-98 .page-subtitle, .skin-98 .muted, .skin-98 .faint { color: #000; }
+.skin-98 .page-subtitle, .skin-98 .muted, .skin-98 .faint { color: var(--w-text); }
 .skin-98 .page-subtitle { margin-bottom: 12px; }
 .skin-98 h2.shelf-title { font-size: 12px; font-weight: bold; letter-spacing: 0; margin: 18px 0 2px; }
-.skin-98 .shelf-subtitle { color: #404040; font-size: 11px; margin-bottom: 8px; }
+.skin-98 .shelf-subtitle { color: var(--w-quiet); font-size: 11px; margin-bottom: 8px; }
 .skin-98 .badge { border-radius: 0; font-size: 9px; padding: 1px 3px; }
 
 /* ------------------------------------------------ the content: a sunken white pane, as a folder's view was */
 
 .skin-98 .content {
-  background: #fff;
+  background: var(--w-window);
   border: 1px solid;
-  border-color: #808080 #fff #fff #808080;
-  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf;
+  border-color: var(--w-shadow) var(--w-highlight) var(--w-highlight) var(--w-shadow);
+  box-shadow: inset 1px 1px var(--w-dark-shadow), inset -1px -1px var(--w-light);
   padding: 8px 14px 24px;
   scroll-behavior: auto;
 }
@@ -354,18 +392,18 @@
 /* Covers and their names, as a folder's large icons: framed, and blue and chequered once pointed at. */
 .skin-98 .card { border-radius: 0; padding: 4px; margin: -4px; transition: none; }
 .skin-98 .card:hover { background: none; }
-.skin-98 .cover { border-radius: 0; box-shadow: none; outline: 1px solid #808080; outline-offset: -1px; }
+.skin-98 .cover { border-radius: 0; box-shadow: none; outline: 1px solid var(--w-shadow); outline-offset: -1px; }
 .skin-98 .card:hover .cover::after, .skin-98 .card:focus-visible .cover::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='2' height='2'><path fill='%23000080' d='M0 0h1v1H0zM1 1h1v1H1z'/></svg>");
+  background: var(--w-selection-dither);
   opacity: 0.5;
   pointer-events: none;
 }
 .skin-98 .card-title { display: inline-block; max-width: 100%; margin: 5px 0 1px; padding: 0 2px; font-size: 11px; font-weight: normal; vertical-align: top; }
-.skin-98 .card:hover .card-title, .skin-98 .card:focus-visible .card-title { background: #000080; color: #fff; }
-.skin-98 .card-sub { font-size: 11px; color: #404040; padding: 0 2px; }
+.skin-98 .card:hover .card-title, .skin-98 .card:focus-visible .card-title { background: var(--w-selection); color: var(--w-selection-text); }
+.skin-98 .card-sub { font-size: 11px; color: var(--w-quiet); padding: 0 2px; }
 .skin-98 .cover .hover-play { width: 32px; height: 28px; right: 8px; bottom: 8px; transform: none; z-index: 1; }
 .skin-98 .cover.round .hover-play { right: calc(50% - 16px); bottom: calc(50% - 14px); }
 .skin-98 .cover .hover-play svg { width: 16px; height: 16px; }
@@ -374,28 +412,28 @@
 .skin-98 .grid { gap: 16px 14px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 
 /* A navy row under the pointer. */
-.skin-98 .track:hover, .skin-98 .track:focus-within { background: #000080; }
-.skin-98 .track:hover .round-button:hover { box-shadow: inset -1px -1px #000, inset 1px 1px #fff; }
+.skin-98 .track:hover, .skin-98 .track:focus-within { background: var(--w-selection); }
+.skin-98 .track:hover .round-button:hover { box-shadow: inset -1px -1px var(--w-dark-shadow), inset 1px 1px var(--w-highlight); }
 
 .skin-98 .hero { gap: 16px; padding: 12px 0 14px; }
 .skin-98 .hero .cover { width: 160px; }
 .skin-98 .hero h1 { font-size: 24px; letter-spacing: 0; margin: 4px 0 6px; }
-.skin-98 .hero .meta, .skin-98 .hero .kind { color: #000; }
+.skin-98 .hero .meta, .skin-98 .hero .kind { color: var(--w-text); }
 .skin-98 .hero .kind { letter-spacing: 0.04em; }
 .skin-98 .toolbar { gap: 6px; margin: 2px 0 10px; }
 
 .skin-98 .banner {
   border-radius: 0;
-  background: #ffffe1;
-  border: 1px solid #000;
-  color: #000;
+  background: var(--w-tooltip);
+  border: 1px solid var(--w-text);
+  color: var(--w-text);
   font-size: 11px;
   padding: 8px 10px;
 }
-.skin-98 .banner.welcome a { color: #0000ff; }
-.skin-98 .empty { color: #000; }
+.skin-98 .banner.welcome a { color: var(--w-link); }
+.skin-98 .empty { color: var(--w-text); }
 .skin-98 .empty h3 { font-size: 13px; }
-.skin-98 .empty svg { color: #808080; }
+.skin-98 .empty svg { color: var(--w-grey-text); }
 
 /* The busy hourglass, turning over, for a spinner. */
 .skin-98 .spinner {
@@ -403,7 +441,7 @@
   height: 16px;
   border: 0;
   border-radius: 0;
-  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path d='M2 0h12v2H2zM2 14h12v2H2z'/><path fill='%23fff' stroke='%23000' d='M3.5 2.5h9v1.5L9 8l3.5 4v1.5h-9V12L7 8 3.5 4z'/><path fill='%23000080' d='M5 4h6L8 7zM8 9l3 4H5z'/></svg>") no-repeat center;
+  background: var(--w-hourglass) no-repeat center;
   animation: hourglass 1.6s steps(1) infinite;
 }
 @keyframes hourglass { 50% { transform: rotate(180deg); } }
@@ -414,8 +452,8 @@
 .skin-98 .field, .skin-98 textarea {
   border: 0;
   border-radius: 0;
-  background: #fff;
-  color: #000;
+  background: var(--w-window);
+  color: var(--w-text);
   font-size: 11px;
   padding: 4px 5px;
   box-shadow: var(--w-sunken);
@@ -423,8 +461,8 @@
 /* A box that scrolls keeps its edge in a border, so the scroll bar sits inside it rather than over it. */
 .skin-98 textarea.field {
   border: 1px solid;
-  border-color: #808080 #fff #fff #808080;
-  box-shadow: inset 1px 1px #000, inset -1px -1px #dfdfdf;
+  border-color: var(--w-shadow) var(--w-highlight) var(--w-highlight) var(--w-shadow);
+  box-shadow: inset 1px 1px var(--w-dark-shadow), inset -1px -1px var(--w-light);
   font-family: inherit;
   font-size: 11px;
 }
@@ -435,9 +473,9 @@
   padding: 0 22px 0 4px;
   border: 0;
   border-radius: 0;
-  color: #000;
+  color: var(--w-text);
   font-size: 11px;
-  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='17'><path fill='%23c0c0c0' d='M0 0h16v17H0z'/><path fill='%23dfdfdf' d='M0 0h15v1H1v15H0z'/><path fill='%23fff' d='M1 1h13v1H2v13H1z'/><path fill='%23808080' d='M1 15h14V1h1v15z'/><path d='M0 16h16v1H0zM15 0h1v16h-1zM4 6h7v1H4zM5 7h5v1H5zM6 8h3v1H6zM7 9h1v1H7z'/></svg>") no-repeat right 2px center, #fff;
+  background: var(--w-select) no-repeat right 2px center, var(--w-window);
   box-shadow: var(--w-sunken);
 }
 
@@ -449,27 +487,27 @@
   height: 13px;
   margin: 0;
   border-radius: 0;
-  background: #fff;
+  background: var(--w-window);
   box-shadow: var(--w-sunken);
   transition: none;
   flex: none;
 }
 .skin-98 .switch::after { display: none; }
-.skin-98 .switch.on, .skin-98 input[type='checkbox']:checked { background: var(--w-check) no-repeat 3px 3px, #fff; }
+.skin-98 .switch.on, .skin-98 input[type='checkbox']:checked { background: var(--w-check) no-repeat 3px 3px, var(--w-window); }
 .skin-98 input[type='radio'] {
   -webkit-appearance: none;
   appearance: none;
   width: 12px;
   height: 12px;
   margin: 0;
-  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><path fill='%23808080' d='M4 0h4v1H4zM2 1h2v1H2zM8 1h2v1H8zM1 2h1v2H1zM0 4h1v4H0zM1 8h1v2H1z'/><path d='M4 1h4v1H4zM2 2h2v1H2zM8 2h2v1H8zM2 3h1v1H2zM1 4h1v4H1zM2 8h1v1H2z'/><path fill='%23fff' d='M10 2h1v2h-1zM11 4h1v4h-1zM10 8h1v2h-1zM8 10h2v1H8zM2 10h2v1H2zM4 11h4v1H4zM3 2h6v8H3zM2 4h8v4H2z'/><path fill='%23dfdfdf' d='M9 3h1v1H9zM10 4h1v4h-1zM9 8h1v1H9zM8 9h1v1H8zM3 9h1v1H3zM4 10h4v1H4z'/></svg>") no-repeat;
+  background: var(--w-radio) no-repeat;
 }
-.skin-98 input[type='radio']:checked { background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12'><path fill='%23808080' d='M4 0h4v1H4zM2 1h2v1H2zM8 1h2v1H8zM1 2h1v2H1zM0 4h1v4H0zM1 8h1v2H1z'/><path d='M4 1h4v1H4zM2 2h2v1H2zM8 2h2v1H8zM2 3h1v1H2zM1 4h1v4H1zM2 8h1v1H2z'/><path fill='%23fff' d='M10 2h1v2h-1zM11 4h1v4h-1zM10 8h1v2h-1zM8 10h2v1H8zM2 10h2v1H2zM4 11h4v1H4zM3 2h6v8H3zM2 4h8v4H2z'/><path fill='%23dfdfdf' d='M9 3h1v1H9zM10 4h1v4h-1zM9 8h1v1H9zM8 9h1v1H8zM3 9h1v1H3zM4 10h4v1H4z'/><path d='M5 4h2v4H5zM4 5h4v2H4z'/></svg>"); }
+.skin-98 input[type='radio']:checked { background-image: var(--w-radio-on); }
 
 /* The volume is a trackbar: a sunken groove and a raised slab. */
 .skin-98 .bar.volume { height: 22px; }
-.skin-98 .bar.volume::-webkit-slider-runnable-track { height: 4px; border-radius: 0; background: #fff; box-shadow: var(--w-sunken); }
-.skin-98 .bar.volume::-moz-range-track { height: 4px; border-radius: 0; background: #fff; box-shadow: var(--w-sunken); }
+.skin-98 .bar.volume::-webkit-slider-runnable-track { height: 4px; border-radius: 0; background: var(--w-window); box-shadow: var(--w-sunken); }
+.skin-98 .bar.volume::-moz-range-track { height: 4px; border-radius: 0; background: var(--w-window); box-shadow: var(--w-sunken); }
 .skin-98 .bar.volume::-webkit-slider-thumb { opacity: 1; width: 11px; height: 21px; margin-top: -9px; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
 .skin-98 .bar.volume::-moz-range-thumb { opacity: 1; width: 11px; height: 21px; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
 
@@ -479,10 +517,10 @@
   position: relative;
   margin: 22px 0 14px;
   padding: 16px 12px 8px;
-  border: 1px solid #808080;
-  box-shadow: inset 1px 1px #fff, 1px 1px #fff;
+  border: 1px solid var(--w-shadow);
+  box-shadow: inset 1px 1px var(--w-highlight), 1px 1px var(--w-highlight);
 }
-.skin-98 .settings h2 { margin: 14px 0 6px; font-size: 11px; font-weight: bold; letter-spacing: 0; text-transform: none; color: #000; }
+.skin-98 .settings h2 { margin: 14px 0 6px; font-size: 11px; font-weight: bold; letter-spacing: 0; text-transform: none; color: var(--w-text); }
 .skin-98 .settings section > h2:first-child {
   position: absolute;
   top: -8px;
@@ -493,16 +531,16 @@
   background: var(--w-face);
 }
 .skin-98 .setting { background: none; border: 0; border-radius: 0; padding: 6px 0; margin: 0; gap: 12px; }
-.skin-98 .setting + .setting { border-top: 1px solid #808080; box-shadow: inset 0 1px #fff; }
+.skin-98 .setting + .setting { border-top: 1px solid var(--w-shadow); box-shadow: inset 0 1px var(--w-highlight); }
 .skin-98 .setting .label strong { font-weight: bold; font-size: 11px; }
-.skin-98 .setting .label small { color: #000; font-size: 11px; }
+.skin-98 .setting .label small { color: var(--w-text); font-size: 11px; }
 .skin-98 .status { font-size: 11px; }
-.skin-98 .status.connected { color: #008000; }
-.skin-98 .status.error, .skin-98 .status.warning { color: #800000; }
+.skin-98 .status.connected { color: var(--w-good); }
+.skin-98 .status.error, .skin-98 .status.warning { color: var(--w-bad); }
 .skin-98 .themes { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
 .skin-98 .theme { padding: 6px; font-size: 11px; font-weight: normal; border: 0; }
-.skin-98 .theme.on { box-shadow: var(--w-pressed); background: var(--w-dither) !important; padding: 7px 5px 5px 7px; outline: 1px dotted #000; outline-offset: -4px; }
-.skin-98 .theme .swatch { border-radius: 0; height: 26px; margin-bottom: 5px; box-shadow: inset 0 0 0 1px #808080; }
+.skin-98 .theme.on { box-shadow: var(--w-pressed); background: var(--w-dither) !important; padding: 7px 5px 5px 7px; outline: 1px dotted var(--w-text); outline-offset: -4px; }
+.skin-98 .theme .swatch { border-radius: 0; height: 26px; margin-bottom: 5px; box-shadow: inset 0 0 0 1px var(--w-shadow); }
 .skin-98 .theme small { font-size: 11px; opacity: 1; }
 
 /* ------------------------------------------------ dialogs, menus and notices */
@@ -522,7 +560,7 @@
   height: 18px;
   padding: 0 24px 0 4px;
   background: var(--w-title);
-  color: #fff;
+  color: var(--w-title-text);
   font-size: 11px;
   font-weight: bold;
   line-height: 18px;
@@ -532,7 +570,7 @@
 }
 .skin-98 .dialog .caption-close { position: absolute; top: 5px; right: 5px; margin: 0; cursor: default; }
 .skin-98 .caption-close:active { box-shadow: var(--w-pressed); background-position: 5px 4px; }
-.skin-98 .dialog p { color: #000; margin: 0 0 12px; line-height: 1.35; }
+.skin-98 .dialog p { color: var(--w-text); margin: 0 0 12px; line-height: 1.35; }
 .skin-98 .dialog .buttons { margin: 16px 0 0; gap: 6px; }
 .skin-98 .dialog .qr { border-radius: 0; box-shadow: var(--w-sunken); padding: 10px; }
 
@@ -545,57 +583,63 @@
   box-shadow: var(--w-frame);
   animation: none;
 }
-.skin-98 .menu button { gap: 8px; padding: 3px 18px 3px 6px; border-radius: 0; font-size: 11px; color: #000; }
+.skin-98 .menu button { gap: 8px; padding: 3px 18px 3px 6px; border-radius: 0; font-size: 11px; color: var(--w-text); }
 .skin-98 .menu button svg { width: 16px; height: 16px; flex: none; }
-.skin-98 .menu button:hover { background: #000080; color: #fff; }
-.skin-98 .menu hr { margin: 3px 1px; border-top: 1px solid #808080; border-bottom: 1px solid #fff; }
-.skin-98 .menu .heading { padding: 3px 6px 2px; font-size: 11px; color: #000; font-weight: bold; letter-spacing: 0; text-transform: none; }
+.skin-98 .menu button:hover { background: var(--w-selection); color: var(--w-selection-text); }
+.skin-98 .menu hr { margin: 3px 1px; border-top: 1px solid var(--w-shadow); border-bottom: 1px solid var(--w-highlight); }
+.skin-98 .menu .heading { padding: 3px 6px 2px; font-size: 11px; color: var(--w-text); font-weight: bold; letter-spacing: 0; text-transform: none; }
 
 /* The start menu: a band down its side with the name on it, and its items big and plain. */
 .skin-98 .menu:has(.start-menu) { padding: 3px; min-width: 0; max-width: none; max-height: none; overflow: visible; margin-left: -6px; }
 .skin-98 .start-menu { display: grid; grid-template-columns: 22px minmax(0, 1fr); min-width: 210px; }
-.skin-98 .start-banner { grid-row: 1 / span 2; display: flex; align-items: flex-end; background: linear-gradient(to bottom, #000000, #000080); }
+.skin-98 .start-banner { grid-row: 1 / span 2; display: flex; align-items: flex-end; background: linear-gradient(to bottom, var(--w-dark-shadow), var(--w-title-from)); }
 .skin-98 .start-banner img { display: none; }
 .skin-98 .start-banner span {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   padding: 6px 0 4px;
-  color: #fff;
+  color: var(--w-title-text);
   font: bold 17px Arial, sans-serif;
   letter-spacing: 0.02em;
   line-height: 22px;
 }
 .skin-98 .start-places, .skin-98 .start-foot { display: flex; flex-direction: column; }
-.skin-98 .start-places::before, .skin-98 .start-foot::before { content: ''; margin: 3px 1px; border-top: 1px solid #808080; border-bottom: 1px solid #fff; }
+.skin-98 .start-places::before, .skin-98 .start-foot::before { content: ''; margin: 3px 1px; border-top: 1px solid var(--w-shadow); border-bottom: 1px solid var(--w-highlight); }
 .skin-98 .start-menu button { gap: 10px; padding: 5px 24px 5px 8px; }
 
-/* Notices are tooltips: pale yellow, a black line round them, nothing else. */
+/* Notices are tooltips: the scheme's tooltip, pale yellow in 98's, a line of the writing round them, nothing else. */
 .skin-98 .notice {
-  border: 1px solid #000;
+  border: 1px solid var(--w-text);
   border-radius: 0;
-  background: #ffffe1;
-  color: #000;
+  background: var(--w-tooltip);
+  color: var(--w-text);
   box-shadow: none;
   font-size: 11px;
   padding: 4px 6px;
   animation: none;
 }
-.skin-98 .notice.bad, .skin-98 .notice.good { border-left-color: #000; }
+.skin-98 .notice.bad, .skin-98 .notice.good { border-left-color: var(--w-text); }
 
 /* ------------------------------------------------ the player bar: a control strip over the taskbar */
 
 .skin-98 .player { background: var(--w-face); border-top: 0; }
-.skin-98 .controls .play { width: 34px; height: 28px; border-radius: 0; color: #000; }
+.skin-98 .controls .play { width: 34px; height: 28px; border-radius: 0; color: var(--w-text); }
 .skin-98 .controls .play:hover { transform: none; }
 .skin-98 .controls .play svg { width: 16px; height: 16px; margin: 0 !important; }
 .skin-98 .controls .round-button { width: 28px; height: 26px; }
-.skin-98 .output-chip { border-radius: 0; background: none; color: #000; padding: 0 4px; font-size: 11px; }
-.skin-98 .seek { color: #000; font-size: 11px; }
+.skin-98 .output-chip { border-radius: 0; background: none; color: var(--w-text); padding: 0 4px; font-size: 11px; }
+.skin-98 .seek { color: var(--w-text); font-size: 11px; }
+/* The Classic seek bar is 98's progress bar in the scheme's colours: blocks in a sunken well, a raised slab on it. */
+.skin-98 .bar.CLASSIC::-webkit-slider-runnable-track {
+  border-color: var(--w-shadow) var(--w-highlight) var(--w-highlight) var(--w-shadow);
+  background: repeating-linear-gradient(to right, var(--accent) 0 8px, transparent 8px 10px) 0 0 / var(--fill) 100% no-repeat, var(--w-window);
+}
+.skin-98 .bar.CLASSIC::-webkit-slider-thumb { background: var(--w-face); box-shadow: inset -1px -1px color-mix(in srgb, var(--w-dark-shadow), var(--w-shadow)), inset 1px 1px var(--w-highlight); }
 
 @media (min-width: 861px) {
-  .skin-98 .player { box-shadow: inset 0 1px #fff; }
-  /* The taskbar: the window's grey with a highlight along its top. */
-  .skin-98 .player::before { background: var(--w-face); box-shadow: inset 0 1px #dfdfdf, inset 0 2px #fff; }
+  .skin-98 .player { box-shadow: inset 0 1px var(--w-highlight); }
+  /* The taskbar: the window's face with a highlight along its top. */
+  .skin-98 .player::before { background: var(--w-face); box-shadow: inset 0 1px var(--w-light), inset 0 2px var(--w-highlight); }
   .skin-98 .controls { gap: 3px; }
   .skin-98 .controls .round-button { box-shadow: var(--w-raised); background: var(--w-face); }
   .skin-98 .controls .round-button:active { box-shadow: var(--w-pressed); }
@@ -613,7 +657,7 @@
     box-shadow: var(--w-raised);
   }
   .skin-98 .start-button img { width: 16px; height: 16px; }
-  .skin-98 .start-button.open { box-shadow: var(--w-pressed); padding: 2px 5px 0 5px; outline: 1px dotted #000; outline-offset: -4px; }
+  .skin-98 .start-button.open { box-shadow: var(--w-pressed); padding: 2px 5px 0 5px; outline: 1px dotted var(--w-text); outline-offset: -4px; }
 
   /* The task in front: pressed in, chequered, and in bold. */
   .skin-98 .player .now {
@@ -628,7 +672,7 @@
   .skin-98 .player .now .cover { width: 16px; outline: 0; }
   .skin-98 .player .now .cover .placeholder svg { width: 12px; height: 12px; }
   .skin-98 .player .now .title { font-weight: bold; }
-  .skin-98 .player .now .artist { color: #000; }
+  .skin-98 .player .now .artist { color: var(--w-text); }
   .skin-98 .player .now .round-button, .skin-98 .player .now .round-button.on { width: 18px; height: 18px; background: none; box-shadow: none; }
   .skin-98 .player .now .round-button svg { width: 13px; height: 13px; }
 
@@ -648,9 +692,9 @@
   .skin-98 .tray-clock { padding: 0 6px 0 8px; }
 }
 
-/* ------------------------------------------------ now playing: windows on the teal desktop */
+/* ------------------------------------------------ now playing: windows on the desktop, 98's teal or the night's sky */
 
-.skin-98 .now-playing { background: #008080; padding: 16px; gap: 16px; }
+.skin-98 .now-playing { background: var(--w-desktop); padding: 16px; gap: 16px; }
 .skin-98 .np-hero, .skin-98 .panel {
   position: relative;
   background: var(--w-face);
@@ -668,14 +712,14 @@
   height: 18px;
   padding: 0 4px 0 22px;
   background: url('/noctorium.png') no-repeat 3px 1px / 16px 16px, var(--w-title);
-  color: #fff;
+  color: var(--w-title-text);
   font-weight: bold;
   line-height: 18px;
 }
 .skin-98 .panel::before { position: static; margin: 3px 3px 0; }
-.skin-98 .np-hero .cover { border-radius: 0; outline: 0; box-shadow: var(--w-sunken); padding: 2px; background: #fff; width: min(calc(100dvh - var(--player) - 380px), 100%, 420px); }
+.skin-98 .np-hero .cover { border-radius: 0; outline: 0; box-shadow: var(--w-sunken); padding: 2px; background: var(--w-window); width: min(calc(100dvh - var(--player) - 380px), 100%, 420px); }
 .skin-98 .np-hero h1 { font-size: 16px; letter-spacing: 0; }
-.skin-98 .np-hero .artist { color: #000; font-size: 11px; }
+.skin-98 .np-hero .artist { color: var(--w-text); font-size: 11px; }
 .skin-98 .np-hero .seek { max-width: 460px; }
 .skin-98 .np-hero .controls .round-button { background: var(--w-face); box-shadow: var(--w-raised); }
 .skin-98 .np-hero .controls .round-button.on { background: var(--w-dither); box-shadow: var(--w-pressed); }
@@ -692,7 +736,7 @@
   padding: 0 10px;
   margin-top: 2px;
   background: var(--w-face);
-  box-shadow: inset 1px 1px #fff, inset -1px 0 #000, inset -2px 0 #808080, inset 2px 2px #dfdfdf;
+  box-shadow: inset 1px 1px var(--w-highlight), inset -1px 0 var(--w-dark-shadow), inset -2px 0 var(--w-shadow), inset 2px 2px var(--w-light);
 }
 .skin-98 .panel .tabs .chip.on { height: 23px; margin: 0 -2px -1px; padding: 0 12px 1px; background: var(--w-face); z-index: 1; }
 .skin-98 .panel .tabs .chip:active { padding: 0 10px; }
@@ -700,39 +744,39 @@
   margin: 0 8px 8px;
   padding: 6px;
   background: var(--w-face);
-  box-shadow: inset -1px -1px #000, inset 1px 1px #fff, inset -2px -2px #808080;
+  box-shadow: inset -1px -1px var(--w-dark-shadow), inset 1px 1px var(--w-highlight), inset -2px -2px var(--w-shadow);
 }
-.skin-98 .panel .body > * { background: #fff; }
+.skin-98 .panel .body > * { background: var(--w-window); }
 .skin-98 .panel .body .tracks, .skin-98 .panel .body > div { box-shadow: var(--w-sunken); padding: 2px; min-height: 100%; }
 .skin-98 .lyrics { padding: 10px 12px 30vh; }
-.skin-98 .lyrics p { font-size: 15px; font-weight: bold; color: #000; margin: 0 0 8px; padding: 1px 3px; }
-.skin-98 .lyrics p.sung { color: #808080; }
-.skin-98 .lyrics p.active { color: #fff; background: #000080; }
+.skin-98 .lyrics p { font-size: 15px; font-weight: bold; color: var(--w-text); margin: 0 0 8px; padding: 1px 3px; }
+.skin-98 .lyrics p.sung { color: var(--w-grey-text); }
+.skin-98 .lyrics p.active { color: var(--w-selection-text); background: var(--w-selection); }
 .skin-98 .lyrics.plain p { font-size: 13px; font-weight: normal; }
 .skin-98 .lyrics-sources { padding: 6px 6px 8px; gap: 4px; }
 .skin-98 .lyrics-sources .chip { height: 21px; font-size: 11px; border-radius: 0; padding: 0 7px; }
 
 /* A download on its way -- the Downloads page draws its bar inline -- is a progress bar of the time: navy blocks in a sunken well. */
-.skin-98 .setting > .label + div[style]:has(> div[style]:only-child) { height: 16px !important; padding: 2px; border-radius: 0 !important; background: #fff !important; box-shadow: var(--w-thin-sunken); }
-.skin-98 .setting > .label + div[style]:has(> div[style]:only-child) > div { background: repeating-linear-gradient(to right, #000080 0 8px, transparent 8px 10px) !important; }
+.skin-98 .setting > .label + div[style]:has(> div[style]:only-child) { height: 16px !important; padding: 2px; border-radius: 0 !important; background: var(--w-window) !important; box-shadow: var(--w-thin-sunken); }
+.skin-98 .setting > .label + div[style]:has(> div[style]:only-child) > div { background: repeating-linear-gradient(to right, var(--w-selection) 0 8px, transparent 8px 10px) !important; }
 
 /* ------------------------------------------------ YouTube's player, in a window of its own */
 
 .skin-98 .yt-stage.floating { border: 0; border-radius: 0; padding: 3px; background: var(--w-face); box-shadow: var(--w-frame); }
-.skin-98 .yt-bar { height: 18px; margin-bottom: 2px; padding: 0 2px 0 4px; background: var(--w-title); color: #fff; font-size: 11px; font-weight: bold; }
-.skin-98 .yt-bar .round-button { width: 16px; height: 14px; margin-left: 2px; background: var(--w-face); box-shadow: var(--w-frame); color: #000; }
+.skin-98 .yt-bar { height: 18px; margin-bottom: 2px; padding: 0 2px 0 4px; background: var(--w-title); color: var(--w-title-text); font-size: 11px; font-weight: bold; }
+.skin-98 .yt-bar .round-button { width: 16px; height: 14px; margin-left: 2px; background: var(--w-face); box-shadow: var(--w-frame); color: var(--w-text); }
 .skin-98 .yt-bar .round-button svg { width: 10px; height: 10px; }
 
 /* ------------------------------------------------ a phone: the taskbar at the bottom, the tabs on it */
 
 @media (max-width: 860px) {
-  .skin-98 .player { box-shadow: inset 0 1px #dfdfdf, inset 0 2px #fff; }
+  .skin-98 .player { box-shadow: inset 0 1px var(--w-light), inset 0 2px var(--w-highlight); }
   .skin-98 .player .now .cover { width: 40px; }
-  .skin-98 .mini-progress { background: #808080; }
-  .skin-98 .tabbar { background: var(--w-face); border-top: 0; box-shadow: inset 0 1px #dfdfdf, inset 0 2px #fff; gap: 2px; padding: 4px 2px; }
-  .skin-98 .tabbar button { flex: 1; color: #000; font-size: 11px; box-shadow: var(--w-raised); padding: 4px 2px; }
-  .skin-98 .tabbar button.active { color: #000; background: var(--w-dither); box-shadow: var(--w-pressed); font-weight: bold; }
-  .skin-98 .tabbar button.active svg { color: #000; }
+  .skin-98 .mini-progress { background: var(--w-shadow); }
+  .skin-98 .tabbar { background: var(--w-face); border-top: 0; box-shadow: inset 0 1px var(--w-light), inset 0 2px var(--w-highlight); gap: 2px; padding: 4px 2px; }
+  .skin-98 .tabbar button { flex: 1; color: var(--w-text); font-size: 11px; box-shadow: var(--w-raised); padding: 4px 2px; }
+  .skin-98 .tabbar button.active { color: var(--w-text); background: var(--w-dither); box-shadow: var(--w-pressed); font-weight: bold; }
+  .skin-98 .tabbar button.active svg { color: var(--w-text); }
   .skin-98 .content { margin: 0; }
   .skin-98 .now-playing { padding: 12px; }
   .skin-98 .np-close { top: 17px; right: 17px; }

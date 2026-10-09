@@ -14,6 +14,7 @@ import { Library, LocalPage, PlaylistPage } from './pages/Library';
 import { DevicesPage, DownloadsPage, QueuePage } from './pages/Other';
 import { SettingsPage } from './pages/Settings';
 import { closeNowPlaying, openNowPlaying, useUi } from './ui';
+import { STANDARD_98, windows98Of, windows98Properties } from './windows98';
 
 const allPages = [
   ['home', 'Home', HomeIcon],
@@ -32,8 +33,9 @@ const pages = HOSTED ? allPages.filter(([id]) => id !== 'downloads' && id !== 'd
 const YouTubeStage = HOSTED ? lazy(() => import('./hosted/Stage')) : null;
 
 /**
- * The theme's colours on the page, so every Noctorium theme is this page's theme too -- and for the two Windows
- * themes their skin, a class on the root that skins.css dresses the whole page from.
+ * The theme's colours on the page, so every Noctorium theme is this page's theme too -- and for the Windows themes
+ * their skin, a class on the root that skins.css dresses the whole page from, with 98's drawn in the scheme of the
+ * theme in force: its own grey, or Noctorium 98's night.
  */
 function useTheme() {
   const settings = usePart('settings');
@@ -42,7 +44,13 @@ function useTheme() {
     const c = settings?.colours;
     if (!c) return;
     const root = document.documentElement;
-    const skin = skinOf(settings.theme);
+    const skin = skinOf(settings);
+    const scheme = skin === '98' ? windows98Of(settings) : undefined;
+    for (const [name, value] of Object.entries(windows98Properties(scheme ?? STANDARD_98))) {
+      if (scheme) root.style.setProperty(name, value);
+      else root.style.removeProperty(name);
+    }
+    root.classList.toggle('w98-dark', !!scheme?.dark);
     root.style.setProperty('--bg', c.background);
     root.style.setProperty('--panel', c.panel);
     root.style.setProperty('--card', c.card);
