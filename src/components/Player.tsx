@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import {
-  ChevronUp, Heart, ListMusic, Mic2, Monitor, MonitorSpeaker, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack,
-  SkipForward, Smartphone, Volume1, Volume2, VolumeX, Moon,
+  Check, ChevronUp, CircleStop, Disc3, Heart, ListMusic, Mic2, Monitor, MonitorSpeaker, Pause, Play, Plus, Repeat, Repeat1,
+  Shuffle, SkipBack, SkipForward, Smartphone, Square, User, Moon,
 } from '../icons';
 import { audio } from '../audio';
 import { live, send, usePart } from '../live';
@@ -9,9 +9,19 @@ import { openMenu, openNowPlaying, useUi, closeNowPlaying } from '../ui';
 import { canLike, cls, formatTime, isLiked } from '../util';
 import { Cover, Spinner } from './Common';
 import { StartButton, TrayClock, taskbarMenu, useSkin } from './Skin';
-import type { Playback } from '../types';
+import { AddToPlaylist, TrackMenu } from './Tracks';
+import { VolumeButton, VolumeSlider } from './Volume';
+import { useLooks } from '../looks';
+import { go } from '../router';
+import type { Playback, Track } from '../types';
 import { HOSTED } from '../mode';
-import { BARS_HEIGHT, BARS_PITCH, BARS_WIDTH, BEAD_HEAD_RADIUS, BEAD_PITCH, BEAD_RADIUS, RULER_MAJOR_TICK, RULER_POINTER, RULER_TICK, barHeights, rulerTicks } from '../seekbar';
+import {
+  BARS_HEIGHT, BARS_PITCH, BARS_WIDTH, BEAD_HEAD_RADIUS, BEAD_PITCH, BEAD_RADIUS, RULER_MAJOR_TICK, RULER_POINTER, RULER_TICK, SLIDER_GROOVE,
+  SLIDER_HANDLE_RADIUS, barHeights, rulerTicks,
+} from '../seekbar';
+
+/** The Slider's groove and handle, as Base measures them, for skins.css and styles.css to draw. */
+const slider = { ['--groove' as string]: `${SLIDER_GROOVE}px`, ['--handle' as string]: `${SLIDER_HANDLE_RADIUS * 2}px` };
 
 /** Where the track is now, carried forward between the updates Noctorium sends, or read from this tab's own audio. */
 export function usePosition(playback?: Playback): number {
@@ -36,8 +46,11 @@ export function usePosition(playback?: Playback): number {
  */
 const drawn = new Set(['BARS', 'BEADS', 'NEON', 'RULER', 'LUNA']);
 
-/** The seek bar, in whichever of Noctorium's eleven styles is chosen. */
-export function SeekBar({ playback, compact }: { playback?: Playback; compact?: boolean }) {
+/**
+ * The seek bar, in whichever of Noctorium's twelve styles is chosen: with the times at its two ends, or none, or --
+ * as the Toolbar has it -- both after it, "0:58 / 2:31".
+ */
+export function SeekBar({ playback, compact, times = compact ? 'none' : 'ends' }: { playback?: Playback; compact?: boolean; times?: 'ends' | 'after' | 'none' }) {
   const settings = usePart('settings');
   const position = usePosition(playback);
   const [dragging, setDragging] = useState<number | null>(null);
@@ -56,15 +69,15 @@ export function SeekBar({ playback, compact }: { playback?: Playback; compact?: 
       value={shown}
       disabled={!playback?.track || duration <= 0}
       aria-label="Seek"
-      style={{ ['--fill' as string]: `${fraction * 100}%` }}
+      style={{ ['--fill' as string]: `${fraction * 100}%`, ...(style === 'SLIDER' ? slider : {}) }}
       onChange={(e) => setDragging(Number(e.target.value))}
       onPointerUp={() => { if (dragging != null) { send('seek', { positionMs: Math.round(dragging) }); setDragging(null); } }}
       onKeyUp={() => { if (dragging != null) { send('seek', { positionMs: Math.round(dragging) }); setDragging(null); } }}
     />
   );
   return (
-    <div className={cls('seek', playback?.status !== 'playing' && 'paused')}>
-      {!compact && <span className="time">{formatTime(shown)}</span>}
+    <div className={cls('seek', playback?.status !== 'playing' && 'paused', times === 'after' && 'times-after')}>
+      {times === 'ends' && <span className="time">{formatTime(shown)}</span>}
       {style === 'WAVE' ? (
         <div className="wave-wrap">
           <svg width={`${fraction * 100}%`} viewBox={`0 0 100 16`} preserveAspectRatio="none" aria-hidden>
@@ -78,7 +91,10 @@ export function SeekBar({ playback, compact }: { playback?: Playback; compact?: 
       ) : drawn.has(style) ? (
         <Drawing style={style} fraction={fraction} durationMs={duration} seed={playback?.track?.key}>{input}</Drawing>
       ) : input}
-      {!compact && <span className="time">{remaining && duration > 0 ? `-${formatTime(duration - shown)}` : formatTime(duration)}</span>}
+      {times === 'ends' && <span className="time">{remaining && duration > 0 ? `-${formatTime(duration - shown)}` : formatTime(duration)}</span>}
+      {times === 'after' && (
+        <span className="time both">{duration > 0 && shown < 1000 ? '0:00' : formatTime(shown)} / {remaining && duration > 0 ? `-${formatTime(duration - shown)}` : formatTime(duration)}</span>
+      )}
     </div>
   );
 }
@@ -223,9 +239,14 @@ function Luna() {
   );
 }
 
+/**
+ * Shuffle, previous, play or pause, next and repeat -- and Stop after next, where the listener asked for it, as
+ * the desktop offers it among its player buttons.
+ */
 export function Controls({ big }: { big?: boolean }) {
   const playback = usePart('playback');
   const queue = usePart('queue');
+  const { stopButton } = useLooks();
   const size = big ? 26 : 20;
   return (
     <div className="controls">
@@ -236,6 +257,7 @@ export function Controls({ big }: { big?: boolean }) {
       </button>
       {/* Off where next would go nowhere, as Noctorium on a computer says; the hosted player does not say. */}
       <button className="round-button" aria-label="Next" disabled={queue?.hasNext === false} onClick={() => send('next')}><SkipForward size={size} fill="currentColor" /></button>
+      {stopButton && <StopButton size={big ? 22 : 17} className="hide-small" />}
       <button className={cls('round-button hide-small', queue?.repeat !== 'off' && 'on')} aria-label="Repeat" onClick={() => send('repeat')}>
         {queue?.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
       </button>
@@ -295,14 +317,104 @@ function SleepMenu() {
   );
 }
 
+/** The bar along the foot of the page, in the look chosen: this page's own Centred bar, or the Toolbar. */
 export function PlayerBar() {
+  const { playerBar } = useLooks();
+  return playerBar === 'TOOLBAR' ? <ToolbarBar /> : <CentredBar />;
+}
+
+/**
+ * The song playing, as a bar shows it: its cover, its name and who it is by. A click opens the record, and a
+ * right-click the song's menu -- add it to a playlist, like it, queue it, stop after it -- on every bar and skin.
+ */
+function NowSong({ like = true }: { like?: boolean }) {
   const playback = usePart('playback');
   const { nowPlaying } = useUi();
   const track = playback?.track;
+  if (!track) return <div className="now"><div className="words faint">Nothing playing</div></div>;
+  return (
+    <div className="now" onContextMenu={(e) => {
+      e.preventDefault();
+      // Not the taskbar's menu, under a Windows skin, but the song's.
+      e.stopPropagation();
+      openMenu({ clientX: e.clientX, clientY: e.clientY + 44 }, <SongMenu track={track} />);
+    }}>
+      <Cover url={track.artworkUrl} className="" />
+      <div className="words" onClick={() => (nowPlaying ? closeNowPlaying() : openNowPlaying())}>
+        <div className="title ellipsis">{track.title}</div>
+        <div className="artist ellipsis">
+          {playback?.status === 'resolving' ? 'Finding the audio…' : playback?.status === 'error' ? (playback.error ?? 'Could not play this')
+            : playback?.onSpotify ? `${track.artistLine} · on Spotify` : track.artistLine}
+        </div>
+      </div>
+      {like && <span className="hide-small"><LikeButton /></span>}
+    </div>
+  );
+}
+
+/** The menu of the song playing: stop after it, stop, find its artist and album, and everything a song's menu has. */
+export function SongMenu({ track }: { track: Track }) {
+  const playback = usePart('playback');
+  // A Noctorium from before Stop says nothing of stopping after a song, and would not know the command.
+  const stops = playback?.stopAfterCurrent != null;
+  const find = (words: string) => () => { closeNowPlaying(); go(`/search?q=${encodeURIComponent(words)}`); };
+  return (
+    <>
+      {stops && (
+        <>
+          <button aria-pressed={!!playback?.stopAfterCurrent} onClick={() => send('stopAfterCurrent', { on: !playback?.stopAfterCurrent })}>
+            {playback?.stopAfterCurrent ? <Check size={17} /> : <CircleStop size={17} />} Stop after this song
+          </button>
+          <button onClick={() => send('stop')}><Square size={17} /> Stop</button>
+          <hr />
+        </>
+      )}
+      <button onClick={find(track.artists[0]?.name ?? track.artistLine)}><User size={17} /> Find {track.artists[0]?.name ?? 'the artist'}</button>
+      {track.album && <button onClick={find(`${track.album.title} ${track.artists[0]?.name ?? ''}`.trim())}><Disc3 size={17} /> Find the album</button>}
+      <hr />
+      <TrackMenu track={track} />
+    </>
+  );
+}
+
+/** Stop: pause and back to the start of the song, the queue as it was. */
+export function StopButton({ size = 17, className, flat }: { size?: number; className?: string; flat?: boolean }) {
+  const playback = usePart('playback');
+  return (
+    <button className={cls(flat ? 'tool' : 'round-button', className)} aria-label="Stop" title="Stop" disabled={!playback?.track} onClick={() => send('stop')}>
+      <Square size={size} fill="currentColor" />
+    </button>
+  );
+}
+
+/** What the bar says at its right: where the music is coming out, and the sleep timer while it runs. */
+function Chips() {
+  const playback = usePart('playback');
+  const sleeping = playback?.sleep.kind !== 'off' && playback?.sleep;
+  return (
+    <>
+      {playback?.onSpotify && <span className="output-chip hide-small"><MonitorSpeaker size={13} /> On Spotify</span>}
+      {!HOSTED && !playback?.onSpotify && playback?.output === 'browser' && audio.active && <span className="output-chip hide-small"><Smartphone size={13} /> This browser</span>}
+      {!HOSTED && !playback?.onSpotify && playback?.output === 'computer' && <span className="output-chip hide-small"><Monitor size={13} /> The computer</span>}
+      {sleeping && <span className="output-chip"><Moon size={13} /> {sleeping.kind === 'endOfTrack' ? 'End of track' : formatTime(sleeping.remainingMs)}</span>}
+    </>
+  );
+}
+
+function NowPlayingButton() {
+  const { nowPlaying } = useUi();
+  return (
+    <button className="round-button" aria-label="Now playing" onClick={() => (nowPlaying ? closeNowPlaying() : openNowPlaying())}>
+      <ChevronUp size={20} style={{ transform: nowPlaying ? 'rotate(180deg)' : undefined, transition: 'transform .2s' }} />
+    </button>
+  );
+}
+
+/** This page's own bar: the song at the left, the controls in the middle over the seek bar, the tools at the right. */
+function CentredBar() {
+  const playback = usePart('playback');
   const position = usePosition(playback);
   const fraction = playback && playback.durationMs > 0 ? position / playback.durationMs : 0;
-  const VolumeIcon = playback?.muted || (playback?.volume ?? 1) === 0 ? VolumeX : (playback?.volume ?? 1) < 0.5 ? Volume1 : Volume2;
-  const sleeping = playback?.sleep.kind !== 'off' && playback?.sleep;
   // In a Windows skin the bar's bottom row is a taskbar: a start button at its left, a clock in its tray if wanted,
   // and its own menu on a right-click.
   const skin = useSkin();
@@ -310,51 +422,72 @@ export function PlayerBar() {
     <footer className="player" onContextMenu={skin ? taskbarMenu : undefined}>
       <div className="mini-progress"><i style={{ width: `${fraction * 100}%` }} /></div>
       {skin && <StartButton />}
-      <div className="now">
-        {track ? (
-          <>
-            <Cover url={track.artworkUrl} className="" />
-            <div className="words" onClick={() => (nowPlaying ? closeNowPlaying() : openNowPlaying())}>
-              <div className="title ellipsis">{track.title}</div>
-              <div className="artist ellipsis">
-                {playback?.status === 'resolving' ? 'Finding the audio…' : playback?.status === 'error' ? (playback.error ?? 'Could not play this')
-                  : playback?.onSpotify ? `${track.artistLine} · on Spotify` : track.artistLine}
-              </div>
-            </div>
-            <span className="hide-small"><LikeButton /></span>
-          </>
-        ) : (
-          <div className="words faint">Nothing playing</div>
-        )}
-      </div>
+      <NowSong />
       <div className="middle">
         <Controls />
         <SeekBar playback={playback} />
       </div>
       <div className="right">
-        {playback?.onSpotify && <span className="output-chip hide-small"><MonitorSpeaker size={13} /> On Spotify</span>}
-        {!HOSTED && !playback?.onSpotify && playback?.output === 'browser' && audio.active && <span className="output-chip hide-small"><Smartphone size={13} /> This browser</span>}
-        {!HOSTED && !playback?.onSpotify && playback?.output === 'computer' && <span className="output-chip hide-small"><Monitor size={13} /> The computer</span>}
-        {sleeping && <span className="output-chip"><Moon size={13} /> {sleeping.kind === 'endOfTrack' ? 'End of track' : formatTime(sleeping.remainingMs)}</span>}
+        <Chips />
         <button className="round-button" aria-label="Sleep timer" onClick={(e) => openMenu(e, <SleepMenu />)}><Moon size={18} /></button>
         <button className="round-button" aria-label="Lyrics" onClick={() => openNowPlaying('lyrics')}><Mic2 size={18} /></button>
         <button className="round-button" aria-label="Queue" onClick={() => openNowPlaying('queue')}><ListMusic size={18} /></button>
         {!HOSTED && <button className="round-button" aria-label="Where it plays" onClick={(e) => openMenu(e, <OutputMenu />)}><MonitorSpeaker size={18} /></button>}
-        <button className="round-button" aria-label="Mute" onClick={() => send('mute')}><VolumeIcon size={18} /></button>
-        <input
-          className="bar volume"
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={playback?.muted ? 0 : playback?.volume ?? 0.72}
-          aria-label="Volume"
-          style={{ ['--fill' as string]: `${(playback?.muted ? 0 : playback?.volume ?? 0.72) * 100}%` }}
-          onChange={(e) => send('volume', { value: Number(e.target.value) })}
-        />
-        <button className="round-button" aria-label="Now playing" onClick={() => (nowPlaying ? closeNowPlaying() : openNowPlaying())}>
-          <ChevronUp size={20} style={{ transform: nowPlaying ? 'rotate(180deg)' : undefined, transition: 'transform .2s' }} />
-        </button>
+        <VolumeButton />
+        <VolumeSlider />
+        <NowPlayingButton />
+        {skin && <TrayClock />}
+      </div>
+    </footer>
+  );
+}
+
+/**
+ * The Toolbar: one row of flat buttons, as a desktop music player has them -- add to a playlist, previous, play,
+ * pause, stop and next, a thin slider with "0:58 / 2:31" after it, then repeat, shuffle and the volume. Play and
+ * pause are buttons of their own here, and Stop is part of the row. The song sits at the row's left, so it is
+ * never out of sight; on a phone it is over the slider and the buttons.
+ */
+function ToolbarBar() {
+  const playback = usePart('playback');
+  const queue = usePart('queue');
+  const skin = useSkin();
+  const track = playback?.track;
+  const status = playback?.status;
+  return (
+    <footer className="player toolbar" onContextMenu={skin ? taskbarMenu : undefined}>
+      {skin && <StartButton />}
+      <NowSong like={false} />
+      <div className="middle">
+        <div className="tools transport">
+          <button className="tool" aria-label="Add to a playlist" title="Add to a playlist" disabled={!track}
+            onClick={(e) => track && openMenu(e, <AddToPlaylist track={track} />)}><Plus size={18} /></button>
+          <button className="tool" aria-label="Previous" title="Previous" onClick={() => send('previous')}><SkipBack size={18} fill="currentColor" /></button>
+          <button className={cls('tool', status === 'playing' && 'on')} aria-label="Play" title="Play" aria-pressed={status === 'playing'}
+            onClick={() => { if (status !== 'playing') send('toggle'); }}>
+            {status === 'resolving' ? <Spinner /> : <Play size={18} fill="currentColor" />}
+          </button>
+          <button className={cls('tool', status === 'paused' && 'on')} aria-label="Pause" title="Pause" aria-pressed={status === 'paused'}
+            onClick={() => { if (status === 'playing') send('toggle'); }}><Pause size={18} fill="currentColor" /></button>
+          <StopButton flat size={16} />
+          <button className="tool" aria-label="Next" title="Next" disabled={queue?.hasNext === false} onClick={() => send('next')}><SkipForward size={18} fill="currentColor" /></button>
+        </div>
+        <SeekBar playback={playback} times="after" />
+        <div className="tools modes">
+          <button className={cls('tool', queue?.repeat !== 'off' && 'on')} aria-label="Repeat" title="Repeat" onClick={() => send('repeat')}>
+            {queue?.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
+          </button>
+          <button className={cls('tool', queue?.shuffle && 'on')} aria-label="Shuffle" title="Shuffle" onClick={() => send('shuffle')}><Shuffle size={18} /></button>
+          <VolumeButton className="tool" />
+        </div>
+      </div>
+      <div className="right">
+        <Chips />
+        <button className="round-button" aria-label="Sleep timer" onClick={(e) => openMenu(e, <SleepMenu />)}><Moon size={18} /></button>
+        <button className="round-button" aria-label="Lyrics" onClick={() => openNowPlaying('lyrics')}><Mic2 size={18} /></button>
+        <button className="round-button" aria-label="Queue" onClick={() => openNowPlaying('queue')}><ListMusic size={18} /></button>
+        {!HOSTED && <button className="round-button" aria-label="Where it plays" onClick={(e) => openMenu(e, <OutputMenu />)}><MonitorSpeaker size={18} /></button>}
+        <NowPlayingButton />
         {skin && <TrayClock />}
       </div>
     </footer>

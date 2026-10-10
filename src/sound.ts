@@ -93,7 +93,11 @@ class Sound {
     return () => { this.listeners.delete(listener); };
   }
 
+  /** Counts every change, for a component that wants to know one happened. */
+  version = 0;
+
   private changed() {
+    this.version++;
     this.listeners.forEach((l) => l());
   }
 

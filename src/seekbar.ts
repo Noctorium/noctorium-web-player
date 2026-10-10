@@ -7,8 +7,12 @@
 /** Every style, by core's name for it and in its order, with the name the listener sees. */
 export const seekBarStyles: [string, string][] = [
   ['MINIMAL', 'Minimal'], ['MATERIAL', 'Material'], ['WAVE', 'Wave'], ['SEGMENTS', 'Segments'], ['CAPSULE', 'Capsule'],
-  ['BARS', 'Bars'], ['BEADS', 'Beads'], ['NEON', 'Neon'], ['RULER', 'Ruler'], ['CLASSIC', 'Classic'], ['LUNA', 'Luna'],
+  ['BARS', 'Bars'], ['BEADS', 'Beads'], ['NEON', 'Neon'], ['RULER', 'Ruler'], ['CLASSIC', 'Classic'], ['LUNA', 'Luna'], ['SLIDER', 'Slider'],
 ];
+
+/** The Slider: a thin groove, top to bottom, and the radius of its small round handle, like a desktop's own. */
+export const SLIDER_GROOVE = 4;
+export const SLIDER_HANDLE_RADIUS = 7;
 
 /** One bar and the gap after it, and how wide the bar itself is within that. */
 export const BARS_PITCH = 5;

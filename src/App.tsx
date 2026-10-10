@@ -15,6 +15,10 @@ import { DevicesPage, DownloadsPage, QueuePage } from './pages/Other';
 import { SettingsPage } from './pages/Settings';
 import { closeNowPlaying, openNowPlaying, useUi } from './ui';
 import { STANDARD_98, windows98Of, windows98Properties } from './windows98';
+import { setIconSet } from './icons';
+import { useLooks } from './looks';
+import { parse as parseBangs } from './base/searchBangs';
+import { providerName } from './util';
 
 const allPages = [
   ['home', 'Home', HomeIcon],
@@ -68,7 +72,21 @@ function useTheme() {
     const t = playback?.track;
     document.title = t ? `${t.title} · ${t.artistLine} — Noctorium` : 'Noctorium';
   }, [playback?.track?.key]);
+  // The bar and the icons the listener chose: the Toolbar is a bar of another height, and the icons are drawn
+  // from the set in force everywhere at once.
+  const looks = useLooks();
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle('bar-toolbar', looks.playerBar === 'TOOLBAR');
+    document.documentElement.dataset.icons = looks.iconSet.toLowerCase();
+    setIconSet(looks.iconSet);
+  }, [looks.playerBar, looks.iconSet]);
 }
+
+/** The services a bang can choose, by its mode, for the search box to say where a search is going. */
+const bangNames: Record<string, string> = {
+  HYBRID: 'every service', YOUTUBE_MUSIC: providerName.YOUTUBE_MUSIC, YOUTUBE_VIDEO: 'YouTube videos', SOUNDCLOUD: providerName.SOUNDCLOUD,
+  SPOTIFY: providerName.SPOTIFY, BANDCAMP: providerName.BANDCAMP, VK: providerName.VK,
+};
 
 function luminance(hex: string) {
   const n = parseInt(hex.slice(1), 16);
@@ -169,13 +187,17 @@ function TopBar() {
     go(`/search?q=${encodeURIComponent(q)}`);
   }
 
+  // A bang at either end of what is typed sends the search to one service; the box says which, as it is typed.
+  const bang = parseBangs(text).bang;
   return (
     <header className="topbar">
       <button className="round-button" aria-label="Back" onClick={() => history.back()}><ArrowLeft size={20} /></button>
       <button className="round-button" aria-label="Forward" onClick={() => history.forward()}><ArrowRight size={20} /></button>
       <form className="searchbox" onSubmit={(e) => { e.preventDefault(); submit(); }} role="search">
         <SearchIcon size={18} />
-        <input value={text} onChange={(e) => typed(e.target.value)} placeholder="Songs, artists, playlists — or paste a link" aria-label="Search" />
+        <input value={text} onChange={(e) => typed(e.target.value)} placeholder="Songs, artists, playlists — or paste a link" aria-label="Search"
+          title={HOSTED ? 'Start or end with !ytm, !ytv, !sc or !all to search one of them' : 'Start or end with !ytm, !sc, !sp, !bc, !vk or !all to search one service'} />
+        {bang && <span className="bang-pill" title={`${bang.typed}: ${bangNames[bang.mode]} only`}>{bang.mode === 'HYBRID' ? 'All' : bangNames[bang.mode]}</span>}
       </form>
       {!HOSTED && (
         <span className="connection">
