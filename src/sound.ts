@@ -250,6 +250,8 @@ class Sound {
     this.limiter.connect(this.half);
     this.half.connect(this.clip);
     this.volumeNode = c.createGain();
+    // At the listener's volume from the first sample: the element is about to play at full into it.
+    this.volumeNode.gain.value = this.muted ? 0 : this.volume;
     this.volumeNode.connect(c.destination);
     this.analyser = c.createAnalyser();
     this.analyser.fftSize = ANALYSER_FFT_SIZE;

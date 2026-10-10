@@ -57,6 +57,26 @@ The page talks only to the Noctorium that served it, over one WebSocket:
 
 Getting in takes the key in the link `noctorium web` prints, swapped for a cookie on the first visit.
 
+## The sound, the booster and the visualiser
+
+Where the page makes the sound itself — every song in `noctorium web` with this tab as the speaker, and
+SoundCloud in the hosted player — it goes through Web Audio (`src/sound.ts`): the **volume booster**, from
+100% to 1000% (×10, +20 dB) behind a limiter, and an AnalyserNode for the **visualiser**, which draws Base's
+ten bands from the real sound, or each channel's level. The graph is only made once one of them is wanted,
+and the visualiser measures only while it is on the screen. Where the sound is out of the page's reach, both
+say so rather than pretend: the computer's mpv does its own boosting and measuring for `noctorium web` and
+sends the frames; YouTube in the hosted player plays inside YouTube's own frame, which no page can boost or
+hear; Spotify playing in Spotify's app is out of Noctorium's reach altogether.
+
+## Icons
+
+The page draws its icons in the set chosen in Settings: **Standard** and **Line** are
+[Lucide](https://lucide.dev) (ISC licence), as the page always drew it and in thin unfilled strokes;
+**Rounded**, **Outlined**, **Sharp**, **Filled** and **Two-tone** are
+[Material Icons](https://github.com/google/material-design-icons) (Apache License 2.0), the five styles the
+desktop and the phone draw, of which only the icons the page uses are bundled (`scripts/material-icons.mjs`
+writes `src/icons/material-*.ts` from the `@material-design-icons/svg` package).
+
 ## Working on it
 
 ```bash
@@ -66,7 +86,9 @@ npm run dev                    # the page on :5173, with /api passed through to 
 ```
 
 Open the `?key=` link once on :7300 so the browser has the cookie, then work on :5173.
-`npm run build` writes `dist/`, which Noctorium-cli's build carries inside its jar.
+`npm run build` writes `dist/`, which Noctorium-cli's build carries inside its jar. `npm test` runs the
+TypeScript ports of Base's pieces — bangs, the settings search, the visualiser's and the booster's numbers —
+against Base's own cases, and checks that every setting can be found.
 
 The hosted player is `npm run build:hosted` (the same page with `src/hosted/` built in, and the rest of
 `noctorium web`'s connection left out), and `npm run dev:hosted` with `vercel dev` on :3000 for the API. It is

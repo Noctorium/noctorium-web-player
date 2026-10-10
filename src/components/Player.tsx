@@ -521,6 +521,8 @@ export function MediaSession() {
       ['pause', () => send('toggle')],
       ['nexttrack', () => send('next')],
       ['previoustrack', () => send('previous')],
+      // A keyboard's Stop key: pause and back to the start, as the Stop button does.
+      ['stop', () => send('stop')],
       ['seekto', (details) => { if (details.seekTime != null) send('seek', { positionMs: Math.round(details.seekTime * 1000) }); }],
     ];
     handlers.forEach(([action, handler]) => { try { session.setActionHandler(action, handler); } catch { /* not offered here */ } });
