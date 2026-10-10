@@ -8,22 +8,30 @@ import { Controls, LikeButton, SeekBar, usePosition } from './Player';
 import { TrackList } from './Tracks';
 import { Mic2 } from '../icons';
 import { HOSTED } from '../mode';
+import { useLooks } from '../looks';
+import { PlaylistLayout } from './PlaylistLayout';
+import { VolumeButton } from './Volume';
 
 /**
  * The record: a large cover over a blur of itself, and beside it what is up next or the lyrics, lit up line by
  * line as they are sung -- the same eight sources the desktop asks, switched right here.
  */
 export function NowPlaying() {
-  const playback = usePart('playback');
-  const queue = usePart('queue');
-  const { panel } = useUi();
-  const track = playback?.track;
-
+  const { nowPlaying } = useLooks();
   useEffect(() => {
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') closeNowPlaying(); };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, []);
+  return nowPlaying === 'PLAYLIST' ? <PlaylistLayout /> : <SideBySide />;
+}
+
+/** This page's own now playing screen: the record and its controls, with the queue or the lyrics beside it. */
+function SideBySide() {
+  const playback = usePart('playback');
+  const queue = usePart('queue');
+  const { panel } = useUi();
+  const track = playback?.track;
 
   if (!track) {
     return (
@@ -57,6 +65,8 @@ export function NowPlaying() {
           <LikeButton size={22} />
           <Controls big />
           {!HOSTED && <button className="round-button" aria-label="Follow the artist" title="Follow the artist" onClick={() => send('follow')}><UserPlus size={20} /></button>}
+          {/* A phone's player bar has no volume of its own; the booster is reached from here. */}
+          <VolumeButton className="show-small" size={20} />
         </div>
         {playback?.status === 'error' && <div className="banner">{playback.error}</div>}
       </div>
@@ -88,7 +98,7 @@ export function NowPlaying() {
   );
 }
 
-function LyricsPanel() {
+export function LyricsPanel() {
   const playback = usePart('playback');
   const lyrics = usePart('lyrics');
   const position = usePosition(playback);

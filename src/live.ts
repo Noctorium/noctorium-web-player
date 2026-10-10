@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Command, State } from './types';
 import { audio } from './audio';
+import { received } from './feed';
 import { HOSTED } from './mode';
 
 /*
@@ -132,6 +133,10 @@ class Live {
         break;
       case 'audio':
         audio.command(message);
+        break;
+      case 'analysis':
+        // What mpv measures, for a visualiser on this page; only sent while one has asked.
+        received(message);
         break;
     }
   }
