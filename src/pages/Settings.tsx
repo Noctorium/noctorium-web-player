@@ -84,9 +84,11 @@ function PhoneSignIn() {
  */
 export function Row({ setting, title, detail, children, wide }: { setting: string; title: string; detail?: ReactNode; children?: ReactNode; wide?: boolean }) {
   return (
-    <div className="setting" data-setting={setting} style={wide ? { flexDirection: 'column', alignItems: 'stretch' } : undefined}>
+    // No inline style on these: a Windows skin takes a row whose controls are one styled box for a download's
+    // progress bar.
+    <div className={cls('setting', wide && 'wide')} data-setting={setting}>
       <div className="label"><strong>{title}</strong>{detail && <small>{detail}</small>}</div>
-      <div className="actions" style={wide ? { justifyContent: 'flex-start' } : undefined}>{children}</div>
+      <div className="actions">{children}</div>
     </div>
   );
 }
@@ -119,7 +121,7 @@ function Cards({ choices, chosen, choose, extra }: { choices: Choice[]; chosen?:
 
 function Chips({ choices, chosen, choose }: { choices: [string, string][]; chosen?: string; choose: (name: string) => void }) {
   return (
-    <div className="chips" style={{ margin: 0 }}>
+    <div className="chips flush">
       {choices.map(([id, label]) => <button key={id} className={cls('chip', chosen === id && 'on')} onClick={() => choose(id)}>{label}</button>)}
     </div>
   );
@@ -216,6 +218,7 @@ function SettingsSearchBox() {
             if (e.key === 'ArrowDown') { e.preventDefault(); setChosen((c) => Math.min(c + 1, matches.length - 1)); }
             if (e.key === 'ArrowUp') { e.preventDefault(); setChosen((c) => Math.max(c - 1, 0)); }
             if (e.key === 'Escape') setText('');
+            if (e.key === 'Enter') { e.preventDefault(); if (matches[chosen]) open(matches[chosen]); }
           }}
         />
       </form>

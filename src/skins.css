@@ -1571,6 +1571,8 @@
 .skin-98 .queue-table .cell.more svg { width: 12px; height: 12px; }
 .skin-98 .queue-table .row.divider { height: auto; padding: 6px 4px 2px; font-size: 11px; font-weight: bold; color: var(--w-text); }
 .skin-98 .queue-table .row.drop { box-shadow: inset 0 2px 0 var(--w-text); }
+/* Without an Artist column the artist is under the title, and the row is two lines tall. */
+:is(.skin-98, .skin-xp) .queue-table .row:has(.cell.title small) { height: 30px; }
 /* The info bar: an etched panel; the visualiser in a sunken black well, its bars a classic green. */
 .skin-98 .info-bar { margin: 4px; padding: 6px 8px; gap: 10px; background: var(--w-face); border: 0; box-shadow: inset -1px -1px var(--w-highlight), inset 1px 1px var(--w-shadow), inset -2px -2px var(--w-shadow), inset 2px 2px var(--w-highlight); }
 .skin-98 .info-bar .cover { border-radius: 0; width: 48px; outline: 1px solid var(--w-shadow); outline-offset: -1px; }
@@ -1804,4 +1806,6 @@
   :is(.skin-98, .skin-xp) .playlist-layout .playlist .info-bar { margin: 4px; }
   :is(.skin-98, .skin-xp) .player.toolbar .tool { width: 34px; height: 30px; }
   :is(.skin-98, .skin-xp) .player.toolbar .tool svg { width: 18px; height: 18px; }
+  /* The toolbar's groups sit apart on a phone, so they need no line between them. */
+  :is(.skin-98, .skin-xp) .player.toolbar :is(.modes, .transport) { box-shadow: none; padding: 0; }
 }

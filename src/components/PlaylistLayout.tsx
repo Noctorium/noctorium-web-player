@@ -146,7 +146,7 @@ function StatusBar() {
     ?? (reach.where === 'youtube' ? 'In YouTube’s own player' : reach.where === 'spotify' ? 'In Spotify’s own app' : undefined);
   return (
     <footer className="status-bar">
-      <span className="cell format ellipsis" title={format}>{playback?.track ? format ?? 'Format not known yet' : 'Stopped'}</span>
+      <span className="cell format ellipsis" title={format}>{format ?? (playback?.status === 'playing' || playback?.status === 'resolving' ? 'Format not known yet' : playback?.status === 'paused' ? 'Paused' : 'Stopped')}</span>
       {playback?.stopAfterCurrent && <span className="cell">Stops after this song</span>}
       <span className="cell count">{tracks.length} {tracks.length === 1 ? 'song' : 'songs'}</span>
       <span className="cell time">{formatTime(before + position) === '–:––' ? '0:00' : formatTime(before + position)} / {formatTime(total)}</span>
