@@ -151,7 +151,9 @@ export function SettingsPage() {
     if (!wanted || !settings) return;
     const element = document.querySelector<HTMLElement>(`[data-setting="${CSS.escape(wanted)}"]`);
     if (!element) return;
-    element.scrollIntoView({ block: 'center' });
+    // A tall one -- the themes -- from its top, so its name is in sight; anything else in the middle.
+    const room = element.closest('.content')?.clientHeight ?? window.innerHeight;
+    element.scrollIntoView({ block: element.offsetHeight > room * 0.6 ? 'start' : 'center' });
     element.classList.remove('found');
     void element.offsetWidth;
     element.classList.add('found');

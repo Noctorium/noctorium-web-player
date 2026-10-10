@@ -284,12 +284,12 @@
 .settings-pages button { padding: 8px 12px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--subtext); font-weight: 620; font-size: 13.5px; }
 .settings-pages button:hover { color: var(--text); }
 .settings-pages button.on { color: var(--text); border-bottom-color: var(--accent); }
-/* The setting a search chose, lit for a moment so the eye finds it. */
-.setting.found, .setting-block.found { animation: found 2.4s ease; }
-@keyframes found {
-  0%, 30% { box-shadow: 0 0 0 2px var(--accent), 0 0 0 7px var(--accent-soft); }
-  100% { box-shadow: 0 0 0 2px transparent, 0 0 0 7px transparent; }
-}
+/*
+ * The setting a search chose, lit for a moment so the eye finds it: lit while it is .found, which Settings takes
+ * off again after a couple of seconds, and fading out as it goes -- or, with the animations off, simply going.
+ */
+.setting, .setting-block { transition: box-shadow 0.9s ease, background-color 0.9s ease; }
+.setting.found, .setting-block.found { box-shadow: 0 0 0 2px var(--accent), 0 0 0 7px var(--accent-soft); transition: none; }
 .setting-block { border-radius: 14px; }
 .columns-editor { display: flex; flex-direction: column; gap: 4px; min-width: 240px; }
 .columns-editor .column { display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 10px; border-radius: 9px; background: var(--card); border: 1px solid var(--line); font-size: 13.5px; }
