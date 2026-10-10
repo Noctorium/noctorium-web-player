@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, ListMusic, ListX, Monitor, MonitorSpeaker, QrCode, RefreshCw, Save, Shuffle, Smartphone, Trash2, Repeat } from 'lucide-react';
+import { Download, ListMusic, ListX, Monitor, MonitorSpeaker, QrCode, RefreshCw, Save, Shuffle, Smartphone, Trash2, Repeat } from '../icons';
 import { live, send, usePart } from '../live';
 import { audio } from '../audio';
 import { cls, plural, totalTime } from '../util';

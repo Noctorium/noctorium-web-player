@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink } from '../icons';
 import { live, send, usePart } from '../live';
 import { Confirm, Prompt, Spinner, Switch } from '../components/Common';
 import { LookSettings, Row, serviceText } from '../pages/Settings';

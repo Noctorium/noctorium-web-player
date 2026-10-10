@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X } from '../icons';
 import { load, save } from './store';
 
 /** What the hosted player is, said once on Home until it is closed. */

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BookmarkCheck, BookmarkPlus, Download, ExternalLink, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from 'lucide-react';
+import { BookmarkCheck, BookmarkPlus, Download, ExternalLink, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from '../icons';
 import { send, usePart } from '../live';
 import { go, useRoute } from '../router';
 import { bigArtwork, canKeep, keepsFiles, playlistKind, plural, providerName, totalTime } from '../util';

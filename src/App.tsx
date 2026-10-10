@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Download, Home as HomeIcon, Library as LibraryIcon, ListMusic, MonitorSpeaker, Search as SearchIcon, Settings as SettingsIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, Home as HomeIcon, Library as LibraryIcon, ListMusic, MonitorSpeaker, Search as SearchIcon, Settings as SettingsIcon } from './icons';
 import { live, send, useLive, usePart } from './live';
 import { HOSTED } from './mode';
 import { go, useRoute } from './router';

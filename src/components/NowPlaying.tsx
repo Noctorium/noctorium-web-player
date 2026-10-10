@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { ChevronDown, ExternalLink, RefreshCw, UserPlus } from 'lucide-react';
+import { ChevronDown, ExternalLink, RefreshCw, UserPlus } from '../icons';
 import { send, usePart } from '../live';
 import { closeNowPlaying, setPanel, useUi } from '../ui';
 import { bigArtwork, cls, providerName } from '../util';
 import { Badge, Cover, Empty, Spinner } from './Common';
 import { Controls, LikeButton, SeekBar, usePosition } from './Player';
 import { TrackList } from './Tracks';
-import { Mic2 } from 'lucide-react';
+import { Mic2 } from '../icons';
 import { HOSTED } from '../mode';
 
 /**

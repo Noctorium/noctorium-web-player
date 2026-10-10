@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type Poin
 import {
   ChevronUp, Heart, ListMusic, Mic2, Monitor, MonitorSpeaker, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack,
   SkipForward, Smartphone, Volume1, Volume2, VolumeX, Moon,
-} from 'lucide-react';
+} from '../icons';
 import { audio } from '../audio';
 import { live, send, usePart } from '../live';
 import { openMenu, openNowPlaying, useUi, closeNowPlaying } from '../ui';

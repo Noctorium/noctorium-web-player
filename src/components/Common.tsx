@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Music2 } from 'lucide-react';
+import { Music2 } from '../icons';
 import type { Provider } from '../types';
 import { closeDialog, closeMenu, useUi } from '../ui';
 import { cls, providerBadge, providerName } from '../util';

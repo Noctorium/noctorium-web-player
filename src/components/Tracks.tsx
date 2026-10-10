@@ -1,5 +1,5 @@
 import { useState, type MouseEvent, type ReactNode } from 'react';
-import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Radio, Trash2, X } from 'lucide-react';
+import { Download, FileAudio, Heart, Link2, ListEnd, ListPlus, ListStart, MoreHorizontal, Pause, Pin, Play, Plus, ExternalLink, Radio, Trash2, X } from '../icons';
 import { HOSTED } from '../mode';
 import type { LocalPlaylist, Playlist, Track } from '../types';
 import { live, send, usePart } from '../live';

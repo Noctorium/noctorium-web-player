@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeftRight, Maximize2 } from 'lucide-react';
+import { ArrowLeftRight, Maximize2 } from '../icons';
 import { openNowPlaying, useUi } from '../ui';
 import { load, save } from './store';
 import { youtube } from './youtube';

@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent, type ReactElement } from 'react';
-import { Check, Disc3, Download, Home, Library, ListMusic, Mic2, MonitorSpeaker, Music2, Search, Settings } from 'lucide-react';
+import { Check, Disc3, Download, Home, Library, ListMusic, Mic2, MonitorSpeaker, Music2, Search, Settings } from '../icons';
 import { send, usePart } from '../live';
 import { HOSTED } from '../mode';
 import { go } from '../router';

@@ -1,4 +1,4 @@
-import { Disc3, RefreshCw } from 'lucide-react';
+import { Disc3, RefreshCw } from '../icons';
 import { send, usePart } from '../live';
 import { cls } from '../util';
 import { Empty } from '../components/Common';

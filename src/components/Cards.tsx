@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Play } from 'lucide-react';
+import { Play } from '../icons';
 import type { LocalPlaylist, Playlist, Track } from '../types';
 import { send } from '../live';
 import { go } from '../router';

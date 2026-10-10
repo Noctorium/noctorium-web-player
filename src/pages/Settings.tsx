@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check } from '../icons';
 import { send, usePart } from '../live';
 import { cls, providerName, speedName } from '../util';
 import { Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';

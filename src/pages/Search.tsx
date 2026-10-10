@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Play, Search as SearchIcon, User } from 'lucide-react';
+import { Play, Search as SearchIcon, User } from '../icons';
 import { send, usePart } from '../live';
 import { useRoute, go } from '../router';
 import { bigArtwork, cls, isArtist, providerName } from '../util';
