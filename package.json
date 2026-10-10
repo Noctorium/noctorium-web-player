@@ -10,7 +10,8 @@
     "dev:hosted": "vite --mode hosted",
     "build": "tsc --noEmit && vite build",
     "build:hosted": "tsc --noEmit && tsc --noEmit -p api && vite build --mode hosted",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "hls.js": "^1.7.3",
@@ -23,6 +24,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^5.9.3",
-    "vite": "^8.3.2"
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   }
 }

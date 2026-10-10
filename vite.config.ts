@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -18,6 +19,8 @@ export default defineConfig(({ mode }) => ({
     sourcemap: false,
     chunkSizeWarningLimit: 900,
   },
+  // The ports of Base's pieces have Base's own tests, case for case; `npm test` runs them.
+  test: { include: ['src/**/*.test.ts'], environment: 'node' },
   server: {
     port: 5173,
     proxy: {
