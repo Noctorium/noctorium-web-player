@@ -1,5 +1,18 @@
 import { useSyncExternalStore, type CSSProperties } from 'react';
-import * as Lucide from 'lucide-react';
+import {
+  ArrowLeft as ArrowLeftLine, ArrowLeftRight as ArrowLeftRightLine, ArrowRight as ArrowRightLine, BookmarkCheck as BookmarkCheckLine, BookmarkPlus as BookmarkPlusLine, Check as CheckLine,
+  ChevronDown as ChevronDownLine, ChevronUp as ChevronUpLine, ChevronsUp as ChevronsUpLine, CircleStop as CircleStopLine, Columns3 as Columns3Line, Disc3 as Disc3Line,
+  Download as DownloadLine, ExternalLink as ExternalLinkLine, FileAudio as FileAudioLine, Globe as GlobeLine, GripVertical as GripVerticalLine, Headphones as HeadphonesLine,
+  Heart as HeartLine, Home as HomeLine, Info as InfoLine, Library as LibraryLine, Link2 as Link2Line, ListEnd as ListEndLine,
+  ListMinus as ListMinusLine, ListMusic as ListMusicLine, ListPlus as ListPlusLine, ListStart as ListStartLine, ListX as ListXLine, Lock as LockLine,
+  Maximize2 as Maximize2Line, Mic2 as Mic2Line, Monitor as MonitorLine, MonitorSpeaker as MonitorSpeakerLine, Moon as MoonLine, MoreHorizontal as MoreHorizontalLine,
+  Music2 as Music2Line, Palette as PaletteLine, Pause as PauseLine, Pencil as PencilLine, Pin as PinLine, Play as PlayLine,
+  Plus as PlusLine, QrCode as QrCodeLine, Radio as RadioLine, RefreshCw as RefreshCwLine, Repeat as RepeatLine, Repeat1 as Repeat1Line,
+  Save as SaveLine, Search as SearchLine, Settings as SettingsLine, Shuffle as ShuffleLine, SkipBack as SkipBackLine, SkipForward as SkipForwardLine,
+  SlidersHorizontal as SlidersHorizontalLine, Smartphone as SmartphoneLine, Square as SquareLine, Trash2 as Trash2Line, User as UserLine, UserPlus as UserPlusLine,
+  Volume1 as Volume1Line, Volume2 as Volume2Line, VolumeX as VolumeXLine, X as XLine,
+  type LucideIcon, type LucideProps,
+} from 'lucide-react';
 import names from './names.json';
 
 /*
@@ -78,11 +91,29 @@ export interface IconProps {
   set?: string;
 }
 
+/**
+ * Lucide's drawings, by the page's names for them: imported by name, so the bundle carries these and not the
+ * whole of Lucide's thousand and more.
+ */
+const LUCIDE: Record<Exclude<IconName, 'HeartFilled'>, LucideIcon> = {
+  ArrowLeft: ArrowLeftLine, ArrowLeftRight: ArrowLeftRightLine, ArrowRight: ArrowRightLine, BookmarkCheck: BookmarkCheckLine, BookmarkPlus: BookmarkPlusLine, Check: CheckLine,
+  ChevronDown: ChevronDownLine, ChevronUp: ChevronUpLine, ChevronsUp: ChevronsUpLine, CircleStop: CircleStopLine, Columns3: Columns3Line, Disc3: Disc3Line,
+  Download: DownloadLine, ExternalLink: ExternalLinkLine, FileAudio: FileAudioLine, Globe: GlobeLine, GripVertical: GripVerticalLine, Headphones: HeadphonesLine,
+  Heart: HeartLine, Home: HomeLine, Info: InfoLine, Library: LibraryLine, Link2: Link2Line, ListEnd: ListEndLine,
+  ListMinus: ListMinusLine, ListMusic: ListMusicLine, ListPlus: ListPlusLine, ListStart: ListStartLine, ListX: ListXLine, Lock: LockLine,
+  Maximize2: Maximize2Line, Mic2: Mic2Line, Monitor: MonitorLine, MonitorSpeaker: MonitorSpeakerLine, Moon: MoonLine, MoreHorizontal: MoreHorizontalLine,
+  Music2: Music2Line, Palette: PaletteLine, Pause: PauseLine, Pencil: PencilLine, Pin: PinLine, Play: PlayLine,
+  Plus: PlusLine, QrCode: QrCodeLine, Radio: RadioLine, RefreshCw: RefreshCwLine, Repeat: RepeatLine, Repeat1: Repeat1Line,
+  Save: SaveLine, Search: SearchLine, Settings: SettingsLine, Shuffle: ShuffleLine, SkipBack: SkipBackLine, SkipForward: SkipForwardLine,
+  SlidersHorizontal: SlidersHorizontalLine, Smartphone: SmartphoneLine, Square: SquareLine, Trash2: Trash2Line, User: UserLine, UserPlus: UserPlusLine,
+  Volume1: Volume1Line, Volume2: Volume2Line, VolumeX: VolumeXLine, X: XLine,
+};
+
 /** The thin stroke of the Line set, in Lucide's 24-unit box. */
 const LINE_STROKE = 1.25;
 
 function make(name: IconName) {
-  const Drawn = Lucide[name as keyof typeof Lucide] as Lucide.LucideIcon;
+  const Drawn = LUCIDE[name as Exclude<IconName, 'HeartFilled'>];
   function Icon({ size = 24, fill, className, style, strokeWidth, set: own }: IconProps) {
     const inForce = useIconSet();
     const set = own ?? inForce;
@@ -109,7 +140,7 @@ function make(name: IconName) {
     const line = set === 'LINE';
     // Only what is asked for is passed on: Lucide's own fill is none and its stroke two, and an undefined
     // would take their place and leave the shape filled black.
-    const given: Lucide.LucideProps = {};
+    const given: LucideProps = {};
     const filled = line && name !== 'Heart' ? undefined : fill;
     if (filled) given.fill = filled;
     if (line) given.strokeWidth = LINE_STROKE;
