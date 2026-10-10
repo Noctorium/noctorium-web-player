@@ -5,6 +5,11 @@ import { audio } from '../audio';
 import { go } from '../router';
 import { likeKey } from '../util';
 import { seekBarStyles } from '../seekbar';
+import { sound } from '../sound';
+import * as VolumeBoost from '../base/volumeBoost';
+import { parse as parseBangs } from '../base/searchBangs';
+import { describe as describeFormat, queueDurationMs, type StreamFormat } from '../base/streamFormat';
+import { DEFAULT_QUEUE_COLUMNS, HOME_PLAYS, ICON_SETS, normalisedColumns, QUEUE_COLUMNS, VISUALISER_STYLES } from '../base/looks';
 import { version } from '../../package.json';
 import { ask } from './api';
 import { choose, findLyrics } from './lyrics';
@@ -41,17 +46,35 @@ interface Prefs {
   muted: boolean;
   listenbrainzToken?: string;
   listenbrainzUser?: string;
+  /** The booster's level, and the one its button goes back to; kept over a reload, as Noctorium keeps them. */
+  boostPercent: number;
+  lastBoostPercent: number;
+  visualiser: string;
+  queueColumns: string[];
+  statusBar: boolean;
+  iconSet: string;
+  homePlay: string;
 }
 
 const DEFAULTS: Prefs = {
   theme: 'NOCTORIUM_NIGHT', accent: 'THEME', progressBarStyle: 'MINIMAL', timeDisplay: 'TOTAL', animations: true,
-  taskbarClock: true, autoplay: true, volume: 0.72, muted: false,
+  taskbarClock: true, autoplay: true, volume: 0.72, muted: false, boostPercent: VolumeBoost.OFF_PERCENT,
+  lastBoostPercent: VolumeBoost.FIRST_PERCENT, visualiser: 'BARS', queueColumns: DEFAULT_QUEUE_COLUMNS, statusBar: true,
+  iconSet: 'STANDARD', homePlay: 'AUTOPLAY',
 };
+
+/** The searches the hosted player can make; Bandcamp, Spotify and VK are Noctorium's, on a computer or a phone. */
+const SEARCHABLE = new Set<Search['mode']>(['HYBRID', 'YOUTUBE_MUSIC', 'SOUNDCLOUD', 'YOUTUBE_VIDEO']);
 
 const LIKED = 'liked';
 const isYouTube = (t: Track) => t.provider === 'YOUTUBE_MUSIC' || t.provider === 'YOUTUBE_VIDEO';
 
 class Problem extends Error {}
+
+/** No search yet, in [mode]. */
+function searchFrom(mode: Search['mode']): Search {
+  return { query: '', mode, activeSearchMode: mode, loading: false, tracks: [], playlists: [], albums: [], artists: [] };
+}
 
 function shuffled<T>(items: T[]): T[] {
   const out = items.slice();
@@ -81,7 +104,7 @@ export class HostedEngine {
   private unshuffled?: Track[] = load<Track[] | undefined>('unshuffled', undefined);
   private playback: Playback;
   private generation = 0;
-  private search: Search = { query: '', mode: load('searchMode', 'HYBRID'), loading: false, tracks: [], playlists: [], albums: [], artists: [] };
+  private search: Search = searchFrom(load<Search['mode']>('searchMode', 'HYBRID'));
   private searchId = 0;
   private sections: Section[] = [];
   private homeLoading = false;
@@ -96,7 +119,7 @@ export class HostedEngine {
   /** Playlists seen on a card or in search, so one opened from there keeps the title the card showed. */
   private known = new Map<string, Playlist>();
   private fetched = new Map<string, { playlist: Playlist; at: number }>();
-  private streams = new Map<string, { url: string; hls: boolean; at: number }>();
+  private streams = new Map<string, { url: string; hls: boolean; mime?: string; at: number }>();
   private pendingSeek?: number;
   private sleepEndsAt?: number;
   private sleepAtEnd = false;
@@ -106,8 +129,16 @@ export class HostedEngine {
   /** This play's listening, for ListenBrainz: when it began, how much was heard, whether it was sent. */
   private listen = { generation: -1, startedAt: 0, heardMs: 0, lastAt: 0, nowPlaying: false, sent: false };
   private savePosition = 0;
+  /** The music stops when this song ends; see ended(). Not kept over a reload, as Noctorium does not keep it. */
+  private stopAfter = false;
+  /** What is known of the SoundCloud stream playing: its MIME type from SoundCloud, and what hls.js found. */
+  private format: StreamFormat = {};
+  /** The radio after the queue's last song, asked for while it plays so the next song starts without a wait. */
+  private radio?: { key: string; tracks: Promise<Track[]> };
 
   constructor(private store: Store) {
+    this.prefs.queueColumns = normalisedColumns(this.prefs.queueColumns ?? DEFAULT_QUEUE_COLUMNS);
+    this.prefs.boostPercent = VolumeBoost.clamp(this.prefs.boostPercent);
     const current = this.queue.tracks[this.queue.currentIndex];
     this.playback = {
       status: 'idle', track: current, volume: this.prefs.volume, positionMs: current ? load('position', 0) : 0,
@@ -119,6 +150,9 @@ export class HostedEngine {
   }
 
   start() {
+    // A reload keeps the boost, as a restart does in Noctorium; the browser starts it with the sound, at a tap.
+    if (VolumeBoost.isOn(this.prefs.boostPercent)) audio.command({ command: 'boost', generation: this.generation, percent: this.prefs.boostPercent });
+    sound.subscribe(() => this.emitPlayback());
     this.emitSettings();
     this.emitPlayback();
     this.emitQueue();
@@ -143,15 +177,29 @@ export class HostedEngine {
       spotifyConnected: false, spotifyConnecting: false, spotifyAccount: '', lastfm: { status: 'disconnected' },
       listenbrainz: this.listenbrainz, scrobbles: this.scrobbles, connectEnabled: false, desktopYouTube: false, desktopSoundCloud: false,
       version, autoplay: p.autoplay,
+      progressBarStyles: seekBarStyles.map(([name, title]) => ({ name, title })),
+      visualiser: p.visualiser, visualiserStyles: VISUALISER_STYLES.map(({ name, title, description }) => ({ name, title, description })),
+      queueColumns: p.queueColumns, allQueueColumns: QUEUE_COLUMNS.map(({ name, title, heading }) => ({ name, title, description: heading })),
+      statusBar: p.statusBar, iconSet: p.iconSet, iconSets: ICON_SETS, homePlay: p.homePlay, homePlays: HOME_PLAYS,
     };
     this.store.part('settings', settings);
   }
 
   private emitPlayback() {
+    const track = this.playback.track;
+    // YouTube plays inside YouTube's own player, another site's frame, which nothing on this page can reach.
+    const reachable = !(track && isYouTube(track)) && sound.reaches;
     this.playback = {
       ...this.playback,
       volume: this.prefs.volume,
       muted: this.prefs.muted,
+      volumeBoostPercent: this.prefs.boostPercent,
+      volumeBoostAvailable: reachable,
+      boost: reachable && VolumeBoost.isOn(this.prefs.boostPercent),
+      format: track && !isYouTube(track) ? describeFormat(this.format) : undefined,
+      stopAfterCurrent: this.stopAfter,
+      // The page measures its own sound; there is no computer here to ask.
+      analysisKind: 'NONE',
       sleep: this.sleepAtEnd ? { kind: 'endOfTrack' } : this.sleepEndsAt ? { kind: 'countdown', remainingMs: Math.max(0, this.sleepEndsAt - Date.now()) } : { kind: 'off' },
       at: Date.now(),
     };
@@ -159,6 +207,8 @@ export class HostedEngine {
   }
 
   private emitQueue() {
+    const { tracks, currentIndex } = this.queue;
+    this.queue = { ...this.queue, durationMs: queueDurationMs(tracks), elapsedBeforeMs: queueDurationMs(tracks.slice(0, Math.max(0, currentIndex))) };
     this.store.part('queue', this.queue);
     save('queue', this.queue);
     save('unshuffled', this.unshuffled);
@@ -220,7 +270,25 @@ export class HostedEngine {
       case 'mute': return this.setVolume(this.prefs.volume, !this.prefs.muted);
       case 'volume': return this.setVolume(Number(c.value), Number(c.value) > 0 ? false : this.prefs.muted);
       case 'like': if (track) this.toggleLike(track); return;
-      case 'play': return this.playFrom((c.list as Track[] | undefined) ?? (track ? [track] : []), track, c.origin as string | undefined);
+      case 'play':
+        if (c.origin === 'HOME' && track) return this.playFromHome(track, (c.list as Track[] | undefined) ?? [track]);
+        return this.playFrom((c.list as Track[] | undefined) ?? (track ? [track] : []), track, c.origin as string | undefined);
+      case 'stop': return this.stop();
+      case 'stopAfterCurrent': return this.setStopAfter(typeof c.on === 'boolean' ? c.on : !this.stopAfter);
+      case 'clearAllButCurrent': return this.clearAllButCurrent();
+      case 'boostPercent': return this.setBoost(VolumeBoost.snap(Number(c.percent)));
+      case 'boost': return this.setBoost(VolumeBoost.isOn(this.prefs.boostPercent) ? VolumeBoost.OFF_PERCENT : this.prefs.lastBoostPercent);
+      case 'visualiser': return this.choose('visualiser', c.name, VISUALISER_STYLES, 'No such visualiser');
+      case 'iconSet': return this.choose('iconSet', c.name, ICON_SETS, 'No such icon set');
+      case 'homePlay': return this.choose('homePlay', c.name, HOME_PLAYS, 'No such choice');
+      case 'statusBar': this.prefs.statusBar = !!c.on; this.savePrefs(); return this.emitSettings();
+      case 'queueColumns':
+        if (!Array.isArray(c.columns)) throw new Problem('No such columns');
+        this.prefs.queueColumns = normalisedColumns((c.columns as unknown[]).map(String));
+        this.savePrefs();
+        return this.emitSettings();
+      // The page says when it shows a visualiser fed by a computer's player; here the page measures its own.
+      case 'analysis': return;
       case 'playPlaylist': return this.playPlaylist(String(c.key), c.startAt as string | undefined, !!c.shuffle);
       case 'playLocal': {
         const list = this.local(String(c.id));
@@ -235,6 +303,8 @@ export class HostedEngine {
       case 'searchMode':
         this.search = { ...this.search, mode: c.mode as Search['mode'] };
         save('searchMode', this.search.mode);
+        // A bang in the box still says where this search goes; the page's choice is for the next one.
+        if (this.search.searchBang) return this.store.part('search', this.search);
         return this.runSearch(this.search.query, true);
       case 'filter':
         this.filter = String(c.filter);
@@ -356,7 +426,75 @@ export class HostedEngine {
     }
   }
 
+  private choose(pref: 'visualiser' | 'iconSet' | 'homePlay', name: unknown, choices: { name: string }[], refusal: string) {
+    if (!choices.some((choice) => choice.name === name)) throw new Problem(refusal);
+    this.prefs[pref] = String(name);
+    this.savePrefs();
+    this.emitSettings();
+  }
+
+  /** The booster's level, and where its button goes back to when it is switched on again. */
+  private setBoost(percent: number) {
+    this.prefs.boostPercent = percent;
+    if (VolumeBoost.isOn(percent)) this.prefs.lastBoostPercent = percent;
+    this.savePrefs();
+    audio.command({ command: 'boost', generation: this.generation, percent });
+    this.emitPlayback();
+  }
+
   // ------------------------------------------------------------ the queue and the player
+
+  /**
+   * A song picked on Home -- a shelf, Pinned, Played lately -- played as Base's playFromHome plays it: the song
+   * alone, and then what the hosted player's autoplay finds after it, its service's radio, as a radio started
+   * from it would; or, the old way, with the rest of its shelf after it. With autoplay off there is no radio to
+   * follow it, and one song and then silence would read as Home being broken, so the shelf follows it then.
+   */
+  private playFromHome(track: Track, shelf: Track[]) {
+    if (this.prefs.homePlay === 'SHELF' || !this.prefs.autoplay) return this.playFrom(shelf, track, 'HOME');
+    return this.playFrom([track], track, 'HOME');
+  }
+
+  /**
+   * Stop, as Base's AppState.stop(): playing or paused, the song pauses and goes back to its start, and Play
+   * starts it from the top; still being looked for, the looking stops; stopped already, the next Play starts the
+   * song from the top rather than where it stopped. The queue stays as it is.
+   */
+  private stop() {
+    const status = this.playback.status;
+    if (status === 'playing' || status === 'paused') {
+      this.sink().command({ command: 'pause', generation: this.generation });
+      this.sink().command({ command: 'seek', generation: this.generation, positionMs: 0 });
+      this.setPlayback({ status: 'paused', positionMs: 0 });
+    } else if (status === 'resolving') {
+      this.sink().command({ command: 'stop', generation: this.generation });
+      this.generation++;
+      this.setPlayback({ status: 'idle', positionMs: 0 });
+    } else {
+      this.setPlayback({ status: status === 'error' ? 'idle' : status, positionMs: 0, error: undefined });
+    }
+    this.persistPosition();
+  }
+
+  /** Stop after this song. A looping song would never end, so the loop is lifted while it is set. */
+  private setStopAfter(on: boolean) {
+    this.stopAfter = on;
+    this.sink().command({ command: 'loop', generation: this.generation, loop: this.queue.repeat === 'one' && !on });
+    this.emitPlayback();
+  }
+
+  /**
+   * Base's clearAllButCurrent: the queue becomes the playing song alone -- what played before it and what was to
+   * come both go -- and it plays on; autoplay carries on after it as after any last song. Nothing without a song.
+   */
+  private clearAllButCurrent() {
+    const current = this.queue.tracks[this.queue.currentIndex];
+    if (!current) return;
+    this.queue = { ...this.queue, tracks: [current], currentIndex: 0 };
+    this.unshuffled = this.unshuffled ? [current] : undefined;
+    this.emitQueue();
+    this.store.notice('Everything but this song is out of the queue', 'good');
+  }
 
   private async playFrom(list: Track[], start?: Track, origin?: string) {
     if (!list.length) return;
@@ -380,10 +518,11 @@ export class HostedEngine {
     const generation = ++this.generation;
     this.pendingSeek = startMs > 0 ? startMs : undefined;
     this.listen = { generation, startedAt: Math.floor(Date.now() / 1000), heardMs: 0, lastAt: 0, nowPlaying: false, sent: false };
+    this.format = {};
     this.setPlayback({ status: 'resolving', track, error: undefined, positionMs: startMs, durationMs: track.durationMs ?? 0 });
     this.remember(track);
     if (this.prefs.accent === 'ARTWORK') this.refreshAccent();
-    const loop = this.queue.repeat === 'one';
+    const loop = this.looping();
     const { volume, muted } = this.prefs;
 
     if (isYouTube(track)) {
@@ -407,8 +546,16 @@ export class HostedEngine {
       return;
     }
     if (generation !== this.generation) return;
-    const { volume, muted } = this.prefs;
-    audio.command({ command: 'load', generation, url: stream.url, hls: stream.hls, volume, muted, loop: this.queue.repeat === 'one' });
+    const { volume, muted, boostPercent } = this.prefs;
+    // SoundCloud says what it sends; hls.js may say more once it has read the stream.
+    this.format = { codec: stream.mime };
+    this.emitPlayback();
+    audio.command({ command: 'load', generation, url: stream.url, hls: stream.hls, volume, muted, loop: this.looping(), boostPercent });
+  }
+
+  /** Whether the song goes round: repeat one, unless the music is to stop after it. */
+  private looping() {
+    return this.queue.repeat === 'one' && !this.stopAfter;
   }
 
   /**
@@ -430,16 +577,21 @@ export class HostedEngine {
   private async stream(track: Track) {
     const cached = this.streams.get(track.id);
     if (cached && Date.now() - cached.at < 5 * 60_000) return cached;
-    const found = await ask<{ url: string; hls: boolean }>('stream', { id: track.id });
+    const found = await ask<{ url: string; hls: boolean; mime?: string }>('stream', { id: track.id });
     const entry = { ...found, at: Date.now() };
     this.streams.set(track.id, entry);
     return entry;
   }
 
-  /** SoundCloud takes a moment to say where a track is, so the next one is asked as this one starts. */
+  /**
+   * SoundCloud takes a moment to say where a track is, so the next one is asked as this one starts; and the last
+   * song's radio is asked for while it plays, so autoplay -- after a song picked on Home, say -- carries on at once.
+   */
   private prefetchNext() {
     const next = this.queue.tracks[this.queue.currentIndex + 1];
     if (next?.provider === 'SOUNDCLOUD') this.stream(next).catch(() => undefined);
+    const current = this.queue.tracks[this.queue.currentIndex];
+    if (!next && current && this.prefs.autoplay && this.queue.repeat === 'off') this.radioAfter(current).catch(() => undefined);
   }
 
   private failed(message: string) {
@@ -489,7 +641,7 @@ export class HostedEngine {
     if (this.prefs.autoplay && last) {
       // The queue ran out: carry on with what the service would play after the last song.
       try {
-        const { tracks } = await ask<{ tracks: Track[] }>('radio', { key: `${last.provider}:${last.id}` });
+        const tracks = await this.radioAfter(last);
         const seen = new Set(this.queue.tracks.map((t) => t.key));
         const more = tracks.filter((t) => !seen.has(t.key)).slice(0, 25);
         if (more.length) {
@@ -501,6 +653,17 @@ export class HostedEngine {
       }
     }
     this.stopAtEnd();
+  }
+
+  /** The radio after [last], asked for once: while it plays (see prefetchNext), or now. */
+  private radioAfter(last: Track): Promise<Track[]> {
+    if (this.radio?.key !== last.key) {
+      const tracks = ask<{ tracks: Track[] }>('radio', { key: `${last.provider}:${last.id}` }).then((r) => r.tracks);
+      this.radio = { key: last.key, tracks };
+      // A radio that failed is asked again next time, rather than remembered as none.
+      tracks.catch(() => { if (this.radio?.tracks === tracks) this.radio = undefined; });
+    }
+    return this.radio.tracks;
   }
 
   private stopAtEnd() {
@@ -538,7 +701,7 @@ export class HostedEngine {
     const repeat = this.queue.repeat === 'off' ? 'all' : this.queue.repeat === 'all' ? 'one' : 'off';
     this.queue = { ...this.queue, repeat };
     this.emitQueue();
-    this.sink().command({ command: 'loop', generation: this.generation, loop: repeat === 'one' });
+    this.sink().command({ command: 'loop', generation: this.generation, loop: this.looping() });
   }
 
   private setVolume(volume: number, muted: boolean) {
@@ -638,6 +801,7 @@ export class HostedEngine {
         break;
       case 'ended':
         this.submitListen(false);
+        if (this.stopAfter) return this.stoppedAfter();
         if (this.sleepAtEnd) {
           this.sleepAtEnd = false;
           this.setPlayback({ status: 'paused', positionMs: durationMs });
@@ -646,10 +810,37 @@ export class HostedEngine {
         }
         this.next();
         break;
+      case 'format':
+        this.format = { ...this.format, ...Object.fromEntries(['codec', 'channels', 'bitsPerSecond'].filter((k) => event[k] != null).map((k) => [k, event[k]])) };
+        this.emitPlayback();
+        break;
       case 'error':
         if (!this.recover()) this.failed(event.message ?? 'It stopped playing');
         break;
     }
+  }
+
+  /**
+   * The song ended with stop-after-this-song set, as Base does it: nothing plays -- not the next, not autoplay,
+   * not this one again -- and the queue moves on to what would have played next, so Play carries on from there.
+   * Repeating one, that is the same song; at the end of a repeating queue, its first; at the end of any other,
+   * it stays. A sleep timer set for the end of the song is used up too. Then it clears itself.
+   */
+  private stoppedAfter() {
+    this.stopAfter = false;
+    this.sleepAtEnd = false;
+    const { tracks, currentIndex, repeat } = this.queue;
+    const index = repeat === 'one' ? currentIndex
+      : currentIndex + 1 < tracks.length ? currentIndex + 1
+        : repeat === 'all' && tracks.length ? 0 : currentIndex;
+    this.sink().command({ command: 'stop', generation: this.generation });
+    this.generation++;
+    this.queue = { ...this.queue, currentIndex: index };
+    this.emitQueue();
+    const track = tracks[index];
+    this.setPlayback({ status: 'idle', track, positionMs: 0, durationMs: track?.durationMs ?? 0, error: undefined });
+    this.persistPosition();
+    this.store.notice('Stopped after that song');
   }
 
   private persistPosition() {
@@ -758,16 +949,29 @@ export class HostedEngine {
 
   // ------------------------------------------------------------ search, home, links
 
+  /**
+   * A search, bangs and all: `!sc daft punk` asks SoundCloud alone for "daft punk", whatever the page's own choice,
+   * which stays as it was; the query keeps what was typed. A bang alone has chosen the service and asks nothing yet.
+   */
   private async runSearch(query: string, again = false) {
-    const q = query.trim();
-    if (!q) return;
-    if (!again && q === this.search.query && !this.search.loading && this.search.tracks.length) return;
+    const typed = query.trim();
+    if (!typed) return;
+    const { query: words, bang } = parseBangs(typed);
+    const q = words.trim();
+    const mode = bang?.mode ?? this.search.mode;
+    if (!again && typed === this.search.query && !this.search.loading && (this.search.tracks.length || !q)) return;
     const id = ++this.searchId;
-    const changed = q !== this.search.query;
-    this.search = { ...this.search, query: q, loading: true, ...(changed || again ? { tracks: [], playlists: [], albums: [], artists: [] } : {}) };
+    const changed = typed !== this.search.query;
+    const searching = !!q && SEARCHABLE.has(mode);
+    this.search = {
+      ...this.search, query: typed, searchBang: bang?.typed, activeSearchMode: mode, loading: searching,
+      ...(changed || again ? { tracks: [], playlists: [], albums: [], artists: [] } : {}),
+    };
     this.store.part('search', this.search);
+    if (!q) return;
+    if (!searching) throw new Problem('Bandcamp, Spotify and VK are searched by Noctorium on your computer or phone');
     try {
-      const found = await ask<Omit<Search, 'query' | 'mode' | 'loading'>>('search', { q, mode: this.search.mode });
+      const found = await ask<Omit<Search, 'query' | 'mode' | 'loading'>>('search', { q, mode });
       if (id !== this.searchId) return;
       this.learn(found.playlists);
       this.learn(found.albums.map((a) => ({

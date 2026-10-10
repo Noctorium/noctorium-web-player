@@ -144,7 +144,8 @@ export async function radio(id: string): Promise<Track[]> {
   return (reply.collection ?? []).map(trackFrom).filter((t: Track | undefined): t is Track => !!t);
 }
 
-export interface Stream { url: string; hls: boolean }
+/** Where a track's audio is, whether it is HLS, and the MIME type SoundCloud gives it, for the status bar. */
+export interface Stream { url: string; hls: boolean; mime?: string }
 
 /**
  * Where the browser can read a track's audio from: MP3 over plain HTTP where SoundCloud offers it, as the
@@ -170,7 +171,7 @@ export async function stream(id: string): Promise<Stream> {
   const choices = (json.media?.transcodings ?? []).filter((t: Json) => rank(t) < 9).sort((a: Json, b: Json) => rank(a) - rank(b));
   for (const choice of choices) {
     const reply = await api(choice.url, { track_authorization: json.track_authorization }).catch(() => undefined);
-    if (reply?.url) return { url: reply.url, hls: choice.format.protocol === 'hls' };
+    if (reply?.url) return { url: reply.url, hls: choice.format.protocol === 'hls', mime: choice.format.mime_type || undefined };
   }
   throw new Upstream('SoundCloud offered no stream a browser can play');
 }
