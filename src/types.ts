@@ -54,6 +54,19 @@ export interface Playback {
   /** A Spotify song the account's own Spotify app is playing, rather than the computer or this tab. */
   onSpotify?: boolean;
   at: number;
+  /**
+   * The booster's level as chosen, 100 to 1000 (`boost` is whether it is on where the music is now), and whether
+   * it can reach the sound there at all: not Spotify playing in its own app, nor YouTube in the hosted player's
+   * embedded one. These, down to analysisKind, come from a Noctorium from the Audacious release on.
+   */
+  volumeBoostPercent?: number;
+  volumeBoostAvailable?: boolean;
+  /** Base's StreamFormat.describe(): "Opus, stereo, 48 kHz, 128 kbit/s"; absent when nothing is known. */
+  format?: string;
+  /** The music stops when this song ends, and the queue waits on the next. */
+  stopAfterCurrent?: boolean;
+  /** What the computer's player can measure for a visualiser now; NONE while this tab is the speaker. */
+  analysisKind?: 'NONE' | 'LEVELS' | 'SPECTRUM';
 }
 
 /**
@@ -79,6 +92,9 @@ export interface Queue {
   /** Whether next would go anywhere. */
   hasNext?: boolean;
   autoplay?: AutoplayState;
+  /** The whole queue's length, of the songs whose length is known, and the songs' before the one playing. */
+  durationMs?: number;
+  elapsedBeforeMs?: number;
 }
 
 export interface Section { id: string; title: string; subtitle?: string; provider: Provider; tracks: Track[]; playlists: Playlist[] }
@@ -93,6 +109,12 @@ export interface Search {
   playlists: Playlist[];
   albums: Album[];
   artists: Artist[];
+  /**
+   * The bang in force, as typed ("!sc"), and the search it chose -- or the page's own mode without one. The
+   * query keeps what was typed, bang and all.
+   */
+  searchBang?: string;
+  activeSearchMode?: Search['mode'];
 }
 
 export interface Library {
@@ -287,6 +309,21 @@ export interface Settings {
    * before the switch does not send it, and its clock shows.
    */
   taskbarClock?: boolean;
+  /** Every seek bar, in core's order, with what it is; Slider among them from the Audacious release on. */
+  progressBarStyles?: Choice[];
+  /**
+   * The desktop-music-player look's choices, which every player shares: the visualiser, the queue table's
+   * columns, the status bar, the icon set, and what a song picked on Home plays after it -- each with its choices.
+   */
+  visualiser?: string;
+  visualiserStyles?: Choice[];
+  queueColumns?: string[];
+  allQueueColumns?: Choice[];
+  statusBar?: boolean;
+  iconSet?: string;
+  iconSets?: Choice[];
+  homePlay?: string;
+  homePlays?: Choice[];
 }
 
 export interface Download { track: Track; bytes: number; at: number }
