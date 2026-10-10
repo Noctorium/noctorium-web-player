@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download, ListMusic, ListX, Monitor, MonitorSpeaker, QrCode, RefreshCw, Save, Shuffle, Smartphone, Trash2, Repeat } from '../icons';
+import { CircleStop, Download, ListMinus, ListMusic, ListX, Monitor, MonitorSpeaker, QrCode, RefreshCw, Save, Shuffle, Smartphone, Trash2, Repeat } from '../icons';
 import { live, send, usePart } from '../live';
 import { audio } from '../audio';
 import { cls, plural, totalTime } from '../util';
@@ -11,6 +11,7 @@ import type { AutoplayState, Queue } from '../types';
 
 export function QueuePage() {
   const queue = usePart('queue');
+  const playback = usePart('playback');
   if (!queue?.tracks.length) return <Empty icon={<ListMusic size={44} />} title="The queue is empty">Play something and it fills up; the ⋯ menu adds to it.</Empty>;
   const next = queue.tracks.length - queue.currentIndex - 1;
   return (
@@ -21,6 +22,15 @@ export function QueuePage() {
         <span style={{ flex: 1 }} />
         <button className={cls('button small', queue.shuffle && 'primary')} onClick={() => send('shuffle')}><Shuffle size={15} /> Shuffle</button>
         <button className={cls('button small', queue.repeat !== 'off' && 'primary')} onClick={() => send('repeat')}><Repeat size={15} /> {queue.repeat === 'one' ? 'This track' : queue.repeat === 'all' ? 'The queue' : 'Repeat'}</button>
+        {/* The playing song alone left, what came before it and what was to come both gone; Noctorium from before
+            it says nothing of stopping after a song either, and has neither. */}
+        {playback?.stopAfterCurrent != null && (
+          <>
+            <button className={cls('button small', playback.stopAfterCurrent && 'primary')} aria-pressed={playback.stopAfterCurrent} disabled={!playback.track}
+              onClick={() => send('stopAfterCurrent', { on: !playback.stopAfterCurrent })}><CircleStop size={15} /> Stop after this song</button>
+            <button className="button small" disabled={queue.currentIndex < 0 || queue.tracks.length < 2} onClick={() => send('clearAllButCurrent')}><ListMinus size={15} /> Clear all but this song</button>
+          </>
+        )}
         <button className="button small danger" onClick={() => openDialog(<Confirm title="Clear the queue?" detail="Playback stops too." action="Clear" danger yes={() => send('clearQueue')} />)}><Trash2 size={15} /> Clear</button>
       </div>
       {HOSTED ? <p className="page-subtitle">Drag to reorder.</p> : (

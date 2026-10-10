@@ -8,6 +8,7 @@ import { PlaylistCard, Shelf } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
 import type { Search as SearchState } from '../types';
 import { HOSTED } from '../mode';
+import { parse as parseBangs } from '../base/searchBangs';
 
 /**
  * Bandcamp, Spotify and VK are read by Noctorium itself, so the hosted player, which has none behind it,
@@ -35,8 +36,15 @@ export function Search() {
     if (query && query !== search?.query) send('search', { query });
   }, [query]);
 
+  // A bang chooses the service for this search, whatever the chips say; one alone has chosen it and asked nothing.
+  const bang = parseBangs(query);
+  const active = search?.activeSearchMode ?? bang.bang?.mode ?? search?.mode;
+  const activeName = modes.find(([mode]) => mode === active)?.[1] ?? (active === 'HYBRID' ? 'All' : providerName[active as keyof typeof providerName] ?? active);
   if (!query) {
     return <Empty icon={<SearchIcon size={44} />} title="Find something to play">{HOSTED ? 'Both services at once — or paste a link from either.' : 'Every service at once — or paste a link from any of them.'}</Empty>;
+  }
+  if (bang.bang && !bang.query.trim()) {
+    return <Empty icon={<SearchIcon size={44} />} title={`${bang.bang.typed}: ${active === 'HYBRID' ? 'every service' : activeName}`}>Now type what to look for there.</Empty>;
   }
   const top = search?.tracks[0];
   // Bandcamp's and Spotify's albums and artists come as playlists, which is how they open, and are shown as what
@@ -51,10 +59,15 @@ export function Search() {
     <>
       <div className="chips" style={{ marginTop: 14 }}>
         {modes.map(([mode, label]) => (
-          <button key={mode} className={cls('chip', search?.mode === mode && 'on')} onClick={() => send('searchMode', { mode })}>{label}</button>
+          <button key={mode} className={cls('chip', active === mode && 'on')} disabled={!!bang.bang && active !== mode} onClick={() => send('searchMode', { mode })}>{label}</button>
         ))}
         {search?.loading && <Spinner />}
       </div>
+      {bang.bang && (
+        <p className="shelf-subtitle bang-note">
+          <b>{bang.bang.typed}</b> in the search box chose {active === 'HYBRID' ? 'every service' : activeName} for this search; take it out to choose here.
+        </p>
+      )}
       {top && (
         <section className="top-result">
           <div className="card" style={{ background: 'var(--card)', padding: 20, margin: 0 }} role="button" tabIndex={0}
