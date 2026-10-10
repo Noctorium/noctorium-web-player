@@ -1439,3 +1439,369 @@
   .skin-xp .now-playing { padding: 12px; }
   .skin-xp .np-close { top: 16px; right: 17px; }
 }
+
+/* ================================================================== the desktop-music-player look, in both skins */
+
+/*
+ * The Toolbar, the Slider, the volume popover and its booster, the Playlist layout and the settings' search and
+ * pages, as each skin draws such things: under 98 a toolbar of flat buttons that rise when pointed at, a trackbar,
+ * a tab control over a details list, a status bar of sunken panes; under XP the same in Luna. The Playlist layout
+ * is the window itself rather than windows on the desktop, as a music player's main window is: the album art docked
+ * at its left under a tool window's small caption, the playlist in tabs, the info bar under it, the status bar
+ * along the foot.
+ */
+
+/* ------------------------------------------------ 98: the Toolbar */
+
+.skin-98 .tool { width: 24px; height: 22px; border-radius: 0; color: var(--w-text); transition: none; }
+.skin-98 .tool svg { width: 16px; height: 16px; }
+.skin-98 .tool:hover:not(:disabled) { background: none; color: var(--w-text); box-shadow: var(--w-thin-raised); }
+.skin-98 .tool:active:not(:disabled) { background: none; box-shadow: var(--w-thin-sunken); }
+.skin-98 .tool:active:not(:disabled) svg { transform: translate(1px, 1px); }
+.skin-98 .tool.on, .skin-98 .tool.on:hover:not(:disabled) { color: var(--w-text); background: var(--w-dither); box-shadow: var(--w-thin-sunken); }
+.skin-98 .tools { gap: 1px; }
+/* The groups of a 98 toolbar are parted by an etched line. */
+.skin-98 .player.toolbar .modes { padding-left: 6px; box-shadow: inset 1px 0 var(--w-shadow), inset 2px 0 var(--w-highlight); }
+.skin-98 .player.toolbar .transport { padding-right: 6px; box-shadow: inset -2px 0 var(--w-highlight), inset -1px 0 var(--w-shadow); }
+.skin-98 .volume-button.boosted, .skin-98 .tool.volume-button.boosted { width: auto; padding: 0 3px; gap: 2px; background: none; color: var(--w-text); border-radius: 0; }
+.skin-98 .boost-mark { font-size: 11px; font-weight: bold; }
+.skin-98 .seek .time.both { min-width: 78px; }
+@media (min-width: 861px) {
+  :root.skin-98.bar-toolbar, :root.skin-xp.bar-toolbar { --player: 62px; }
+  :is(.skin-98, .skin-xp) .player.toolbar .middle { gap: 8px; padding: 0 6px; }
+  :is(.skin-98, .skin-xp) .player.toolbar .now .cover { width: 16px; }
+  .skin-98 .player .right .volume-button.boosted { width: auto; }
+}
+
+/* ------------------------------------------------ 98: the Slider is a trackbar, the part played in the selection's colour */
+
+.skin-98 .bar.SLIDER { height: 22px; }
+/* A channel six pixels deep: two of bevel each side, and two between them for the part played. */
+.skin-98 .bar.SLIDER::-webkit-slider-runnable-track { height: 6px; border-radius: 0; background: linear-gradient(to right, var(--w-selection) var(--fill), var(--w-window) var(--fill)); box-shadow: var(--w-sunken); }
+.skin-98 .bar.SLIDER::-moz-range-track { height: 6px; border-radius: 0; background: var(--w-window); box-shadow: var(--w-sunken); }
+.skin-98 .bar.SLIDER::-moz-range-progress { height: 6px; border-radius: 0; background: var(--w-selection); }
+.skin-98 .bar.SLIDER::-webkit-slider-thumb { opacity: 1; width: 11px; height: 21px; margin-top: -8px; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
+.skin-98 .bar.SLIDER::-moz-range-thumb { opacity: 1; width: 11px; height: 21px; border: 0; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
+
+/* ------------------------------------------------ 98: the volume popover and the booster */
+
+.skin-98 .menu:has(.volume-popover) { min-width: 250px; }
+.skin-98 .volume-popover { padding: 0 3px 3px; gap: 6px; }
+.skin-98 .volume-popover .heading { padding: 3px 3px 0; }
+.skin-98 .menu .volume-popover button.round-button { width: 24px; height: 22px; border-radius: 0; padding: 0; }
+.skin-98 .menu .volume-popover button:hover { background: none; color: var(--w-text); }
+.skin-98 .volume-popover .figure, .skin-98 .boost-control .figure { color: var(--w-text); font-size: 11px; }
+.skin-98 :is(.volume-popover, .boost-control) .figure small { color: var(--w-text); font-weight: bold; }
+.skin-98 :is(.menu .volume-popover, .setting .boost-control) .boost-toggle {
+  height: 23px;
+  padding: 0 10px;
+  gap: 4px;
+  border: 0;
+  border-radius: 0;
+  background: var(--w-face);
+  color: var(--w-text);
+  box-shadow: var(--w-raised);
+  font-size: 11px;
+  font-weight: normal;
+}
+.skin-98 :is(.menu .volume-popover, .setting .boost-control) .boost-toggle svg { width: 14px; height: 14px; }
+.skin-98 :is(.menu .volume-popover, .setting .boost-control) .boost-toggle.on { background: var(--w-dither); color: var(--w-text); box-shadow: var(--w-pressed); padding: 2px 9px 0 11px; }
+.skin-98 :is(.menu .volume-popover, .setting .boost-control) .boost-toggle:disabled { opacity: 1; }
+.skin-98 .bar.boost { height: 22px; }
+.skin-98 .bar.boost::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 0;
+  box-shadow: var(--w-sunken);
+  background: linear-gradient(to right, var(--w-selection) 0 min(var(--fill), var(--loud)), var(--w-bad) min(var(--fill), var(--loud)) var(--fill), var(--w-window) var(--fill));
+}
+.skin-98 .bar.boost::-webkit-slider-thumb { width: 11px; height: 21px; margin-top: -8px; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
+.skin-98 .bar.boost::-moz-range-thumb { width: 11px; height: 21px; border: 0; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); }
+.skin-98 .boost-scale { color: var(--w-text); font-size: 11px; margin-top: -2px; }
+.skin-98 .boost-note { color: var(--w-text); font-size: 11px; }
+.skin-98 .boost-note.loud { color: var(--w-bad); font-weight: bold; }
+
+/* ------------------------------------------------ 98: the Playlist layout, the window itself */
+
+.skin-98 .now-playing.playlist-layout { background: var(--w-face); padding: 4px 4px 0; gap: 4px; }
+.skin-98 .playlist-layout .pane { background: var(--w-face); border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; }
+.skin-98 .playlist-layout .album-art { padding: 0 2px 4px; box-shadow: var(--w-thin-raised); }
+/* A docked tool window's caption: shorter than a window's, in the same gradient. */
+.skin-98 .playlist-layout .pane-title { height: 15px; margin: 2px 0 4px; padding: 0 3px; background: var(--w-title); color: var(--w-title-text); font-size: 11px; font-weight: bold; letter-spacing: 0; text-transform: none; line-height: 15px; }
+.skin-98 .playlist-layout .album-art .cover { border-radius: 0; padding: 2px; background: var(--w-window); box-shadow: var(--w-sunken); outline: 0; }
+.skin-98 .playlist-tabs { padding: 4px 4px 0; gap: 0; border-bottom: 0; position: relative; z-index: 1; }
+.skin-98 .playlist-tabs .tab {
+  height: 20px;
+  margin: 2px 0 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: var(--w-face);
+  color: var(--w-text);
+  font-size: 11px;
+  font-weight: normal;
+  box-shadow: inset 1px 1px var(--w-highlight), inset -1px 0 var(--w-dark-shadow), inset -2px 0 var(--w-shadow), inset 2px 2px var(--w-light);
+}
+.skin-98 .playlist-tabs .tab small { color: var(--w-text); font-size: 11px; }
+.skin-98 .playlist-tabs .tab.on { height: 23px; margin: 0 -2px -1px; padding: 0 12px 1px; position: relative; z-index: 1; }
+.skin-98 .playlist-tabs .tool { margin-bottom: 1px; }
+.skin-98 .playlist-body {
+  margin: 0 4px;
+  padding: 4px;
+  background: var(--w-face);
+  box-shadow: inset -1px -1px var(--w-dark-shadow), inset 1px 1px var(--w-highlight), inset -2px -2px var(--w-shadow);
+}
+.skin-98 .playlist-body > * { background: var(--w-window); box-shadow: var(--w-sunken); padding: 2px; min-height: 100%; }
+.skin-98 .playlist-body .lyrics-sources { min-height: 0; box-shadow: none; padding: 6px 6px 8px; }
+/* The table: a details list under a row of header buttons. */
+.skin-98 .queue-table { font-size: 11px; }
+.skin-98 .queue-table .row { gap: 0; height: 17px; padding: 0; border: 0; color: var(--w-text); }
+.skin-98 .queue-table .cell { padding: 0 4px; }
+.skin-98 .queue-table .row.head { height: 18px; background: var(--w-face); color: var(--w-text); font-size: 11px; font-weight: normal; }
+.skin-98 .queue-table .row.head > * { height: 100%; display: flex; align-items: center; box-shadow: inset -1px -1px var(--w-dark-shadow), inset 1px 1px var(--w-highlight), inset -2px -2px var(--w-shadow); }
+.skin-98 .queue-table .row.head .cell.number, .skin-98 .queue-table .row.head .cell.duration { justify-content: flex-end; }
+.skin-98 .queue-table .row:not(.head):not(.divider):hover { background: none; }
+.skin-98 .queue-table .row.playing { background: none; }
+.skin-98 .queue-table .row.playing .title, .skin-98 .queue-table .row.playing .cell { color: var(--w-text); font-weight: bold; }
+.skin-98 .queue-table .row.chosen, .skin-98 .queue-table .row.chosen:hover { background: var(--w-selection); }
+.skin-98 .queue-table .row.chosen .cell, .skin-98 .queue-table .row.chosen .title { color: var(--w-selection-text); }
+.skin-98 .queue-table .row:focus-visible { outline: 1px dotted var(--w-text); outline-offset: -1px; }
+.skin-98 .queue-table .cell.number, .skin-98 .queue-table .cell.duration, .skin-98 .queue-table .cell.artist, .skin-98 .queue-table .cell.album { color: var(--w-text); font-size: 11px; }
+.skin-98 .queue-table .cell.title small { color: var(--w-text); font-size: 11px; }
+.skin-98 .queue-table .cell.more { width: 18px; height: 15px; }
+.skin-98 .queue-table .cell.more svg { width: 12px; height: 12px; }
+.skin-98 .queue-table .row.divider { height: auto; padding: 6px 4px 2px; font-size: 11px; font-weight: bold; color: var(--w-text); }
+.skin-98 .queue-table .row.drop { box-shadow: inset 0 2px 0 var(--w-text); }
+/* The info bar: an etched panel; the visualiser in a sunken black well, its bars a classic green. */
+.skin-98 .info-bar { margin: 4px; padding: 6px 8px; gap: 10px; background: var(--w-face); border: 0; box-shadow: inset -1px -1px var(--w-highlight), inset 1px 1px var(--w-shadow), inset -2px -2px var(--w-shadow), inset 2px 2px var(--w-highlight); }
+.skin-98 .info-bar .cover { border-radius: 0; width: 48px; outline: 1px solid var(--w-shadow); outline-offset: -1px; }
+.skin-98 .info-bar .title { font-size: 16px; font-weight: bold; letter-spacing: 0; }
+.skin-98 .info-bar .artist { color: var(--w-text); font-size: 11px; }
+.skin-98 .info-bar .error { color: var(--w-bad); font-size: 11px; }
+.skin-98 .visualiser:not(.blind) { padding: 3px; background: #000; box-shadow: var(--w-sunken); --vis-bar: #00d000; --vis-rest: #003800; --vis-peak: #ffff00; }
+.skin-98.w98-dark .visualiser:not(.blind) { --vis-bar: var(--accent); --vis-rest: color-mix(in srgb, var(--accent) 22%, #000); --vis-peak: #ffffff; }
+.skin-98 .visualiser .channels { color: #00d000; left: 4px; z-index: 1; }
+.skin-98.w98-dark .visualiser .channels { color: var(--accent); }
+.skin-98 .visualiser.meter { padding-left: 16px; }
+.skin-98 .visualiser.blind { color: var(--w-text); font-size: 11px; font-weight: bold; }
+.skin-98 .visualiser.blind small { font-size: 11px; font-weight: normal; color: var(--w-quiet); }
+/* The status bar: sunken panes along the window's foot. */
+.skin-98 .status-bar { height: 22px; margin: 0 -4px; padding: 2px; gap: 2px; background: var(--w-face); border: 0; box-shadow: inset 0 1px var(--w-highlight); color: var(--w-text); font-size: 11px; }
+.skin-98 .status-bar .cell { height: 18px; line-height: 18px; padding: 0 5px; border: 0; box-shadow: var(--w-thin-sunken); }
+.skin-98 .playlist-controls { background: var(--w-face); border-top: 0; box-shadow: inset 0 1px var(--w-highlight); }
+.skin-98 .playlist-controls .controls .round-button { background: var(--w-face); box-shadow: var(--w-raised); }
+
+/* ------------------------------------------------ 98: settings -- the search, the sections and their pages */
+
+.skin-98 .settings section > h2.legend { display: block; }
+.skin-98 .settings-search .searchbox { height: 22px; padding: 0 4px 0 6px; gap: 4px; border: 0; border-radius: 0; background: var(--w-window); box-shadow: var(--w-sunken); max-width: 420px; margin-left: 0; }
+.skin-98 .settings-search .searchbox::before { content: none; }
+.skin-98 .settings-results { padding: 3px; border: 0; border-radius: 0; background: var(--w-face); box-shadow: var(--w-frame); max-width: 420px; }
+.skin-98 .settings-results button { border-radius: 0; padding: 3px 6px; gap: 0; color: var(--w-text); }
+.skin-98 .settings-results button.on, .skin-98 .settings-results button:hover { background: var(--w-selection); color: var(--w-selection-text); }
+.skin-98 .settings-results strong { font-size: 11px; font-weight: bold; }
+.skin-98 .settings-results small, .skin-98 .settings-results .none { font-size: 11px; color: inherit; }
+.skin-98 .settings-results mark { color: inherit; text-decoration: underline; font-weight: bold; }
+/* A section's pages are a tab control, as a properties sheet's were. */
+.skin-98 .settings-pages { gap: 0; border: 0; padding: 0 4px; margin-top: 2px; position: relative; }
+.skin-98 .settings-pages::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; box-shadow: inset 0 1px var(--w-highlight), inset 0 2px var(--w-light); }
+.skin-98 .settings-pages button {
+  height: 20px;
+  margin: 2px 0 0;
+  padding: 0 10px;
+  border: 0;
+  background: var(--w-face);
+  color: var(--w-text);
+  font-size: 11px;
+  font-weight: normal;
+  box-shadow: inset 1px 1px var(--w-highlight), inset -1px 0 var(--w-dark-shadow), inset -2px 0 var(--w-shadow), inset 2px 2px var(--w-light);
+}
+.skin-98 .settings-pages button.on { height: 22px; margin: 0 -2px 0; padding: 0 12px 2px; position: relative; z-index: 1; }
+.skin-98 .settings-sections { gap: 4px; }
+.skin-98 .settings-sections .chip svg { width: 14px; height: 14px; }
+.skin-98 .setting.found, .skin-98 .setting-block.found { animation: found98 2.4s steps(1); }
+@keyframes found98 { 0%, 70% { outline: 1px dotted var(--w-text); outline-offset: 2px; background: var(--w-dither); } }
+.skin-98 .setting-note { color: var(--w-text); font-size: 11px; }
+.skin-98 .choice-card { border: 0; border-radius: 0; background: var(--w-face); box-shadow: var(--w-raised); color: var(--w-text); padding: 6px 7px; }
+.skin-98 .choice-card:hover { background: var(--w-face); }
+.skin-98 .choice-card.on { box-shadow: var(--w-pressed); background: var(--w-dither); padding: 7px 6px 5px 8px; outline: 1px dotted var(--w-text); outline-offset: -4px; }
+.skin-98 .choice-card strong { font-size: 11px; font-weight: bold; }
+.skin-98 .choice-card small { color: var(--w-text); font-size: 11px; }
+.skin-98 .choice-card .tick { color: var(--w-text); }
+.skin-98 .choice-card .mini { border-radius: 0; box-shadow: none; outline: 1px solid var(--w-shadow); }
+.skin-98 .icon-sample { color: var(--w-text); }
+.skin-98 .columns-editor .column { border: 0; border-radius: 0; background: var(--w-window); box-shadow: var(--w-thin-sunken); font-size: 11px; padding: 2px 4px 2px 6px; }
+.skin-98 .columns-editor .column .round-button { width: 22px; height: 20px; }
+.skin-98 .bang { font-size: 11px; }
+.skin-98 .bang code { border-radius: 0; background: var(--w-window); color: var(--w-text); box-shadow: var(--w-thin-sunken); font-size: 11px; }
+.skin-98 .bang-pill { border-radius: 0; background: var(--w-tooltip); color: var(--w-text); border: 1px solid var(--w-text); font-size: 11px; font-weight: normal; padding: 0 4px; }
+.skin-98 .bang-note b { color: var(--w-text); }
+
+/* ------------------------------------------------ XP: the Toolbar */
+
+.skin-xp .tool { width: 26px; height: 24px; border-radius: 3px; color: #000; transition: none; }
+.skin-xp .tool svg { width: 16px; height: 16px; }
+.skin-xp .tool:hover:not(:disabled) { background: linear-gradient(to bottom, #fff, #e3e3db); box-shadow: inset 0 0 0 1px #cecec3; color: #000; }
+.skin-xp .tool:active:not(:disabled) { background: #e3e3db; box-shadow: inset 0 0 0 1px #a7a69d, inset 1px 1px 2px rgb(0 0 0 / 0.15); }
+.skin-xp .tool.on, .skin-xp .tool.on:hover:not(:disabled) { color: #000; background: linear-gradient(to bottom, #f4f4f0, #e6e5dd); box-shadow: inset 0 0 0 1px #a7a69d; }
+.skin-xp .tools { gap: 1px; }
+.skin-xp .player.toolbar .modes { padding-left: 6px; box-shadow: inset 1px 0 #c5c2b2, inset 2px 0 #fff; }
+.skin-xp .player.toolbar .transport { padding-right: 6px; box-shadow: inset -2px 0 #fff, inset -1px 0 #c5c2b2; }
+.skin-xp .volume-button.boosted, .skin-xp .tool.volume-button.boosted { width: auto; padding: 0 4px; gap: 2px; background: none; color: inherit; }
+.skin-xp .boost-mark { font-size: 11px; font-weight: bold; }
+.skin-xp .seek .time.both { min-width: 78px; }
+
+/* ------------------------------------------------ XP: the Slider is XP's trackbar, the part played in Luna's blue */
+
+.skin-xp .bar.SLIDER { height: 22px; }
+.skin-xp .bar.SLIDER::-webkit-slider-runnable-track { height: 4px; border-radius: 1px; background: linear-gradient(to right, #316ac5 var(--fill), #ecebe6 var(--fill)); box-shadow: inset 1px 1px #9d9c99, inset -1px -1px #fff; }
+.skin-xp .bar.SLIDER::-moz-range-track { height: 4px; border-radius: 1px; background: #ecebe6; box-shadow: inset 1px 1px #9d9c99, inset -1px -1px #fff; }
+.skin-xp .bar.SLIDER::-moz-range-progress { height: 4px; background: #316ac5; }
+.skin-xp .bar.SLIDER::-webkit-slider-thumb, .skin-xp .bar.boost::-webkit-slider-thumb {
+  opacity: 1;
+  width: 11px;
+  height: 21px;
+  margin-top: -8px;
+  border-radius: 0;
+  box-shadow: none;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='21'><defs><linearGradient id='f' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23fff'/><stop offset='.6' stop-color='%23f3f2ee'/><stop offset='1' stop-color='%23d6d0c5'/></linearGradient></defs><path fill='url(%23f)' stroke='%23003c74' d='M1.5.5h8a1 1 0 0 1 1 1v13.3l-5 5.2-5-5.2V1.5a1 1 0 0 1 1-1z'/><path d='M1.5 13.6v1l4 4.1 4-4.1v-1' fill='none' stroke='%232ed330'/></svg>") no-repeat;
+}
+.skin-xp .bar.SLIDER::-moz-range-thumb, .skin-xp .bar.boost::-moz-range-thumb { opacity: 1; width: 11px; height: 21px; border: 0; border-radius: 2px 2px 0 0; background: var(--x-button); box-shadow: inset 0 0 0 1px #003c74; }
+.skin-xp .bar.SLIDER:hover::-webkit-slider-thumb, .skin-xp .bar.boost:hover::-webkit-slider-thumb { box-shadow: none; filter: drop-shadow(0 0 1px #f8b636); }
+
+/* ------------------------------------------------ XP: the volume popover and the booster */
+
+.skin-xp .volume-popover { padding: 0 4px 4px; gap: 6px; }
+.skin-xp .menu .volume-popover button.round-button { width: 24px; height: 24px; border-radius: 3px; padding: 0; }
+.skin-xp .menu .volume-popover button:hover { background: linear-gradient(to bottom, #fff, #e3e3db); color: #000; }
+.skin-xp .volume-popover .figure, .skin-xp .boost-control .figure { color: #000; font-size: 11px; }
+.skin-xp :is(.volume-popover, .boost-control) .figure small { color: #000; font-weight: bold; }
+.skin-xp :is(.menu .volume-popover, .setting .boost-control) .boost-toggle {
+  height: 23px;
+  padding: 0 10px;
+  gap: 4px;
+  border: 1px solid #003c74;
+  border-radius: 3px;
+  background: var(--x-button);
+  color: #000;
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: normal;
+}
+.skin-xp :is(.menu .volume-popover, .setting .boost-control) .boost-toggle:hover:not(:disabled) { background: var(--x-button); box-shadow: var(--x-hot); color: #000; }
+.skin-xp :is(.menu .volume-popover, .setting .boost-control) .boost-toggle.on, .skin-xp :is(.menu .volume-popover, .setting .boost-control) .boost-toggle.on:hover { background: var(--x-button-down); box-shadow: inset 1px 1px 2px rgb(0 0 0 / 0.2); color: #000; }
+.skin-xp :is(.menu .volume-popover, .setting .boost-control) .boost-toggle:disabled { opacity: 1; border-color: #c9c7ba; color: #aca899; }
+.skin-xp .bar.boost { height: 22px; }
+.skin-xp .bar.boost::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 1px;
+  box-shadow: inset 1px 1px #9d9c99, inset -1px -1px #fff;
+  background: linear-gradient(to right, #316ac5 0 min(var(--fill), var(--loud)), #e0532f min(var(--fill), var(--loud)) var(--fill), #ecebe6 var(--fill));
+}
+.skin-xp .boost-scale { color: #000; font-size: 11px; margin-top: -2px; }
+.skin-xp .boost-note { color: #000; font-size: 11px; }
+.skin-xp .boost-note.loud { color: #c00000; font-weight: bold; }
+
+/* ------------------------------------------------ XP: the Playlist layout, the window itself */
+
+.skin-xp .now-playing.playlist-layout { background: var(--x-face); padding: 6px 6px 0; gap: 6px; }
+.skin-xp .playlist-layout .pane { background: var(--x-face); border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; }
+.skin-xp .playlist-layout .album-art { padding: 0 0 6px; border: 1px solid #919b9c; background: #fcfcfe; }
+/* A tool window's caption: Luna's blue, shorter. */
+.skin-xp .playlist-layout .pane-title { height: 20px; margin: 0 0 6px; padding: 0 6px; background: var(--x-title); color: #fff; font: bold 11px/20px Tahoma, sans-serif; letter-spacing: 0; text-transform: none; text-shadow: 1px 1px #0f1089; }
+.skin-xp .playlist-layout .album-art .cover { margin: 0 6px; border-radius: 0; padding: 3px; background: #fff; border: 1px solid #919b9c; box-shadow: none; outline: 0; width: auto; }
+.skin-xp .playlist-tabs { padding: 4px 4px 0; gap: 0; border-bottom: 0; position: relative; z-index: 1; }
+.skin-xp .playlist-tabs .tab {
+  height: 21px;
+  margin: 2px 0 0;
+  padding: 0 10px;
+  border: 1px solid #919b9c;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(to bottom, #fff, #ecebe6);
+  color: #000;
+  font-size: 11px;
+  font-weight: normal;
+}
+.skin-xp .playlist-tabs .tab small { color: #000; font-size: 11px; }
+.skin-xp .playlist-tabs .tab:hover { box-shadow: inset 0 2px #ffc83c; }
+.skin-xp .playlist-tabs .tab.on, .skin-xp .playlist-tabs .tab.on:hover { height: 24px; margin: 0 -2px -1px; padding: 0 12px 1px; background: #fcfcfe; box-shadow: inset 0 1px #e68b2c, inset 0 3px #ffc83c; position: relative; z-index: 1; }
+.skin-xp .playlist-body { margin: 0 4px; padding: 6px; background: #fcfcfe; border: 1px solid #919b9c; }
+.skin-xp .playlist-body > * { background: #fff; border: 1px solid var(--x-field); min-height: 100%; }
+.skin-xp .playlist-body .lyrics-sources { min-height: 0; border: 0; padding: 6px 6px 8px; }
+.skin-xp .queue-table { font-size: 11px; }
+.skin-xp .queue-table .row { gap: 0; height: 17px; padding: 0; border: 0; color: #000; }
+.skin-xp .queue-table .cell { padding: 0 5px; }
+.skin-xp .queue-table .row.head { height: 19px; background: linear-gradient(to bottom, #fff, #ebeadb 90%, #cbc7b8); color: #000; font-size: 11px; font-weight: normal; border-bottom: 1px solid #d6d2c2; }
+.skin-xp .queue-table .row.head > * { height: 100%; display: flex; align-items: center; box-shadow: inset -1px 0 #d6d2c2, inset -2px 0 #fff; }
+.skin-xp .queue-table .row.head > *:hover { background: linear-gradient(to bottom, #fff, #faf9f4); box-shadow: inset 0 -3px #f9b13d, inset -1px 0 #d6d2c2; }
+.skin-xp .queue-table .row.head .cell.number, .skin-xp .queue-table .row.head .cell.duration { justify-content: flex-end; }
+.skin-xp .queue-table .row:not(.head):not(.divider):hover { background: none; }
+.skin-xp .queue-table .row.playing { background: none; }
+.skin-xp .queue-table .row.playing .title, .skin-xp .queue-table .row.playing .cell { color: #000; font-weight: bold; }
+.skin-xp .queue-table .row.chosen, .skin-xp .queue-table .row.chosen:hover { background: #316ac5; }
+.skin-xp .queue-table .row.chosen .cell, .skin-xp .queue-table .row.chosen .title { color: #fff; }
+.skin-xp .queue-table .cell.number, .skin-xp .queue-table .cell.duration, .skin-xp .queue-table .cell.artist, .skin-xp .queue-table .cell.album, .skin-xp .queue-table .cell.title small { color: #000; font-size: 11px; }
+.skin-xp .queue-table .row.playing .cell.number { color: #316ac5; }
+.skin-xp .queue-table .cell.more { width: 18px; height: 15px; }
+.skin-xp .queue-table .cell.more svg { width: 12px; height: 12px; }
+.skin-xp .queue-table .row.divider { height: auto; padding: 6px 5px 2px; font-size: 11px; font-weight: bold; color: #0046d5; }
+.skin-xp .info-bar { margin: 6px 4px; padding: 6px 8px; gap: 10px; background: #fcfcfe; border: 1px solid #919b9c; }
+.skin-xp .info-bar .cover { border-radius: 0; width: 48px; border: 1px solid #919b9c; }
+.skin-xp .info-bar .title { font: bold 18px 'Trebuchet MS', Tahoma, sans-serif; color: #0046d5; letter-spacing: 0; }
+.skin-xp .info-bar .artist { color: #000; font-size: 11px; }
+.skin-xp .info-bar .error { color: #c00000; font-size: 11px; }
+/* The visualiser in a dark well, its bars Luna's blue, the peaks green. */
+.skin-xp .visualiser:not(.blind) { padding: 3px; background: #0b1424; border: 1px solid #7f9db9; --vis-bar: #3a95f2; --vis-rest: #1a2b4a; --vis-peak: #8de878; }
+.skin-xp .visualiser .channels { color: #8db4e8; left: 4px; z-index: 1; }
+.skin-xp .visualiser.meter { padding-left: 16px; }
+.skin-xp .visualiser.blind { color: #000; font-size: 11px; font-weight: bold; }
+.skin-xp .visualiser.blind small { font-size: 11px; font-weight: normal; color: #555; }
+.skin-xp .status-bar { height: 22px; margin: 0 -6px; padding: 0 2px; gap: 0; background: var(--x-face); border-top: 1px solid #fff; box-shadow: inset 0 1px #d6d2c2; color: #000; font-size: 11px; }
+.skin-xp .status-bar .cell { height: 18px; line-height: 18px; padding: 0 6px; border: 0; box-shadow: inset 1px 0 #fff, inset 2px 0 #d6d2c2; }
+.skin-xp .status-bar .format { box-shadow: none; padding-left: 6px; }
+.skin-xp .playlist-controls { background: var(--x-face); border-top: 1px solid #d0d0bf; }
+.skin-xp .playlist-controls .controls .round-button { border: 1px solid #003c74; background: var(--x-button); }
+
+/* ------------------------------------------------ XP: settings -- the search, the sections and their pages */
+
+.skin-xp .settings section > h2.legend { display: block; }
+.skin-xp .settings-search .searchbox { height: 22px; padding: 0 4px; gap: 4px; border: 1px solid var(--x-field); border-radius: 0; background: #fff; max-width: 420px; margin-left: 0; }
+.skin-xp .settings-search .searchbox::before { content: none; }
+.skin-xp .settings-results { padding: 2px; border: 1px solid #aca899; border-radius: 0; background: #fff; box-shadow: 2px 2px 3px rgb(0 0 0 / 0.3); max-width: 420px; }
+.skin-xp .settings-results button { border-radius: 0; padding: 3px 6px; gap: 0; color: #000; }
+.skin-xp .settings-results button.on, .skin-xp .settings-results button:hover { background: #316ac5; color: #fff; }
+.skin-xp .settings-results strong { font-size: 11px; font-weight: bold; }
+.skin-xp .settings-results small, .skin-xp .settings-results .none { font-size: 11px; color: inherit; }
+.skin-xp .settings-results mark { color: inherit; text-decoration: underline; font-weight: bold; }
+.skin-xp .settings-pages { gap: 0; border: 0; padding: 0 4px; position: relative; }
+.skin-xp .settings-pages::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; border-bottom: 1px solid #919b9c; }
+.skin-xp .settings-pages button { height: 21px; margin: 2px 0 0; padding: 0 10px; border: 1px solid #919b9c; border-bottom: 0; border-radius: 3px 3px 0 0; background: linear-gradient(to bottom, #fff, #ecebe6); color: #000; font-size: 11px; font-weight: normal; }
+.skin-xp .settings-pages button:hover { box-shadow: inset 0 2px #ffc83c; }
+.skin-xp .settings-pages button.on { height: 23px; margin: 0 -2px 0; padding: 0 12px 1px; background: var(--x-face); box-shadow: inset 0 1px #e68b2c, inset 0 3px #ffc83c; position: relative; z-index: 1; }
+.skin-xp .settings-sections { gap: 4px; }
+.skin-xp .setting.found, .skin-xp .setting-block.found { animation: foundxp 2.4s ease; }
+@keyframes foundxp { 0%, 40% { background: #ffffe1; box-shadow: 0 0 0 1px #aca899; } }
+.skin-xp .setting-note { color: #555; font-size: 11px; }
+.skin-xp .choice-card { border: 1px solid #003c74; border-radius: 3px; background: var(--x-button); color: #000; padding: 6px 7px; }
+.skin-xp .choice-card:hover { background: var(--x-button); box-shadow: var(--x-hot); }
+.skin-xp .choice-card.on { box-shadow: var(--x-focus); outline: 2px solid #316ac5; outline-offset: 1px; }
+.skin-xp .choice-card strong { font-size: 11px; font-weight: bold; }
+.skin-xp .choice-card small { color: #000; font-size: 11px; }
+.skin-xp .choice-card .tick { color: #316ac5; }
+.skin-xp .choice-card .mini { border-radius: 2px; }
+.skin-xp .icon-sample { color: #000; }
+.skin-xp .columns-editor .column { border: 1px solid var(--x-field); border-radius: 0; background: #fff; font-size: 11px; padding: 2px 4px 2px 6px; }
+.skin-xp .bang { font-size: 11px; }
+.skin-xp .bang code { border-radius: 2px; background: #fff; color: #000; border: 1px solid var(--x-field); font-size: 11px; }
+.skin-xp .bang-pill { border-radius: 6px; background: #ffffe1; color: #000; border: 1px solid #000; font-size: 11px; font-weight: normal; padding: 0 5px; }
+.skin-xp .bang-note b { color: #000; }
+
+/* ------------------------------------------------ both: a phone */
+
+@media (max-width: 860px) {
+  :is(.skin-98, .skin-xp) .now-playing.playlist-layout { padding: 0; gap: 0; }
+  :is(.skin-98, .skin-xp) .status-bar { margin: 0; }
+  :is(.skin-98, .skin-xp) .playlist-layout .playlist .info-bar { margin: 4px; }
+  :is(.skin-98, .skin-xp) .player.toolbar .tool { width: 34px; height: 30px; }
+  :is(.skin-98, .skin-xp) .player.toolbar .tool svg { width: 18px; height: 18px; }
+}
