@@ -281,16 +281,19 @@ class Sound {
     const level = VolumeBoost.factor(this.percent) * Math.pow(10, -MAKEUP_DB / 20);
     const now = c.currentTime;
     window.clearTimeout(this.unroute);
+    // Every change of what is connected happens in one go, between two of the audio thread's blocks, so connecting
+    // again -- for an analyser that came or went -- is heard as nothing.
     if (boosted) {
       if (!this.boostedRoute) {
         // Into the boost at no boost, then up to the level, so switching it on is a quick swell rather than a jump.
         this.boost.gain.cancelScheduledValues(now);
         this.boost.gain.setValueAtTime(Math.pow(10, -MAKEUP_DB / 20), now);
-        this.reconnect(true);
       }
+      this.reconnect(true);
       this.boost.gain.setTargetAtTime(level, now, 0.03);
     } else if (this.boostedRoute) {
-      // Down to no boost first, then round the limiter once it is there.
+      // Down to no boost first, still through the limiter, then round it once it is there.
+      this.reconnect(true);
       this.boost.gain.setTargetAtTime(Math.pow(10, -MAKEUP_DB / 20), now, 0.03);
       this.unroute = window.setTimeout(() => this.reconnect(false), 160);
     } else {

@@ -13,8 +13,8 @@ const loadHls = () => (hlsModule ??= import('hls.js'));
  * Noctorium decides what plays; this only does as it is told -- load this, play, pause, go to 1:23 -- and
  * says what the audio element is doing, so the queue moves on when a track ends and a listen is counted as
  * it would be anywhere else. The address it is given is Noctorium's own, which fetches the service's audio
- * for it. HLS, which is how SoundCloud sends much of its catalogue, goes through hls.js except in Safari,
- * which plays it by itself -- unless the sound is going through Web Audio, which cannot hear Safari's own HLS.
+ * for it. HLS, which is how SoundCloud sends much of its catalogue, goes through hls.js wherever hls.js runs --
+ * which is what Web Audio can hear -- and through the browser's own HLS only where it cannot, as on an old iPhone.
  *
  * The volume and the booster are sound.ts's: on the element, or in Web Audio once the booster or a visualiser
  * has wanted it there. And the tab says what it can tell of the stream -- the codec and channels hls.js found,
@@ -233,10 +233,10 @@ class Audio {
 
   private async attach(url: string, hls: boolean, crossOrigin: boolean) {
     const a = this.current;
-    // Safari plays HLS by itself, but Web Audio hears its own HLS as silence; hls.js, where it works, is heard.
-    const throughGraph = a === this.main && (sound.connected || sound.waiting);
+    // hls.js wherever it works, into a Media Source of this page's own, which Web Audio hears; a browser's own HLS
+    // -- Safari's, and lately Chrome's -- only where hls.js cannot run, since Safari's reaches Web Audio as silence.
     const native = hls && !!a.canPlayType('application/vnd.apple.mpegurl');
-    if (hls && (!native || throughGraph)) {
+    if (hls) {
       const { default: Hls } = await loadHls();
       if (Hls.isSupported()) {
         // Noctorium's own address wants its cookie; SoundCloud's servers, which the hosted player reads
@@ -257,7 +257,7 @@ class Audio {
         return;
       }
     }
-    // Safari's own HLS, or a plain file: Web Audio hears the second, and the first only where it was not asked to.
+    // A browser's own HLS, or a plain file: Web Audio hears the second, and is not trusted with the first.
     sound.setReachable(a === this.main && !(hls && native) && (crossOrigin || !HOSTED));
     if (crossOrigin) a.crossOrigin = 'anonymous';
     else a.removeAttribute('crossorigin');
