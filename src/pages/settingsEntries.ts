@@ -57,7 +57,7 @@ export const ENTRIES: Entry[] = [
   e('listening-playback', 'autoplay', 'Keep playing when the queue runs out', 'Songs like the last one, as its own service would carry on.', ['autoplay', 'auto play', 'radio', 'endless', 'continue', 'keep playing']),
   e('listening-playback', 'autoplay-from', 'Autoplay draws from', 'The last song’s own service, or YouTube Music’s radio after every song.', ['radio source', 'recommendations', 'autoplay source'], 'web'),
   e('listening-playback', 'avoid-recent', 'Autoplay skips songs played lately', 'So it does not bring back what was just heard.', ['repeats', 'played recently', 'duplicates'], 'web'),
-  e('listening-playback', 'home-play', 'Playing a song from Home', 'Autoplay after it, as a radio from it, or the rest of its shelf.', ['home', 'shelf', 'start radio', 'tap a song', 'autoplay from home']),
+  e('listening-playback', 'home-play', 'Playing a song from Home or a search', 'Autoplay after it, as a radio from it, or the rest of its shelf or results.', ['home', 'search', 'search results', 'shelf', 'start radio', 'tap a song', 'autoplay from home', 'autoplay from search']),
   e('listening-playback', 'keep-queue', 'Keep the queue between launches', 'Noctorium puts it back where it was left when it starts again.', ['remember queue', 'restore', 'resume', 'session'], 'web'),
   e('listening-playback', 'sleep-fade', 'The sleep timer fades out', 'Over its last seconds, rather than stopping at once.', ['sleep timer', 'fade out', 'bedtime', 'fade'], 'web'),
   e('listening-playback', 'lyrics', 'Lyrics from', 'Every source is still asked; this one is shown first when it has them.', ['words', 'karaoke', 'synced lyrics', 'lrclib', 'genius', 'musixmatch']),

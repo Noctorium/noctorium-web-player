@@ -62,10 +62,10 @@ export const ICON_SETS: Choice[] = [
   { name: 'LINE', title: 'Line', description: 'Thin single strokes in one colour, like a desktop’s own icon theme.' },
 ];
 
-/** What playing a song from Home plays after it, as Base's HomePlay. */
+/** What playing a song from Home or a search plays after it, as Base's HomePlay. */
 export const HOME_PLAYS: Choice[] = [
   { name: 'AUTOPLAY', title: 'Autoplay after it', description: 'The song, then songs like it, as a radio started from it.' },
-  { name: 'SHELF', title: 'The rest of its shelf', description: 'The song, then the ones after it on the same shelf of Home.' },
+  { name: 'SHELF', title: 'The songs around it', description: 'The song, then the rest of the shelf on Home, or of the results it was picked from.' },
 ];
 
 /**

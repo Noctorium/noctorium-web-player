@@ -274,7 +274,7 @@ export class HostedEngine {
       case 'volume': return this.setVolume(Number(c.value), Number(c.value) > 0 ? false : this.prefs.muted);
       case 'like': if (track) this.toggleLike(track); return;
       case 'play':
-        if (c.origin === 'HOME' && track) return this.playFromHome(track, (c.list as Track[] | undefined) ?? [track]);
+        if ((c.origin === 'HOME' || c.origin === 'SEARCH') && track) return this.playStartingAutoplay(track, (c.list as Track[] | undefined) ?? [track], c.origin);
         return this.playFrom((c.list as Track[] | undefined) ?? (track ? [track] : []), track, c.origin as string | undefined);
       case 'stop': return this.stop();
       case 'stopAfterCurrent': return this.setStopAfter(typeof c.on === 'boolean' ? c.on : !this.stopAfter);
@@ -448,14 +448,15 @@ export class HostedEngine {
   // ------------------------------------------------------------ the queue and the player
 
   /**
-   * A song picked on Home -- a shelf, Pinned, Played lately -- played as Base's playFromHome plays it: the song
-   * alone, and then what the hosted player's autoplay finds after it, its service's radio, as a radio started
-   * from it would; or, the old way, with the rest of its shelf after it. With autoplay off there is no radio to
-   * follow it, and one song and then silence would read as Home being broken, so the shelf follows it then.
+   * A song picked on Home -- a shelf, Pinned, Played lately -- or from a search's results, played as Base's
+   * playFromHome and playFromSearch play it: the song alone, and then what the hosted player's autoplay finds after
+   * it, its service's radio, as a radio started from it would; or, the old way, with the songs around it after it.
+   * With autoplay off there is no radio to follow it, and one song and then silence would read as broken, so the
+   * songs around it follow it then.
    */
-  private playFromHome(track: Track, shelf: Track[]) {
-    if (this.prefs.homePlay === 'SHELF' || !this.prefs.autoplay) return this.playFrom(shelf, track, 'HOME');
-    return this.playFrom([track], track, 'HOME');
+  private playStartingAutoplay(track: Track, around: Track[], origin: 'HOME' | 'SEARCH') {
+    if (this.prefs.homePlay === 'SHELF' || !this.prefs.autoplay) return this.playFrom(around, track, origin);
+    return this.playFrom([track], track, origin);
   }
 
   /**

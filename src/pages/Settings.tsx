@@ -466,8 +466,8 @@ function PlaybackSettings({ settings }: { settings: Settings }) {
         </Row>
       )}
       {(HOSTED || settings.homePlay != null) && (
-        <Row setting="home-play" title="Playing a song from Home" wide
-          detail={<>{homePlays.find((c) => c.name === (settings.homePlay ?? 'AUTOPLAY'))?.description} {settings.autoplay === false ? <b>With autoplay off, Home plays the rest of the shelf whatever this says.</b> : 'With autoplay off, Home plays the rest of the shelf whatever this says.'}</>}>
+        <Row setting="home-play" title="Playing a song from Home or a search" wide
+          detail={<>{homePlays.find((c) => c.name === (settings.homePlay ?? 'AUTOPLAY'))?.description} {settings.autoplay === false ? <b>With autoplay off, the songs around it play whatever this says.</b> : 'With autoplay off, the songs around it play whatever this says.'}</>}>
           <Chips choices={homePlays.map((c) => [c.name, c.title])} chosen={settings.homePlay ?? 'AUTOPLAY'} choose={(name) => send('homePlay', { name })} />
         </Row>
       )}
