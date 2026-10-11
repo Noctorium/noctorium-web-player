@@ -67,6 +67,9 @@ const DEFAULTS: Prefs = {
 const SEARCHABLE = new Set<Search['mode']>(['HYBRID', 'YOUTUBE_MUSIC', 'SOUNDCLOUD', 'YOUTUBE_VIDEO']);
 
 const LIKED = 'liked';
+
+/** How far into a song Previous goes back to its start rather than to the song before: Base's figure. */
+export const PREVIOUS_RESTARTS_AFTER_MS = 5000;
 const isYouTube = (t: Track) => t.provider === 'YOUTUBE_MUSIC' || t.provider === 'YOUTUBE_VIDEO';
 
 class Problem extends Error {}
@@ -672,9 +675,13 @@ export class HostedEngine {
     this.setPlayback({ status: 'idle', positionMs: 0 });
   }
 
+  /**
+   * Five seconds or more into a song, back to its start; sooner, the song before; with none before, the start
+   * whatever the time -- Base's AppState.previous and its PREVIOUS_RESTARTS_AFTER_MS, so every player agrees.
+   */
   private previous() {
     const position = this.playback.positionMs;
-    if (position > 3000 || this.queue.currentIndex <= 0) return this.seek(0);
+    if (position >= PREVIOUS_RESTARTS_AFTER_MS || this.queue.currentIndex <= 0) return this.seek(0);
     return this.playIndex(this.queue.currentIndex - 1);
   }
 
