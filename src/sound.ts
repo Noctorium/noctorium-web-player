@@ -10,24 +10,29 @@ import boostWorkletUrl from './boostWorklet.ts?worker&url';
  *                                                 └─ boost → limiter → soft clip ── wet ──┘   └─ ÷ volume → [analysers]
  *
  * The booster is Base's VolumeBoost, which says why it is made the way it is: the listener's volume first, then
- * the boost, a gain from 1 to 10; then a limiter holding the peaks at CEILING × drive; then a soft clip into
- * CEILING, −0.5 dBFS. The limiter and the soft clip are limiter.ts's, the limiter every Noctorium player runs,
- * here in an AudioWorklet (boostWorklet.ts). Only a page in a secure context may have a worklet, though, and
- * `noctorium web` opened on a phone is plain http from another computer on the house's network; there the
- * browser's own DynamicsCompressorNode stands in for the limiter and a WaveShaperNode carries the soft clip.
+ * the boost, a gain from 1 to 10; then a limiter holding the peaks at CEILING × drive; then Base's soft clip,
+ * bending what is left over towards CEILING, −0.5 dBFS, which it never reaches. The limiter is limiter.ts's, the
+ * one every Noctorium player runs, and here it and the clip run in an AudioWorklet (boostWorklet.ts). Only a page
+ * in a secure context may have a worklet, though, and `noctorium web` opened on a phone is plain http from another
+ * computer on the house's network; there the browser's own DynamicsCompressorNode stands in for the limiter and a
+ * WaveShaperNode carries the soft clip.
  *
  * Measured in Chrome by rendering offline through these very nodes: a loud master (−7.7 LUFS, peaks at −0.3 dBFS)
  * came out at −4.9, −3.1 and −1.7 LUFS at 200%, 400% and 1000% through the worklet, as Base's reference makes it
  * to the tenth, and at −4.9, −3.0 and −1.5 through the compressor; the old booster, a compressor holding everything
- * at full scale, managed −7.1, −6.4 and −5.7. Not one sample of any of it went past −0.5 dBFS. Noise peaking at
- * −12 dBFS came out 6.0 dB louder at 200%, untouched. At half volume, 200% left that noise exactly as it came, and
- * the master as loud as it came, with only the tops of its peaks rounded by the soft clip's knee at −1.9 dBFS.
+ * at full scale, managed −7.1, −6.4 and −5.7. Not one sample of any of it went past −0.5 dBFS, and nothing was
+ * held flat at the top: three samples in a row came out the same only 17 times at 1000%, nearly all of them three
+ * the same in the 16-bit recording already. (A tanh for the clip, as at first, was as loud, but in 32-bit floats it
+ * stops dead at the ceiling as a hard clip does, and held 21,800 such runs, up to 228 samples long.) Noise peaking
+ * at −12 dBFS came out 6.0 dB louder at 200%, untouched. At half volume, 200% left that noise exactly as it came,
+ * and the master as loud as it came, with only the tops of its peaks rounded by the soft clip's knee at −1.9 dBFS.
  *
  * The compressor is set as a limiter would be: no knee, its highest ratio, no attack, RELEASE_MS's release, and
  * its threshold 0 dB, where it adds no make-up gain of its own. A ratio of 20 still lets a peak a little over, so
  * the sound is brought to it with the threshold 1 dB under the limiter's ceiling, which is where it comes nearest
  * the worklet; the shaper takes off whatever is still over, as the worklet's soft clip does, and holds anything
- * past the end of its curve at CEILING. Its oversampling is left off: a 4× shaper's filters rang well past 0 dBFS.
+ * past the end of its curve just under CEILING. Its oversampling is left off: a 4× shaper's filters rang well past
+ * 0 dBFS.
  *
  * At 100% the boost is out of the way altogether. Switching it on or off crosses from one way round to the other
  * over a few tens of milliseconds while the boost glides to its level, rather than cutting across: what comes out

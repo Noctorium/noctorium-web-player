@@ -55,6 +55,35 @@ describe('the volume booster', () => {
     }
   });
 
+  it('clips straight to its knee and never reaches the ceiling', () => {
+    expect(VolumeBoost.clip(0.5)).toBe(0.5);
+    expect(VolumeBoost.clip(-0.8)).toBe(-0.8);
+    const knee = VolumeBoost.CLIP_KNEE * VolumeBoost.CEILING;
+    expect(20 * Math.log10(knee)).toBeCloseTo(-1.9, 1);
+    expect(VolumeBoost.clip(knee)).toBe(knee);
+    expect(VolumeBoost.clip(knee + 0.01)).toBeGreaterThan(knee);
+    expect(VolumeBoost.clip(knee + 0.01)).toBeLessThan(knee + 0.01);
+    expect(VolumeBoost.clip(50)).toBeLessThan(VolumeBoost.CEILING);
+    expect(VolumeBoost.clip(-50)).toBeGreaterThan(-VolumeBoost.CEILING);
+  });
+
+  it('bends over from the knee without a corner, and is still rising at the top in 32-bit floats', () => {
+    const knee = VolumeBoost.CLIP_KNEE * VolumeBoost.CEILING;
+    const slope = (x: number) => (VolumeBoost.clip(x + 1e-6) - VolumeBoost.clip(x - 1e-6)) / 2e-6;
+    expect(slope(knee)).toBeCloseTo(1, 4);
+    expect(slope(knee + 0.1)).toBeLessThan(1);
+    for (let x = 0.001; x < 40; x *= 1.01) expect(VolumeBoost.clip(-x)).toBe(-VolumeBoost.clip(x));
+    // Up to CEILING × 3.16, as far as the limiter lets anything through at 1000%, every step of a hundredth comes
+    // out a different sample, where a tanh would long since have stopped at the ceiling.
+    let last = Math.fround(VolumeBoost.clip(knee));
+    for (let x = knee + 0.01; x <= VolumeBoost.CEILING * VolumeBoost.drive(1000); x += 0.01) {
+      const sample = Math.fround(VolumeBoost.clip(x));
+      expect(sample, `at ${x}`).toBeGreaterThan(last);
+      expect(sample).toBeLessThan(VolumeBoost.CEILING);
+      last = sample;
+    }
+  });
+
   it('writes its level for a slider and for the volume button', () => {
     expect(VolumeBoost.percentLabel(400)).toBe('400%');
     expect(VolumeBoost.percentLabel(9000)).toBe('1000%');

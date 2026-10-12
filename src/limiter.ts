@@ -14,47 +14,32 @@ import * as VolumeBoost from './base/volumeBoost';
  * the smallest over a stretch with that frame in it, so none of them is above what the frame needs, and nor is
  * their average. Not one sample goes past the ceiling.
  *
- * The soft clip comes after it, to CEILING: what the limiter let over by drive (VolumeBoost.drive) is rounded off
- * there, and whatever reaches it, nothing comes out past CEILING.
+ * The soft clip comes after it, Base's own (VolumeBoost.clip): what the limiter let over CEILING by drive
+ * (VolumeBoost.drive) is rounded off towards CEILING, and whatever reaches it, nothing comes out past CEILING.
  */
 
 /** The name boostWorklet.ts registers its processor by, for an AudioWorkletNode to ask for. */
 export const BOOST_PROCESSOR = 'noctorium-boost';
 
-/** Where the soft clip starts bending, as a sample's size: CLIP_KNEE of CEILING, −1.9 dBFS. */
-const KNEE = VolumeBoost.CLIP_KNEE * VolumeBoost.CEILING;
-
-/** How far from the knee to CEILING. */
-const ROOM = VolumeBoost.CEILING - KNEE;
-
 /**
- * The soft clip: [x] as it is up to the knee, then bending into CEILING along a tanh, which leaves the knee at the
- * same slope it arrived with, so the bend has no corner to be heard. Nothing comes out past CEILING.
- */
-export function softClip(x: number): number {
-  const size = Math.abs(x);
-  if (size <= KNEE) return x;
-  return Math.sign(x) * (KNEE + ROOM * Math.tanh((size - KNEE) / ROOM));
-}
-
-/**
- * softClip for a WaveShaperNode fed each sample divided by [range]: [points] values of it, evenly from −range to
- * +range. A shaper holds anything past either end at that end's value, which is CEILING or next to it.
+ * VolumeBoost.clip for a WaveShaperNode fed each sample divided by [range]: [points] values of it, evenly from
+ * −range to +range. A shaper holds anything past either end at that end's value, which is just under CEILING.
  */
 export function clipCurve(range: number, points = 8193): Float32Array<ArrayBuffer> {
   const curve = new Float32Array(points);
-  for (let i = 0; i < points; i++) curve[i] = softClip(range * ((i / (points - 1)) * 2 - 1));
+  for (let i = 0; i < points; i++) curve[i] = VolumeBoost.clip(range * ((i / (points - 1)) * 2 - 1));
   return curve;
 }
 
 /**
  * What the booster does to a block once the gain has been put on: [limiter] holds it at [ceiling] (CEILING ×
- * drive), and the soft clip rounds what that leaves into CEILING. From [input] into [output], [frames] frames.
+ * drive), and the soft clip rounds what that leaves off towards CEILING. From [input] into [output], [frames]
+ * frames.
  */
 export function limitAndClip(limiter: Limiter, input: readonly Float32Array[], output: readonly Float32Array[], frames: number, ceiling: number) {
   limiter.process(input, output, frames, ceiling);
   for (const channel of output) {
-    for (let i = 0; i < frames; i++) channel[i] = softClip(channel[i]);
+    for (let i = 0; i < frames; i++) channel[i] = VolumeBoost.clip(channel[i]);
   }
 }
 

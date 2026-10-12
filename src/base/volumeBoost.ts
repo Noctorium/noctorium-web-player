@@ -9,7 +9,8 @@
  *    nothing limited at all.
  * 2. A limiter that looks LOOKAHEAD_MS ahead holds the peaks at CEILING × drive, turning the whole sound down for
  *    a moment around each one and coming back up over RELEASE_MS.
- * 3. A soft clip rounds whatever is over the knee into CEILING, so nothing the booster makes ever goes past it.
+ * 3. A soft clip (clip) rounds whatever is over the knee off towards CEILING, so nothing the booster makes ever
+ *    goes past it.
  *
  * Why both, and why the limiter's ceiling moves: mastered music already touches full scale, so a limiter holding
  * the peaks where they were can only bring the rest up towards them, and the song barely gets louder (1000% was
@@ -42,7 +43,7 @@ export const UNAVAILABLE = 'The volume can only be boosted where Noctorium makes
 /** The most the booster ever puts out, as a sample's size: −0.5 dBFS. Nothing it makes goes past it. */
 export const CEILING = 0.944;
 
-/** The soft clip is a straight line up to this much of CEILING, and bends into CEILING above it. */
+/** The soft clip is a straight line up to this much of CEILING, and bends over towards CEILING above it. */
 export const CLIP_KNEE = 0.85;
 
 /** How far ahead the limiter looks, so that it is already down when a peak arrives: five milliseconds. */
@@ -82,6 +83,23 @@ export const gainDb = (percent: number) => 20 * Math.log10(factor(percent));
  * float, as factor is.
  */
 export const drive = (percent: number) => Math.fround(Math.sqrt(factor(percent)));
+
+/**
+ * The soft clip: [sample] as it came up to CLIP_KNEE of CEILING, and above that bent over smoothly towards the
+ * ceiling, which it never reaches. The bend starts with the slope the straight part ends with, so there is no
+ * corner in it to be heard, and it is x over the square root of one plus x squared rather than a tanh: as loud for
+ * the same drive, measured, but still rising at the very top, where a tanh in floats goes flat at the ceiling and
+ * holds a run of samples there as a hard clip would.
+ */
+export function clip(sample: number): number {
+  const size = Math.abs(sample);
+  const knee = CLIP_KNEE * CEILING;
+  if (size <= knee) return sample;
+  const room = CEILING - knee;
+  const over = (size - knee) / room;
+  const bent = knee + (room * over) / Math.sqrt(1 + over * over);
+  return sample < 0 ? -bent : bent;
+}
 
 /** "400%", for a slider's label. */
 export const percentLabel = (percent: number) => `${clamp(percent)}%`;

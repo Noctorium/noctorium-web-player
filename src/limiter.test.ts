@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import * as VolumeBoost from './base/volumeBoost';
-import { Limiter, clipCurve, limitAndClip, softClip } from './limiter';
+import { Limiter, clipCurve, limitAndClip } from './limiter';
 
 const RATE = 48000;
 const { CEILING } = VolumeBoost;
-const KNEE = VolumeBoost.CLIP_KNEE * CEILING;
 
 /** A fixed stream of numbers from 0 to 1, so every run of a test hears the same "music". */
 function random(seed: number) {
@@ -56,6 +55,20 @@ function boost(input: Float32Array[], percent: number, volume = 1, ceiling = CEI
 /** The loudest sample of every channel. */
 const peakOf = (channels: Float32Array[]) => Math.max(...channels.map((c) => c.reduce((m, s) => Math.max(m, Math.abs(s)), 0)));
 
+/**
+ * How many times a sample over 0.5 is the same as the two before it: what a hard clip does, holding the top of a
+ * peak flat. Two the same either side of a slow crest can happen by rounding; three is a flat top.
+ */
+function heldFlat(channels: Float32Array[]): number {
+  let held = 0;
+  for (const channel of channels) {
+    for (let i = 2; i < channel.length; i++) {
+      if (Math.abs(channel[i]) > 0.5 && channel[i] === channel[i - 1] && channel[i] === channel[i - 2]) held++;
+    }
+  }
+  return held;
+}
+
 /** The RMS in dB, leaving out the look-ahead at the start, where the limiter has had nothing yet. */
 function rmsDb(channels: Float32Array[], skip = 0): number {
   let sum = 0;
@@ -69,40 +82,18 @@ function rmsDb(channels: Float32Array[], skip = 0): number {
   return 10 * Math.log10(sum / n);
 }
 
-describe('the soft clip', () => {
-  it('leaves everything up to the knee alone', () => {
-    for (const x of [0, 0.1, -0.5, 0.8, KNEE, -KNEE]) expect(softClip(x)).toBe(x);
-    expect(20 * Math.log10(KNEE)).toBeCloseTo(-1.9, 1);
-  });
-
-  it('bends into the ceiling from the knee without a corner, and never past it', () => {
-    const slope = (x: number) => (softClip(x + 1e-6) - softClip(x - 1e-6)) / 2e-6;
-    expect(slope(KNEE)).toBeCloseTo(1, 4);
-    expect(slope(KNEE + 0.1)).toBeLessThan(1);
-    let last = softClip(0);
-    for (let x = 0.001; x < 40; x *= 1.01) {
-      const y = softClip(x);
-      expect(y, `at ${x}`).toBeGreaterThanOrEqual(last);
-      expect(y, `at ${x}`).toBeLessThanOrEqual(CEILING);
-      expect(softClip(-x)).toBe(-y);
-      last = y;
-    }
-    expect(softClip(1e9)).toBeLessThanOrEqual(CEILING);
-    expect(softClip(Infinity)).toBe(CEILING);
-    // The old soft clip went on up to full scale, past the ceiling.
-    expect(softClip(2)).toBeLessThan(0.95);
-  });
-
-  it('makes a shaper curve that is the same thing, held at the ceiling past its ends', () => {
+describe("the shaper's curve", () => {
+  it('is the soft clip, still rising at the very end, where a shaper holds whatever is past it', () => {
     const curve = clipCurve(4, 8193);
     expect(curve.length).toBe(8193);
     expect(curve[4096]).toBe(0);
-    expect(curve[0]).toBeCloseTo(-CEILING, 6);
-    expect(curve[8192]).toBeCloseTo(CEILING, 6);
     // Sample i stands for 4 × (i / 4096 − 1).
     expect(curve[4096 + 512]).toBeCloseTo(0.5, 6);
-    expect(curve[4096 + 1024]).toBeCloseTo(softClip(1), 6);
-    expect(Math.max(...curve)).toBeLessThanOrEqual(Math.fround(CEILING));
+    expect(curve[4096 + 1024]).toBeCloseTo(VolumeBoost.clip(1), 6);
+    expect(curve[8192]).toBeCloseTo(CEILING, 3);
+    expect(curve[8192]).toBeLessThan(CEILING);
+    expect(curve[0]).toBe(-curve[8192]);
+    for (let i = 1; i < curve.length; i++) expect(curve[i], `point ${i}`).toBeGreaterThan(curve[i - 1]);
   });
 });
 
@@ -195,8 +186,32 @@ describe('the booster', () => {
     expect(levels[1].rms - levels[0].rms, '200% over 100%').toBeGreaterThan(2.5);
     expect(levels[2].rms - levels[1].rms, '400% over 200%').toBeGreaterThan(1.25);
     expect(levels[3].rms - levels[2].rms, '1000% over 400%').toBeGreaterThan(1);
-    // The ceiling as a 32-bit float, which is what a sample is: 6 parts in a billion over 0.944, still −0.5 dBFS.
-    for (const { percent, peak } of levels.slice(1)) expect(peak, `${percent}%`).toBeLessThanOrEqual(Math.fround(CEILING));
+    for (const { percent, peak } of levels.slice(1)) expect(peak, `${percent}%`).toBeLessThan(CEILING);
+  });
+
+  it('holds nothing flat at the top, as a hard clip would, even driven ten times', () => {
+    // A full-scale 1 kHz tone at 1000%: the limiter lets its crests through at CEILING × 3.16, and the clip rounds
+    // every one of them off, with not three samples in a row the same.
+    const tone = [0, 1].map(() => Float32Array.from({ length: RATE / 2 }, (_, i) => 0.966 * Math.sin((2 * Math.PI * 1000 * i) / RATE)));
+    const loudTone = boost(tone, 1000);
+    expect(peakOf(loudTone)).toBeGreaterThan(0.94);
+    expect(heldFlat(loudTone)).toBe(0);
+    const music = master();
+    expect(heldFlat(music)).toBe(0);
+    for (const percent of [200, 400, 1000]) expect(heldFlat(boost(music, percent)), `music at ${percent}%`).toBe(0);
+    // A tanh in the clip's place, as the first one was, goes flat in 32-bit floats once its input is past about
+    // 1.8, and holds the tone's crests there just as a hard clip would.
+    const tanh = (x: number) => {
+      const knee = VolumeBoost.CLIP_KNEE * CEILING;
+      const room = CEILING - knee;
+      return Math.abs(x) <= knee ? x : Math.sign(x) * (knee + room * Math.tanh((Math.abs(x) - knee) / room));
+    };
+    const limited = tone.map(() => new Float32Array(RATE / 2));
+    new Limiter(RATE).process(tone.map((c) => c.map((s) => s * 10)), limited, RATE / 2, CEILING * VolumeBoost.drive(1000));
+    expect(heldFlat(limited.map((c) => c.map(tanh)))).toBeGreaterThan(1000);
+    // A square wave is the same sample over and over, so whatever the clip, so is what comes out; it stays under.
+    const square = [Float32Array.from({ length: RATE }, (_, i) => (Math.floor(i / 100) % 2 ? 1 : -1))];
+    expect(peakOf(boost(square, 1000))).toBeLessThan(CEILING);
   });
 
   it('would barely get louder with the limiter held at the ceiling, as the old booster held it at full scale', () => {
