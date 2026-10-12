@@ -2,8 +2,20 @@
  * The volume booster's numbers, so that every player means the same thing by "400%": Base's VolumeBoost, ported.
  *
  * A level is a percentage of the amplitude: 100 is the sound as it came, 200 is twice the amplitude (+6 dB) and
- * 1000 is ten times (+20 dB). Every player puts a limiter straight after the gain, which is what makes a level this
- * high usable at all; here that is a DynamicsCompressorNode set as one (see sound.ts).
+ * 1000 is ten times (+20 dB). The same three steps make it on every player:
+ *
+ * 1. The listener's volume comes first, then the boost: the samples are multiplied by volume × factor. So the
+ *    booster takes up the volume's slack before anything else -- at half volume, 200% is a clean +6 dB with
+ *    nothing limited at all.
+ * 2. A limiter that looks LOOKAHEAD_MS ahead holds the peaks at CEILING × drive, turning the whole sound down for
+ *    a moment around each one and coming back up over RELEASE_MS.
+ * 3. A soft clip rounds whatever is over the knee into CEILING, so nothing the booster makes ever goes past it.
+ *
+ * Why both, and why the limiter's ceiling moves: mastered music already touches full scale, so a limiter holding
+ * the peaks where they were can only bring the rest up towards them, and the song barely gets louder (1000% was
+ * about 2 LU louder than 100% on a loud master, measured). Letting the limiter go over full scale by drive, for
+ * the soft clip to take back off the tops, splits the boost's decibels half and half between the two, which is
+ * what makes 1000% sound like a great deal more than 200%. sound.ts says how a browser does it.
  */
 
 /** No boost: the sound as it came. The booster is off at this level and nowhere else. */
@@ -26,6 +38,18 @@ export const LOUD_WARNING = 'Loud: mind your ears and your speakers';
 
 /** What a player that cannot boost says in the booster's place. */
 export const UNAVAILABLE = 'The volume can only be boosted where Noctorium makes the sound itself.';
+
+/** The most the booster ever puts out, as a sample's size: −0.5 dBFS. Nothing it makes goes past it. */
+export const CEILING = 0.944;
+
+/** The soft clip is a straight line up to this much of CEILING, and bends into CEILING above it. */
+export const CLIP_KNEE = 0.85;
+
+/** How far ahead the limiter looks, so that it is already down when a peak arrives: five milliseconds. */
+export const LOOKAHEAD_MS = 5;
+
+/** How long the limiter takes to come back up after a peak, as a time constant: sixty milliseconds. */
+export const RELEASE_MS = 60;
 
 /** [percent] within OFF_PERCENT..MAX_PERCENT. A level from an older or hand-edited store is never trusted. */
 export function clamp(percent: number): number {
@@ -51,6 +75,13 @@ export const factor = (percent: number) => Math.fround(clamp(percent) / 100);
 
 /** The gain in decibels: 0 at 100%, about 6 at 200%, 20 at 1000%. */
 export const gainDb = (percent: number) => 20 * Math.log10(factor(percent));
+
+/**
+ * How far over CEILING the limiter lets the sound go, for the soft clip to take back off: the square root of the
+ * factor, so half of the boost's decibels. ×1.41 at 200%, ×2 at 400%, ×3.16 at 1000%, and 1 at 100%. A 32-bit
+ * float, as factor is.
+ */
+export const drive = (percent: number) => Math.fround(Math.sqrt(factor(percent)));
 
 /** "400%", for a slider's label. */
 export const percentLabel = (percent: number) => `${clamp(percent)}%`;
