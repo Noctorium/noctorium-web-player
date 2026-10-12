@@ -61,12 +61,15 @@ Getting in takes the key in the link `noctorium web` prints, swapped for a cooki
 
 Where the page makes the sound itself — every song in `noctorium web` with this tab as the speaker, and
 SoundCloud in the hosted player — it goes through Web Audio (`src/sound.ts`): the **volume booster**, from
-100% to 1000% (×10, +20 dB) behind a limiter, and an AnalyserNode for the **visualiser**, which draws Base's
-ten bands from the real sound, or each channel's level. The graph is only made once one of them is wanted,
-and the visualiser measures only while it is on the screen. Where the sound is out of the page's reach, both
-say so rather than pretend: the computer's mpv does its own boosting and measuring for `noctorium web` and
-sends the frames; YouTube in the hosted player plays inside YouTube's own frame, which no page can boost or
-hear; Spotify playing in Spotify's app is out of Noctorium's reach altogether.
+100% to 1000% (×10, +20 dB), the listener's volume first and then a look-ahead limiter and a soft clip that
+keep it under −0.5 dBFS, the same as every Noctorium player's (an AudioWorklet, or the browser's own
+compressor where a page cannot have one, as on plain http from another device); and an AnalyserNode for the
+**visualiser**, which draws Base's ten bands from the real sound, or each channel's level. The graph is only
+made once one of them is wanted, and the visualiser measures only while it is on the screen. Where the sound
+is out of the page's reach, both say so rather than pretend: the computer's mpv does its own boosting and
+measuring for `noctorium web` and sends the frames; YouTube in the hosted player plays inside YouTube's own
+frame, which no page can boost or hear; Spotify playing in Spotify's app is out of Noctorium's reach
+altogether.
 
 ## Icons
 
