@@ -80,6 +80,12 @@ The page draws its icons in the set chosen in Settings: **Standard** and **Line*
 desktop and the phone draw, of which only the icons the page uses are bundled (`scripts/material-icons.mjs`
 writes `src/icons/material-*.ts` from the `@material-design-icons/svg` package).
 
+The badges that say which service a song comes from carry each service's mark, from
+[Simple Icons](https://simpleicons.org) (simple-icons 16.35.0, CC0 1.0), unless they are set back to letters
+beside the icon set. The marks are trademarks of the services they stand for, drawn only to say which service a
+song is from; music on the computer has Material Icons' folder (Apache License 2.0). They are kept in
+`src/base/serviceMarks.ts`, a copy of Noctorium-Base's, which the desktop and the phone draw from.
+
 ## Working on it
 
 ```bash

@@ -62,6 +62,12 @@ export const ICON_SETS: Choice[] = [
   { name: 'LINE', title: 'Line', description: 'Thin single strokes in one colour, like a desktop’s own icon theme.' },
 ];
 
+/** How the badge that says where a song comes from is drawn, as Base's ServiceBadgeStyle: Marks unless asked. */
+export const SERVICE_BADGE_STYLES: Choice[] = [
+  { name: 'MARKS', title: 'Marks', description: 'Each service’s own mark: YouTube Music’s ring, SoundCloud’s cloud, Spotify’s three waves.' },
+  { name: 'LETTERS', title: 'Letters', description: 'The service’s short name, YTM, SC or SP, as the badges always had it.' },
+];
+
 /** What playing a song from Home or a search plays after it, as Base's HomePlay. */
 export const HOME_PLAYS: Choice[] = [
   { name: 'AUTOPLAY', title: 'Autoplay after it', description: 'The song, then songs like it, as a radio started from it.' },

@@ -6,7 +6,7 @@ import {
 import { send, usePart } from '../live';
 import { go, useRoute } from '../router';
 import { cls, providerName, speedName } from '../util';
-import { Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
+import { Badge, Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
 import type { Account, Bandcamp, Choice, Provider, Service, Settings, Spotify, Vk } from '../types';
 import { HOSTED } from '../mode';
@@ -18,7 +18,7 @@ import { Visualiser } from '../components/Visualiser';
 import { BarPreview, LayoutPreview } from '../components/LookPreviews';
 import { setLook, useLooks } from '../looks';
 import { ICON_SET_NAMES } from '../icons';
-import { HOME_PLAYS, ICON_SETS, NOW_PLAYING_LAYOUTS, PLAYER_BARS, QUEUE_COLUMNS, VISUALISER_STYLES, normalisedColumns } from '../base/looks';
+import { HOME_PLAYS, ICON_SETS, NOW_PLAYING_LAYOUTS, PLAYER_BARS, QUEUE_COLUMNS, SERVICE_BADGE_STYLES, VISUALISER_STYLES, normalisedColumns } from '../base/looks';
 import { ALL as BANGS, bangFor, type SearchMode } from '../base/searchBangs';
 import { search as searchSettings, words, type SettingMatch } from '../base/settingsSearch';
 import { SECTIONS, entriesFor, pagesFor, type Entry, type Page, type Section } from './settingsEntries';
@@ -346,6 +346,8 @@ function PlayerSettings({ settings }: { settings: Settings }) {
   // Noctorium sends every seek bar it has; a Noctorium from before Slider does not, and this page's list stands in.
   const bars = settings.progressBarStyles?.length ? settings.progressBarStyles.map((c) => [c.name, c.title] as [string, string]) : seekBarStyles;
   const sets = settings.iconSets?.length ? settings.iconSets.map((c) => ({ ...c, description: c.description || ICON_SETS.find((s) => s.name === c.name)?.description })) : ICON_SETS;
+  // Noctorium sends the badges' styles; one from before the marks does not, and Base's list stands in.
+  const badgeStyles = settings.serviceBadgeStyles?.length ? settings.serviceBadgeStyles : SERVICE_BADGE_STYLES;
   return (
     <>
       <Block setting="player-bar" title="Player bar">
@@ -370,9 +372,21 @@ function PlayerSettings({ settings }: { settings: Settings }) {
         />
         <p className="setting-note">Standard and Line are Lucide (ISC); the others are Material Icons (Apache 2.0), in the styles the desktop and the phone draw them in.</p>
       </Block>
+      <Block setting="service-badges" title="Service badge style">
+        <Cards
+          choices={badgeStyles}
+          chosen={looks.serviceBadgeStyle}
+          choose={(name) => setLook('serviceBadgeStyle', name)}
+          extra={(c) => <span className="badge-sample" aria-hidden>{badgeSamples.map((p) => <Badge key={p} provider={p} style={c.name} />)}</span>}
+        />
+        <p className="setting-note">The badge on a cover or in a list that says which service a song is from. The marks are Simple Icons’ (CC0), and each is its service’s trademark, there only to say which service that is.</p>
+      </Block>
     </>
   );
 }
+
+/** The services a badge style is shown by in its card. */
+const badgeSamples: Provider[] = ['YOUTUBE_MUSIC', 'YOUTUBE_VIDEO', 'SOUNDCLOUD', 'SPOTIFY', 'BANDCAMP', 'VK'];
 
 function NowPlayingSettings() {
   const looks = useLooks();

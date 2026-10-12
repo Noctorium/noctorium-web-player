@@ -5,6 +5,7 @@ import { HOSTED } from './mode';
 import { go, useRoute } from './router';
 import { cls } from './util';
 import { Badge, Layers } from './components/Common';
+import { setServiceBadgeStyle } from './components/Badge';
 import { MediaSession, PlayerBar } from './components/Player';
 import { NowPlaying } from './components/NowPlaying';
 import { skinOf, useSkin, WindowTitle } from './components/Skin';
@@ -72,14 +73,15 @@ function useTheme() {
     const t = playback?.track;
     document.title = t ? `${t.title} · ${t.artistLine} — Noctorium` : 'Noctorium';
   }, [playback?.track?.key]);
-  // The bar and the icons the listener chose: the Toolbar is a bar of another height, and the icons are drawn
-  // from the set in force everywhere at once.
+  // The bar and the icons the listener chose: the Toolbar is a bar of another height, and the icons and the
+  // services' badges are drawn from the set and the style in force everywhere at once.
   const looks = useLooks();
   useLayoutEffect(() => {
     document.documentElement.classList.toggle('bar-toolbar', looks.playerBar === 'TOOLBAR');
     document.documentElement.dataset.icons = looks.iconSet.toLowerCase();
     setIconSet(looks.iconSet);
-  }, [looks.playerBar, looks.iconSet]);
+    setServiceBadgeStyle(looks.serviceBadgeStyle);
+  }, [looks.playerBar, looks.iconSet, looks.serviceBadgeStyle]);
 }
 
 /** The services a bang can choose, by its mode, for the search box to say where a search is going. */

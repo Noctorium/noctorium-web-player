@@ -54,6 +54,15 @@ describe('the settings and their search', () => {
     expect(first('search shortcut')).toBe('bangs');
   });
 
+  it('finds the badges by their marks, logos and letters, in either build', () => {
+    for (const hosted of [false, true]) {
+      const found = (query: string) => search(query, entriesFor(hosted)).map((m) => m.entry.id);
+      for (const query of ['logo', 'service icons', 'badge', 'marks']) expect(found(query)[0], query).toBe('service-badges');
+      for (const query of ['icons', 'letters', 'ytm']) expect(found(query), query).toContain('service-badges');
+      expect(found('icon')[0]).toBe('icons');
+    }
+  });
+
   it('describes every setting, for the search to look in', () => {
     for (const entry of ENTRIES) expect(entry.description?.length, entry.id).toBeGreaterThan(10);
   });

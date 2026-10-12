@@ -380,6 +380,22 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 .badge.VK { background: #0077ff; }
 .badge.LOCAL { background: var(--card); color: var(--subtext); }
 
+/*
+ * A badge with the service's mark: the letters are still there, unseen, so the chip is the size it always was, and the
+ * mark is laid over them in their colour, in the middle, a little taller than their capitals.
+ */
+.badge.mark { position: relative; }
+.badge.mark .letters { visibility: hidden; }
+.badge.mark svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.25em;
+  height: 1.25em;
+  max-height: 100%;
+  fill: currentColor;
+}
+
 /* ------------------------------------------------------------------ track rows */
 
 .tracks { display: flex; flex-direction: column; }

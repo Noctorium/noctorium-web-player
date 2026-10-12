@@ -324,6 +324,12 @@ export interface Settings {
   iconSets?: Choice[];
   homePlay?: string;
   homePlays?: Choice[];
+  /**
+   * How the badge that says where a song comes from is drawn, by ServiceBadgeStyle's name -- MARKS, each service's
+   * own, or LETTERS, as the badges were -- and the choices. A Noctorium from before the marks sends neither.
+   */
+  serviceBadgeStyle?: string;
+  serviceBadgeStyles?: Choice[];
 }
 
 export interface Download { track: Track; bytes: number; at: number }

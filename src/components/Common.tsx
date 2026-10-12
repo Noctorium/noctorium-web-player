@@ -1,9 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Music2 } from '../icons';
-import type { Provider } from '../types';
 import { closeDialog, closeMenu, useUi } from '../ui';
-import { cls, providerBadge, providerName } from '../util';
+import { cls } from '../util';
 import { useSkin } from './Skin';
+
+export { Badge } from './Badge';
 
 export function Cover({ url, className, round, alt = '', children }: { url?: string; className?: string; round?: boolean; alt?: string; children?: ReactNode }) {
   const [failed, setFailed] = useState(false);
@@ -18,10 +19,6 @@ export function Cover({ url, className, round, alt = '', children }: { url?: str
       {children}
     </div>
   );
-}
-
-export function Badge({ provider }: { provider: Provider }) {
-  return <span className={cls('badge', provider)} title={providerName[provider]}>{providerBadge[provider]}</span>;
 }
 
 export function Spinner() {

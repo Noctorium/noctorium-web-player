@@ -7,9 +7,9 @@ import { DEFAULT_QUEUE_COLUMNS, normalisedColumns } from './base/looks';
  *
  * The player bar and the now playing layout -- and whether the Centred bar has a Stop button -- are this page's
  * own and kept in this browser, as the desktop keeps its own bar and layout: a phone and a laptop opening the same
- * Noctorium can each have theirs. The visualiser, the queue's columns, the status bar and the icon set are
- * Noctorium's, shared with its other players, and sent with the settings; from a Noctorium too old to send them,
- * they are kept here too, so the choice still holds in this browser.
+ * Noctorium can each have theirs. The visualiser, the queue's columns, the status bar, the icon set and the service
+ * badges' style are Noctorium's, shared with its other players, and sent with the settings; from a Noctorium too old
+ * to send them, they are kept here too, so the choice still holds in this browser.
  */
 
 export interface Looks {
@@ -23,12 +23,14 @@ export interface Looks {
   queueColumns: string[];
   statusBar: boolean;
   iconSet: string;
+  /** Base's ServiceBadgeStyle: MARKS, each service's own, or LETTERS, as the badges were. */
+  serviceBadgeStyle: string;
 }
 
 const KEY = 'noctorium:looks';
 const DEFAULTS: Looks = {
   playerBar: 'CENTERED', nowPlaying: 'SIDE_BY_SIDE', stopButton: false, visualiser: 'BARS', queueColumns: DEFAULT_QUEUE_COLUMNS,
-  statusBar: true, iconSet: 'STANDARD',
+  statusBar: true, iconSet: 'STANDARD', serviceBadgeStyle: 'MARKS',
 };
 
 function read(): Looks {
@@ -49,6 +51,7 @@ const kept: Partial<Record<keyof Looks, (value: any) => [string, Record<string, 
   queueColumns: (columns: string[]) => ['queueColumns', { columns }],
   statusBar: (on: boolean) => ['statusBar', { on }],
   iconSet: (name: string) => ['iconSet', { name }],
+  serviceBadgeStyle: (name: string) => ['serviceBadgeStyle', { name }],
 };
 
 /** Every choice, as it stands: Noctorium's where it sends it, this browser's otherwise. */
@@ -61,6 +64,7 @@ export function useLooks(): Looks {
     queueColumns: settings?.queueColumns ? normalisedColumns(settings.queueColumns) : mine.queueColumns,
     statusBar: settings?.statusBar ?? mine.statusBar,
     iconSet: settings?.iconSet ?? mine.iconSet,
+    serviceBadgeStyle: settings?.serviceBadgeStyle ?? mine.serviceBadgeStyle,
   };
 }
 

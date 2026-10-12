@@ -9,7 +9,7 @@ import { sound } from '../sound';
 import * as VolumeBoost from '../base/volumeBoost';
 import { parse as parseBangs } from '../base/searchBangs';
 import { describe as describeFormat, queueDurationMs, type StreamFormat } from '../base/streamFormat';
-import { DEFAULT_QUEUE_COLUMNS, HOME_PLAYS, ICON_SETS, normalisedColumns, QUEUE_COLUMNS, VISUALISER_STYLES } from '../base/looks';
+import { DEFAULT_QUEUE_COLUMNS, HOME_PLAYS, ICON_SETS, normalisedColumns, QUEUE_COLUMNS, SERVICE_BADGE_STYLES, VISUALISER_STYLES } from '../base/looks';
 import { version } from '../../package.json';
 import { ask } from './api';
 import { choose, findLyrics } from './lyrics';
@@ -54,13 +54,15 @@ interface Prefs {
   statusBar: boolean;
   iconSet: string;
   homePlay: string;
+  /** The services' badges with their marks, or with their letters, as Base's ServiceBadgeStyle. */
+  serviceBadgeStyle: string;
 }
 
 const DEFAULTS: Prefs = {
   theme: 'NOCTORIUM_NIGHT', accent: 'THEME', progressBarStyle: 'MINIMAL', timeDisplay: 'TOTAL', animations: true,
   taskbarClock: true, autoplay: true, volume: 0.72, muted: false, boostPercent: VolumeBoost.OFF_PERCENT,
   lastBoostPercent: VolumeBoost.FIRST_PERCENT, visualiser: 'BARS', queueColumns: DEFAULT_QUEUE_COLUMNS, statusBar: true,
-  iconSet: 'STANDARD', homePlay: 'AUTOPLAY',
+  iconSet: 'STANDARD', homePlay: 'AUTOPLAY', serviceBadgeStyle: 'MARKS',
 };
 
 /** The searches the hosted player can make; Bandcamp, Spotify and VK are Noctorium's, on a computer or a phone. */
@@ -184,6 +186,7 @@ export class HostedEngine {
       visualiser: p.visualiser, visualiserStyles: VISUALISER_STYLES.map(({ name, title, description }) => ({ name, title, description })),
       queueColumns: p.queueColumns, allQueueColumns: QUEUE_COLUMNS.map(({ name, title, heading }) => ({ name, title, description: heading })),
       statusBar: p.statusBar, iconSet: p.iconSet, iconSets: ICON_SETS, homePlay: p.homePlay, homePlays: HOME_PLAYS,
+      serviceBadgeStyle: p.serviceBadgeStyle, serviceBadgeStyles: SERVICE_BADGE_STYLES,
     };
     this.store.part('settings', settings);
   }
@@ -284,6 +287,7 @@ export class HostedEngine {
       case 'visualiser': return this.choose('visualiser', c.name, VISUALISER_STYLES, 'No such visualiser');
       case 'iconSet': return this.choose('iconSet', c.name, ICON_SETS, 'No such icon set');
       case 'homePlay': return this.choose('homePlay', c.name, HOME_PLAYS, 'No such choice');
+      case 'serviceBadgeStyle': return this.choose('serviceBadgeStyle', c.name, SERVICE_BADGE_STYLES, 'No such badges');
       case 'statusBar': this.prefs.statusBar = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'queueColumns':
         if (!Array.isArray(c.columns)) throw new Problem('No such columns');
@@ -429,7 +433,7 @@ export class HostedEngine {
     }
   }
 
-  private choose(pref: 'visualiser' | 'iconSet' | 'homePlay', name: unknown, choices: { name: string }[], refusal: string) {
+  private choose(pref: 'visualiser' | 'iconSet' | 'homePlay' | 'serviceBadgeStyle', name: unknown, choices: { name: string }[], refusal: string) {
     if (!choices.some((choice) => choice.name === name)) throw new Problem(refusal);
     this.prefs[pref] = String(name);
     this.savePrefs();
