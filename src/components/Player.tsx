@@ -1,12 +1,12 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import {
-  Check, ChevronUp, CircleStop, Disc3, Heart, ListMusic, Mic2, Monitor, MonitorSpeaker, Pause, Play, Plus, Repeat, Repeat1,
+  Check, ChevronUp, CircleStop, Disc3, Gauge, Heart, ListMusic, Mic2, Monitor, MonitorSpeaker, Pause, Play, Plus, Repeat, Repeat1,
   Shuffle, SkipBack, SkipForward, Smartphone, Square, User, Moon,
 } from '../icons';
 import { audio } from '../audio';
 import { live, send, usePart } from '../live';
 import { openMenu, openNowPlaying, useUi, closeNowPlaying } from '../ui';
-import { canLike, cls, formatTime, isLiked } from '../util';
+import { SPEEDS, canLike, cls, formatTime, isLiked, speedName } from '../util';
 import { Cover, Spinner } from './Common';
 import { StartButton, TrayClock, taskbarMenu, useSkin } from './Skin';
 import { AddToPlaylist, TrackMenu } from './Tracks';
@@ -317,10 +317,24 @@ function SleepMenu() {
   );
 }
 
-/** The bar along the foot of the page, in the look chosen: this page's own Centred bar, or the Toolbar. */
+/** The speeds Settings offers, the one in force ticked, for Toolbar 2's speed button. */
+function SpeedMenu() {
+  const settings = usePart('settings');
+  const speed = settings?.playbackSpeed ?? 1;
+  return (
+    <>
+      <div className="heading">Speed</div>
+      {SPEEDS.map((s) => <button key={s} onClick={() => send('speed', { value: s })}>{speedName(s)} {Math.abs(speed - s) < 0.01 ? '✓' : ''}</button>)}
+    </>
+  );
+}
+
+/** The bar along the foot of the page, in the look chosen: this page's own Centred bar, the Toolbar, or Toolbar 2. */
 export function PlayerBar() {
   const { playerBar } = useLooks();
-  return playerBar === 'TOOLBAR' ? <ToolbarBar /> : <CentredBar />;
+  if (playerBar === 'TOOLBAR') return <ToolbarBar />;
+  if (playerBar === 'TOOLBAR_2') return <Toolbar2Bar />;
+  return <CentredBar />;
 }
 
 /**
@@ -487,6 +501,91 @@ function ToolbarBar() {
         <button className="round-button" aria-label="Lyrics" onClick={() => openNowPlaying('lyrics')}><Mic2 size={18} /></button>
         <button className="round-button" aria-label="Queue" onClick={() => openNowPlaying('queue')}><ListMusic size={18} /></button>
         {!HOSTED && <button className="round-button" aria-label="Where it plays" onClick={(e) => openMenu(e, <OutputMenu />)}><MonitorSpeaker size={18} /></button>}
+        <NowPlayingButton />
+        {skin && <TrayClock />}
+      </div>
+    </footer>
+  );
+}
+
+/**
+ * Toolbar 2: the Toolbar with play and pause one button again and no add button, and every other button the bar
+ * can carry after the slider, in groups -- like, lyrics and the queue; repeat and shuffle; the sleep timer, where it
+ * plays, the speed and the volume. Stop is among the transport when asked for, as on the Centred bar. The hosted
+ * player has nowhere else to play and no speed to change, so it leaves out those two.
+ *
+ * As the row narrows, lyrics and the queue go first, both only ways to the now playing screen; then repeat,
+ * shuffle, the sleep timer and the speed, unless the timer is counting down or the song is playing faster or
+ * slower, as on the desktop. The row's own width decides, not the window's (see looks.css), so a Windows skin's
+ * control strip, which has the whole width, keeps them all. On a phone it is the Toolbar's three rows -- the song,
+ * the slider, and like, previous, play, next, the queue, shuffle and repeat, as the phone's Toolbar 2 has them.
+ */
+function Toolbar2Bar() {
+  const playback = usePart('playback');
+  const queue = usePart('queue');
+  const likes = usePart('likes');
+  const connect = usePart('connect');
+  const settings = usePart('settings');
+  const { stopButton } = useLooks();
+  const skin = useSkin();
+  const track = playback?.track;
+  const status = playback?.status;
+  const playing = status === 'playing';
+  const likeable = !!track && canLike(likes, track);
+  const liked = likeable && isLiked(likes, track);
+  const sleeping = !!playback && playback.sleep.kind !== 'off';
+  const elsewhere = !!connect?.target || !!connect?.controlledBy;
+  const speed = settings?.playbackSpeed ?? 1;
+  const changed = Math.abs(speed - 1) >= 0.01;
+  return (
+    <footer className="player toolbar toolbar-2" onContextMenu={skin ? taskbarMenu : undefined}>
+      {skin && <StartButton />}
+      <NowSong like={false} />
+      <div className="middle">
+        <div className="tools transport">
+          <button className="tool" aria-label="Previous" title="Previous" onClick={() => send('previous')}><SkipBack size={18} fill="currentColor" /></button>
+          {/* One button that says what it will do, as the Centred bar's does. */}
+          <button className="tool" aria-label={playing ? 'Pause' : 'Play'} title={playing ? 'Pause' : 'Play'} onClick={() => send('toggle')}>
+            {status === 'resolving' ? <Spinner /> : playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+          </button>
+          {stopButton && <StopButton flat size={16} />}
+          <button className="tool" aria-label="Next" title="Next" disabled={queue?.hasNext === false} onClick={() => send('next')}><SkipForward size={18} fill="currentColor" /></button>
+        </div>
+        <SeekBar playback={playback} times="after" />
+        <div className="tools song-tools">
+          {/* Kept in its place, off, where the song cannot be liked from here, so the row does not shift. */}
+          <button className={cls('tool', liked && 'on')} data-button="LIKE" aria-label={liked ? 'Unlike' : 'Like'} title={liked ? 'Unlike' : 'Like'}
+            disabled={!likeable} onClick={() => track && send('like', { track })}>
+            <Heart size={18} fill={liked ? 'currentColor' : 'none'} />
+          </button>
+          <button className="tool goes-first" data-button="LYRICS" aria-label="Lyrics" title="Lyrics" onClick={() => openNowPlaying('lyrics')}><Mic2 size={18} /></button>
+          <button className="tool goes-first" data-button="QUEUE" aria-label="Queue" title="Queue" onClick={() => openNowPlaying('queue')}><ListMusic size={18} /></button>
+        </div>
+        <div className="tools modes">
+          <button className={cls('tool', queue?.repeat !== 'off' && 'on')} data-button="REPEAT" aria-label="Repeat" title="Repeat" onClick={() => send('repeat')}>
+            {queue?.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
+          </button>
+          <button className={cls('tool', queue?.shuffle && 'on')} data-button="SHUFFLE" aria-label="Shuffle" title="Shuffle" onClick={() => send('shuffle')}><Shuffle size={18} /></button>
+        </div>
+        <div className="tools extras">
+          <button className={cls('tool goes-next', sleeping && 'on under-way')} data-button="SLEEP_TIMER" aria-label="Sleep timer" title="Sleep timer"
+            onClick={(e) => openMenu(e, <SleepMenu />)}><Moon size={18} /></button>
+          {!HOSTED && (
+            <button className={cls('tool', elsewhere && 'on')} data-button="DEVICES" aria-label="Where it plays" title="Where it plays"
+              onClick={(e) => openMenu(e, <OutputMenu />)}><MonitorSpeaker size={18} /></button>
+          )}
+          {/* The speed itself while it is not the song's own, as the volume shows its boost. */}
+          {!HOSTED && (
+            <button className={cls('tool speed goes-next', changed && 'on under-way')} data-button="SPEED" aria-label={`Speed, ${speedName(speed)}`} title={`Speed, ${speedName(speed)}`}
+              onClick={(e) => openMenu(e, <SpeedMenu />)}>
+              {changed ? <span className="speed-mark">{speedName(speed)}</span> : <Gauge size={18} />}
+            </button>
+          )}
+          <VolumeButton className="tool" />
+        </div>
+      </div>
+      <div className="right">
+        <Chips />
         <NowPlayingButton />
         {skin && <TrayClock />}
       </div>

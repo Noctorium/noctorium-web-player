@@ -1,6 +1,6 @@
 /*
  * Small drawings of each player bar and each now playing layout, for Settings' cards, in the theme's own colours:
- * enough to tell the two apart at a glance before choosing. Drawn here, not taken from anywhere.
+ * enough to tell them apart at a glance before choosing. Drawn here, not taken from anywhere.
  */
 
 export function BarPreview({ name }: { name: string }) {
@@ -16,6 +16,23 @@ export function BarPreview({ name }: { name: string }) {
         <rect className="accent" x="102" y="16" width="13" height="2" rx="1" />
         <circle className="handle" cx="115" cy="17" r="3" />
         {[141, 148, 155].map((x) => <rect key={x} className="faint" x={x - 2} y="14" width="4" height="6" rx="1" />)}
+      </svg>
+    );
+  }
+  if (name === 'TOOLBAR_2') {
+    // Three buttons where the Toolbar has six, play and pause one of them, a shorter slider, and a longer row of
+    // buttons after it in three groups: like, lyrics, the queue; repeat, shuffle; the timer, Connect, speed, volume.
+    return (
+      <svg className="mini" viewBox="0 0 160 34" aria-hidden>
+        <rect className="panel" width="160" height="34" rx="4" />
+        <rect className="art" x="5" y="9" width="16" height="16" rx="2" />
+        <rect className="ink" x="25" y="12" width="16" height="3" rx="1.5" />
+        <rect className="faint" x="25" y="19" width="11" height="3" rx="1.5" />
+        {[45, 52, 59].map((x, i) => <rect key={x} className={i === 1 ? 'accent' : 'ink'} x={x} y="14" width="5" height="6" rx="1" />)}
+        <rect className="track" x="69" y="16" width="29" height="2" rx="1" />
+        <rect className="accent" x="69" y="16" width="11" height="2" rx="1" />
+        <circle className="handle" cx="80" cy="17" r="3" />
+        {[103, 108.5, 114, 121, 126.5, 133.5, 139, 144.5, 150].map((x) => <rect key={x} className="faint" x={x} y="14" width="4" height="6" rx="1" />)}
       </svg>
     );
   }

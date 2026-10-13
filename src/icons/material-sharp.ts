@@ -59,6 +59,7 @@ const icons: Record<string, string> = {
   skip_previous: '<path d="M6 6h2v12H6V6zm3.5 6 8.5 6V6l-8.5 6z"/>',
   smartphone: '<path d="M5 1v22h14V1H5zm12 18H7V5h10v14z"/>',
   speaker_group: '<path d="M20 1H8v17.99h12V1zm-6 2c1.1 0 2 .89 2 2s-.9 2-2 2-2-.89-2-2 .9-2 2-2zm0 13.5c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/><circle cx="14" cy="12.5" r="2.5"/><path d="M6 5H4v18h12v-2H6z"/>',
+  speed: '<path d="m20.39 8.56-1.24 1.86a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.86-1.24A10 10 0 0 0 4 20h16a10 10 0 0 0 .38-11.44z"/><path d="M10.59 15.41a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z"/>',
   stop: '<path d="M6 6h12v12H6V6z"/>',
   stop_circle: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 14H8V8h8v8z"/>',
   swap_horiz: '<path d="M6.99 11 3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>',

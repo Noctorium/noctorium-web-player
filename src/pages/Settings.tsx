@@ -5,7 +5,7 @@ import {
 } from '../icons';
 import { send, usePart } from '../live';
 import { go, useRoute } from '../router';
-import { cls, providerName, speedName } from '../util';
+import { SPEEDS, cls, providerName, speedName } from '../util';
 import { Badge, Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
 import type { Account, Bandcamp, Choice, Provider, Service, Settings, Spotify, Vk } from '../types';
@@ -354,7 +354,7 @@ function PlayerSettings({ settings }: { settings: Settings }) {
         <Cards choices={PLAYER_BARS} chosen={looks.playerBar} choose={(name) => setLook('playerBar', name)} extra={(c) => <BarPreview name={c.name} />} />
         <p className="setting-note">Kept in this browser, so a phone and a computer can each have their own.</p>
       </Block>
-      <Row setting="stop-button" title="Stop button" detail="Stop on the Centred bar too, after Next: pause, and back to the start of the song. The Toolbar always has one.">
+      <Row setting="stop-button" title="Stop button" detail="Stop after Next on the Centred bar and Toolbar 2: pause, and back to the start of the song. The Toolbar always has one.">
         <Switch on={looks.stopButton} change={(on) => setLook('stopButton', on)} label="Stop button" />
       </Row>
       <Block setting="seek-bar" title="Seek bar">
@@ -450,7 +450,6 @@ function ColumnsEditor() {
 
 // ------------------------------------------------------------------ Listening
 
-const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const fades: [number, string][] = [[0, 'Off'], [15, '15 s'], [30, '30 s'], [60, '60 s']];
 
 /** How it plays: the speed, carrying on when the queue runs out, a song from Home, the queue, the sleep timer, lyrics. */
@@ -462,7 +461,7 @@ function PlaybackSettings({ settings }: { settings: Settings }) {
       {!HOSTED && (
         <Row setting="speed" title="Speed" detail="Slower or faster, keeping the pitch.">
           <div className="chips" style={{ margin: 0 }}>
-            {speeds.map((s) => <button key={s} className={cls('chip', Math.abs(speed - s) < 0.01 && 'on')} onClick={() => send('speed', { value: s })}>{speedName(s)}</button>)}
+            {SPEEDS.map((s) => <button key={s} className={cls('chip', Math.abs(speed - s) < 0.01 && 'on')} onClick={() => send('speed', { value: s })}>{speedName(s)}</button>)}
           </div>
         </Row>
       )}

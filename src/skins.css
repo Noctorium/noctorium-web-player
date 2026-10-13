@@ -1461,10 +1461,10 @@
 .skin-98 .tool.on, .skin-98 .tool.on:hover:not(:disabled) { color: var(--w-text); background: var(--w-dither); box-shadow: var(--w-thin-sunken); }
 .skin-98 .tools { gap: 1px; }
 /* The groups of a 98 toolbar are parted by an etched line. */
-.skin-98 .player.toolbar .modes { padding-left: 6px; box-shadow: inset 1px 0 var(--w-shadow), inset 2px 0 var(--w-highlight); }
+.skin-98 .player.toolbar :is(.modes, .song-tools, .extras) { padding-left: 6px; box-shadow: inset 1px 0 var(--w-shadow), inset 2px 0 var(--w-highlight); }
 .skin-98 .player.toolbar .transport { padding-right: 6px; box-shadow: inset -2px 0 var(--w-highlight), inset -1px 0 var(--w-shadow); }
 .skin-98 .volume-button.boosted, .skin-98 .tool.volume-button.boosted { width: auto; padding: 0 3px; gap: 2px; background: none; color: var(--w-text); border-radius: 0; }
-.skin-98 .boost-mark { font-size: 11px; font-weight: bold; }
+.skin-98 :is(.boost-mark, .speed-mark) { font-size: 11px; font-weight: bold; }
 .skin-98 .seek .time.both { min-width: 78px; }
 @media (min-width: 861px) {
   :root.skin-98.bar-toolbar, :root.skin-xp.bar-toolbar { --player: 62px; }
@@ -1647,10 +1647,10 @@
 .skin-xp .tool:active:not(:disabled) { background: #e3e3db; box-shadow: inset 0 0 0 1px #a7a69d, inset 1px 1px 2px rgb(0 0 0 / 0.15); }
 .skin-xp .tool.on, .skin-xp .tool.on:hover:not(:disabled) { color: #000; background: linear-gradient(to bottom, #f4f4f0, #e6e5dd); box-shadow: inset 0 0 0 1px #a7a69d; }
 .skin-xp .tools { gap: 1px; }
-.skin-xp .player.toolbar .modes { padding-left: 6px; box-shadow: inset 1px 0 #c5c2b2, inset 2px 0 #fff; }
+.skin-xp .player.toolbar :is(.modes, .song-tools, .extras) { padding-left: 6px; box-shadow: inset 1px 0 #c5c2b2, inset 2px 0 #fff; }
 .skin-xp .player.toolbar .transport { padding-right: 6px; box-shadow: inset -2px 0 #fff, inset -1px 0 #c5c2b2; }
 .skin-xp .volume-button.boosted, .skin-xp .tool.volume-button.boosted { width: auto; padding: 0 4px; gap: 2px; background: none; color: inherit; }
-.skin-xp .boost-mark { font-size: 11px; font-weight: bold; }
+.skin-xp :is(.boost-mark, .speed-mark) { font-size: 11px; font-weight: bold; }
 .skin-xp .seek .time.both { min-width: 78px; }
 
 /* ------------------------------------------------ XP: the Slider is XP's trackbar, the part played in Luna's blue */
@@ -1807,5 +1807,5 @@
   :is(.skin-98, .skin-xp) .player.toolbar .tool { width: 34px; height: 30px; }
   :is(.skin-98, .skin-xp) .player.toolbar .tool svg { width: 18px; height: 18px; }
   /* The toolbar's groups sit apart on a phone, so they need no line between them. */
-  :is(.skin-98, .skin-xp) .player.toolbar :is(.modes, .transport) { box-shadow: none; padding: 0; }
+  :is(.skin-98, .skin-xp) .player.toolbar :is(.modes, .transport, .song-tools, .extras) { box-shadow: none; padding: 0; }
 }

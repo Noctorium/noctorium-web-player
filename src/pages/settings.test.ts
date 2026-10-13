@@ -46,6 +46,8 @@ describe('the settings and their search', () => {
     expect(first('visualizer')).toBe('visualiser');
     expect(first('icon')).toBe('icons');
     expect(first('toolbar')).toBe('player-bar');
+    expect(first('toolbar 2')).toBe('player-bar');
+    expect(first('toolbar 2', true)).toBe('player-bar');
     expect(first('scrobble')).toBe('lastfm');
     expect(first('scrobble', true)).toBe('listenbrainz');
     expect(first('columns')).toBe('queue-columns');

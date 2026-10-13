@@ -42,8 +42,8 @@ export const ENTRIES: Entry[] = [
   e('look-theme', 'accent', 'Accent', 'The colour of the playing song, the buttons that are on, the seek bar.', ['color', 'colour', 'highlight', 'tint', 'artwork colour']),
   e('look-theme', 'animations', 'Animations', 'Pages ease in and covers lift; off makes every change instant.', ['motion', 'reduce motion', 'transitions', 'effects', 'animation']),
 
-  e('look-player', 'player-bar', 'Player bar', 'This page’s Centred bar, or the Toolbar: one row of flat buttons, a slider and the time.', ['toolbar', 'controls', 'transport', 'buttons', 'bottom bar', 'layout']),
-  e('look-player', 'stop-button', 'Stop button', 'A Stop among the Centred bar’s buttons. The Toolbar always has one.', ['stop', 'square button']),
+  e('look-player', 'player-bar', 'Player bar', 'This page’s Centred bar, or a row of flat buttons with a slider and the time: the Toolbar, or Toolbar 2 with more buttons.', ['toolbar', 'toolbar 2', 'controls', 'transport', 'buttons', 'bottom bar', 'layout']),
+  e('look-player', 'stop-button', 'Stop button', 'A Stop among the buttons of the Centred bar and Toolbar 2. The Toolbar always has one.', ['stop', 'square button']),
   e('look-player', 'seek-bar', 'Seek bar', 'How the song’s progress is drawn: Minimal, Bars, Ruler, Slider and the rest.', ['progress bar', 'scrubber', 'timeline', 'slider', 'waveform', 'scrub']),
   e('look-player', 'time-display', 'The figure on the right of the seek bar', 'The song’s whole length, or the time left.', ['remaining', 'countdown', 'time left', 'duration', 'elapsed']),
   e('look-player', 'icons', 'Icons', 'The icon set every button is drawn with: Standard, Rounded, Outlined, Sharp, Filled, Two-tone or Line.', ['icon set', 'icon theme', 'icon style', 'glyphs', 'symbols', 'material']),

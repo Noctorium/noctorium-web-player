@@ -77,7 +77,7 @@ export const HOME_PLAYS: Choice[] = [
 /**
  * The player bar and the now playing screen, which this page keeps for itself rather than Noctorium: the page's
  * own design under Base's name for the one it is -- Centred, and Side by side -- and the desktop-music-player
- * pair beside them.
+ * pair beside them, with the Toolbar's second version, Toolbar 2, after the Toolbar.
  */
 export const PLAYER_BARS: (Choice & { phone: string })[] = [
   {
@@ -89,6 +89,11 @@ export const PLAYER_BARS: (Choice & { phone: string })[] = [
     name: 'TOOLBAR', title: 'Toolbar',
     description: 'One row of flat buttons, as a desktop music player has them: add to a playlist, previous, play, pause, stop and next, a slider and the time, then repeat, shuffle and the volume.',
     phone: 'The track over a row of flat buttons -- previous, play, pause, stop and next -- with a thin slider and the time.',
+  },
+  {
+    name: 'TOOLBAR_2', title: 'Toolbar 2',
+    description: 'The Toolbar’s flat buttons with play and pause as one, and more of them: like, lyrics and the queue, repeat and shuffle, the sleep timer, Connect, the speed and the volume.',
+    phone: 'The track over a row of flat buttons with play and pause as one, and more of them: like, previous, play, next, the queue, shuffle and repeat, over a thin slider and the time.',
   },
 ];
 

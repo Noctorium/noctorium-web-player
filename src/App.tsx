@@ -73,11 +73,11 @@ function useTheme() {
     const t = playback?.track;
     document.title = t ? `${t.title} · ${t.artistLine} — Noctorium` : 'Noctorium';
   }, [playback?.track?.key]);
-  // The bar and the icons the listener chose: the Toolbar is a bar of another height, and the icons and the
+  // The bar and the icons the listener chose: either Toolbar is a bar of another height, and the icons and the
   // services' badges are drawn from the set and the style in force everywhere at once.
   const looks = useLooks();
   useLayoutEffect(() => {
-    document.documentElement.classList.toggle('bar-toolbar', looks.playerBar === 'TOOLBAR');
+    document.documentElement.classList.toggle('bar-toolbar', looks.playerBar === 'TOOLBAR' || looks.playerBar === 'TOOLBAR_2');
     document.documentElement.dataset.icons = looks.iconSet.toLowerCase();
     setIconSet(looks.iconSet);
     setServiceBadgeStyle(looks.serviceBadgeStyle);

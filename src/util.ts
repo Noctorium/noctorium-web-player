@@ -83,6 +83,9 @@ export function speedName(speed: number): string {
   return `${Number(speed.toFixed(2))}×`;
 }
 
+/** The speeds offered, in Settings and on Toolbar 2's speed button: half as fast to twice as fast. */
+export const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
 export const providerName: Record<Provider, string> = {
   YOUTUBE_MUSIC: 'YouTube Music',
   YOUTUBE_VIDEO: 'YouTube',

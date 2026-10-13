@@ -2,7 +2,7 @@ import { useSyncExternalStore, type CSSProperties } from 'react';
 import {
   ArrowLeft as LucideArrowLeft, ArrowLeftRight as LucideArrowLeftRight, ArrowRight as LucideArrowRight, BookmarkCheck as LucideBookmarkCheck, BookmarkPlus as LucideBookmarkPlus, Check as LucideCheck,
   ChevronDown as LucideChevronDown, ChevronUp as LucideChevronUp, ChevronsUp as LucideChevronsUp, CircleStop as LucideCircleStop, Columns3 as LucideColumns3, Disc3 as LucideDisc3,
-  Download as LucideDownload, ExternalLink as LucideExternalLink, FileAudio as LucideFileAudio, Globe as LucideGlobe, GripVertical as LucideGripVertical, Headphones as LucideHeadphones,
+  Download as LucideDownload, ExternalLink as LucideExternalLink, FileAudio as LucideFileAudio, Gauge as LucideGauge, Globe as LucideGlobe, GripVertical as LucideGripVertical, Headphones as LucideHeadphones,
   Heart as LucideHeart, Home as LucideHome, Info as LucideInfo, Library as LucideLibrary, Link2 as LucideLink2, ListEnd as LucideListEnd,
   ListMinus as LucideListMinus, ListMusic as LucideListMusic, ListPlus as LucideListPlus, ListStart as LucideListStart, ListX as LucideListX, Lock as LucideLock,
   Maximize2 as LucideMaximize2, Mic2 as LucideMic2, Monitor as LucideMonitor, MonitorSpeaker as LucideMonitorSpeaker, Moon as LucideMoon, MoreHorizontal as LucideMoreHorizontal,
@@ -98,7 +98,7 @@ export interface IconProps {
 const LUCIDE: Record<Exclude<IconName, 'HeartFilled'>, LucideIcon> = {
   ArrowLeft: LucideArrowLeft, ArrowLeftRight: LucideArrowLeftRight, ArrowRight: LucideArrowRight, BookmarkCheck: LucideBookmarkCheck, BookmarkPlus: LucideBookmarkPlus, Check: LucideCheck,
   ChevronDown: LucideChevronDown, ChevronUp: LucideChevronUp, ChevronsUp: LucideChevronsUp, CircleStop: LucideCircleStop, Columns3: LucideColumns3, Disc3: LucideDisc3,
-  Download: LucideDownload, ExternalLink: LucideExternalLink, FileAudio: LucideFileAudio, Globe: LucideGlobe, GripVertical: LucideGripVertical, Headphones: LucideHeadphones,
+  Download: LucideDownload, ExternalLink: LucideExternalLink, FileAudio: LucideFileAudio, Gauge: LucideGauge, Globe: LucideGlobe, GripVertical: LucideGripVertical, Headphones: LucideHeadphones,
   Heart: LucideHeart, Home: LucideHome, Info: LucideInfo, Library: LucideLibrary, Link2: LucideLink2, ListEnd: LucideListEnd,
   ListMinus: LucideListMinus, ListMusic: LucideListMusic, ListPlus: LucideListPlus, ListStart: LucideListStart, ListX: LucideListX, Lock: LucideLock,
   Maximize2: LucideMaximize2, Mic2: LucideMic2, Monitor: LucideMonitor, MonitorSpeaker: LucideMonitorSpeaker, Moon: LucideMoon, MoreHorizontal: LucideMoreHorizontal,
@@ -166,6 +166,7 @@ export const Disc3 = make('Disc3');
 export const Download = make('Download');
 export const ExternalLink = make('ExternalLink');
 export const FileAudio = make('FileAudio');
+export const Gauge = make('Gauge');
 export const Globe = make('Globe');
 export const GripVertical = make('GripVertical');
 export const Headphones = make('Headphones');

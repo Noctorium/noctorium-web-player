@@ -13,7 +13,7 @@ import { DEFAULT_QUEUE_COLUMNS, normalisedColumns } from './base/looks';
  */
 
 export interface Looks {
-  /** Base's PlayerBarStyle: CENTERED, this page's own bar, or TOOLBAR. */
+  /** Base's PlayerBarStyle: CENTERED, this page's own bar, TOOLBAR or TOOLBAR_2. */
   playerBar: string;
   /** Base's NowPlayingLayout: SIDE_BY_SIDE, this page's own screen, or PLAYLIST. */
   nowPlaying: string;
