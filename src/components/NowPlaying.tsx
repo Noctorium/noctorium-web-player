@@ -124,6 +124,9 @@ export function LyricsPanel() {
     element?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }, [active]);
 
+  // The Playlist layout keeps its Lyrics tab with nothing playing, and says what it is for rather than "no lyrics".
+  if (!track) return <Empty icon={<Mic2 size={34} />} title="Nothing playing">The words of the song playing are shown here, lit up as they are sung.</Empty>;
+
   return (
     <div>
       <div className="lyrics-sources">

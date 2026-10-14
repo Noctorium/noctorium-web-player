@@ -17,8 +17,8 @@ import type { Track } from '../types';
 
 /*
  * The Playlist layout of the now playing screen, after a desktop music player's main window: the cover in a panel
- * of its own at the left; the queue as a table with the columns the listener chose, in tabs -- Up next, the playlist
- * it came from where the page knows it, and the lyrics; under it an info bar with a small cover, the title large,
+ * of its own at the left; the queue as a table with the columns the listener chose, in tabs -- Up next, the lyrics,
+ * and the playlist it came from where the page knows it; under it an info bar with a small cover, the title large,
  * the artist and album, and a visualiser of the real sound; and along the foot a status bar with what is known of
  * the stream and how far into the queue it is. On a phone the info bar is at the top, over the table, with the
  * controls under it, since the player bar is under the screen there.
@@ -70,12 +70,13 @@ export function PlaylistLayout() {
           <button role="tab" aria-selected={shownTab === 'queue'} className={cls('tab', shownTab === 'queue' && 'on')} onClick={() => setTab('queue')}>
             Up next <small>({queue?.tracks.length ?? 0})</small>
           </button>
+          {/* Straight after the queue, ahead of the tab that comes and goes with the playlist, so it never moves. */}
+          <button role="tab" aria-selected={shownTab === 'lyrics'} className={cls('tab', shownTab === 'lyrics' && 'on')} onClick={() => setTab('lyrics')}>Lyrics</button>
           {source && (
             <button role="tab" aria-selected={shownTab === 'source'} className={cls('tab', shownTab === 'source' && 'on')} onClick={() => setTab('source')}>
               <span className="ellipsis">{source.title}</span> <small>({source.tracks.length})</small>
             </button>
           )}
-          <button role="tab" aria-selected={shownTab === 'lyrics'} className={cls('tab', shownTab === 'lyrics' && 'on')} onClick={() => setTab('lyrics')}>Lyrics</button>
           <span className="spacer" />
           {shownTab === 'queue' && (
             <>
