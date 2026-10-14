@@ -907,6 +907,8 @@ textarea.field { min-height: 130px; resize: vertical; font-family: ui-monospace,
 .empty { text-align: center; padding: 70px 20px; color: var(--subtext); }
 .empty svg { color: var(--faint); margin-bottom: 14px; }
 .empty h3 { color: var(--text); margin: 0 0 6px; font-size: 19px; }
+/* Connect switched off, on Devices: said under its switch, with the rest of the page still to come below it. */
+.connect-off .empty { padding: 36px 20px 30px; }
 
 .spinner { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

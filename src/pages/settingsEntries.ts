@@ -34,6 +34,10 @@ const e = (page: string, id: string, title: string, description: string, keyword
 
 export const ENTRIES: Entry[] = [
   e('you', 'account', 'Noctorium account', 'Counts your listening, and lets Connect find your devices.', ['sign in', 'log in', 'login', 'stats', 'listening stats', 'profile'], 'web'),
+  // Switched here and at the top of Devices; the hosted player has no Connect at all.
+  e('you', 'connect', 'Noctorium Connect', 'Whether this computer and your other devices find each other, to move the music between them.', [
+    'turn off connect', 'turn on connect', 'disable connect', 'enable connect', 'devices', 'other devices', 'play on another device', 'cast', 'remote', 'multiroom',
+  ], 'web'),
   e('you', 'lastfm', 'Last.fm', 'Scrobbles what you play to your Last.fm profile.', ['scrobble', 'scrobbling', 'last fm', 'lastfm'], 'web'),
   e('you', 'listenbrainz', 'ListenBrainz', 'Sends what you play to ListenBrainz, with your user token.', ['scrobble', 'scrobbling', 'listen history', 'token']),
 

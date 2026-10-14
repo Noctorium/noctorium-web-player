@@ -22,6 +22,7 @@ import { HOME_PLAYS, ICON_SETS, NOW_PLAYING_LAYOUTS, PLAYER_BARS, QUEUE_COLUMNS,
 import { ALL as BANGS, bangFor, type SearchMode } from '../base/searchBangs';
 import { search as searchSettings, words, type SettingMatch } from '../base/settingsSearch';
 import { SECTIONS, entriesFor, pagesFor, type Entry, type Page, type Section } from './settingsEntries';
+import { connectSays } from './Other';
 
 const accents: Record<string, [string, string | null]> = {
   THEME: ['Theme’s own', null], VIOLET: ['Violet', '#b47cff'], MAGENTA: ['Magenta', '#ff6ec7'], EMBER: ['Ember', '#ff9757'],
@@ -281,11 +282,17 @@ function PageSettings({ page, settings }: { page: string; settings: Settings }) 
 
 function YouSettings({ settings }: { settings: Settings }) {
   const account = usePart('account');
+  const connectOn = usePart('connect')?.enabled ?? settings.connectEnabled;
   return (
     <>
       <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : 'Optional: counts your listening, and lets Connect find your devices.'}>
         {account?.signedIn ? <button className="button small danger" onClick={() => send('signOut', { service: 'noctorium' })}>Sign out</button>
           : <button className="button small" onClick={() => openDialog(<NoctoriumLogIn />)}>Sign in</button>}
+      </Row>
+      {/* The same switch as at the top of Devices, and the way there, where the other devices are. */}
+      <Row setting="connect" title="Noctorium Connect" detail={connectSays(connectOn)}>
+        <button className="button small" onClick={() => go('/devices')}>Devices</button>
+        <Switch on={connectOn} change={(on) => send('connect', { on })} label="Noctorium Connect" />
       </Row>
       <Row setting="lastfm" title="Last.fm" detail={serviceText(settings.lastfm)}>
         {settings.lastfm.status === 'connected' ? <button className="button small danger" onClick={() => send('signOut', { service: 'lastfm' })}>Disconnect</button>

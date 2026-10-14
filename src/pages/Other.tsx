@@ -110,18 +110,64 @@ export function DownloadsPage() {
   );
 }
 
+/**
+ * What Noctorium Connect on and off mean, said under its switch on Devices and in Settings, in the desktop's words.
+ * "This computer" is right in a browser too: the computer running `noctorium web` is the device the others see.
+ */
+export function connectSays(on: boolean): string {
+  return on
+    ? 'This computer finds your other devices, and they can find it.'
+    : 'Off: this computer is not looking for your other devices, and they cannot see it.';
+}
+
 export function DevicesPage() {
   const playback = usePart('playback');
   const connect = usePart('connect');
+  const settings = usePart('settings');
   const [address, setAddress] = useState<string | null>(null);
   useEffect(() => {
     fetch('/api/address').then((r) => r.json()).then((a) => setAddress(a.address)).catch(() => undefined);
   }, []);
   const here = playback?.output === 'browser' && audio.active;
+  // Connect's own word first, the settings' while it has not said yet; off until one of them says it is on.
+  const connectOn = connect?.enabled ?? settings?.connectEnabled ?? false;
   return (
-    <div className="settings">
+    <div className="settings devices">
       <h1 className="page-title">Devices</h1>
       <p className="page-subtitle">Where the music comes out, and the other Noctoriums on your network.</p>
+      {/* Connect's switch at the top, so whether this computer can be found at all is the first thing said. */}
+      <div className="setting connect-switch">
+        <MonitorSpeaker />
+        <div className="label"><strong>Noctorium Connect</strong><small>{connectSays(connectOn)}</small></div>
+        <Switch on={connectOn} change={(on) => send('connect', { on })} label="Noctorium Connect" />
+      </div>
+      {connectOn ? (
+        <section>
+          <h2>Your other devices</h2>
+          {connect && !connect.available && <div className="banner">Connect needs your Noctorium account, on every device. Sign in under Settings.</div>}
+          {connect?.target && (
+            <div className="setting">
+              <MonitorSpeaker />
+              <div className="label"><strong>Playing on {connect.target.name}</strong></div>
+              <button className="button primary" onClick={() => send('bringBack')}>Bring it back</button>
+            </div>
+          )}
+          {connect?.controlledBy && <div className="banner">{connect.controlledBy} is playing music on this Noctorium.</div>}
+          {connect?.devices.map((device) => (
+            <div key={device.id} className="setting">
+              <MonitorSpeaker />
+              <div className="label"><strong>{device.name}</strong><small>{device.kind}</small></div>
+              <button className="button" disabled={connect.busy} onClick={() => send('playOn', { id: device.id })}>{connect.busy ? <Spinner /> : 'Play there'}</button>
+            </div>
+          ))}
+          {connect?.available && !connect.devices.length && <p className="muted">No other device found on this network yet.</p>}
+        </section>
+      ) : (
+        // Off is a choice, not a fault: no list, no troubleshooting, only what is so and how to undo it.
+        <div className="connect-off">
+          <Empty icon={<MonitorSpeaker size={40} />} title="Noctorium Connect is off">Turn it on to see your other devices here and play on them.</Empty>
+        </div>
+      )}
       <section>
         <h2>Play on</h2>
         <div className="setting">
@@ -141,30 +187,6 @@ export function DevicesPage() {
             <button className="button" onClick={() => openDialog(<QrDialog title="Scan to open the web player" text={address}><p>The code carries the key, so treat it like a password.</p></QrDialog>)}>Show the code</button>
           </div>
         )}
-      </section>
-      <section>
-        <h2>Noctorium Connect</h2>
-        <div className="setting">
-          <div className="label"><strong>Connect</strong><small>Move the music between this and your other devices, mid-song.</small></div>
-          <Switch on={!!connect?.enabled} change={(on) => send('connect', { on })} label="Connect" />
-        </div>
-        {connect?.enabled && !connect.available && <div className="banner">Connect needs your Noctorium account, on every device. Sign in under Settings.</div>}
-        {connect?.target && (
-          <div className="setting">
-            <MonitorSpeaker />
-            <div className="label"><strong>Playing on {connect.target.name}</strong></div>
-            <button className="button primary" onClick={() => send('bringBack')}>Bring it back</button>
-          </div>
-        )}
-        {connect?.controlledBy && <div className="banner">{connect.controlledBy} is playing music on this Noctorium.</div>}
-        {connect?.devices.map((device) => (
-          <div key={device.id} className="setting">
-            <MonitorSpeaker />
-            <div className="label"><strong>{device.name}</strong><small>{device.kind}</small></div>
-            <button className="button" disabled={connect.busy} onClick={() => send('playOn', { id: device.id })}>{connect.busy ? <Spinner /> : 'Play there'}</button>
-          </div>
-        ))}
-        {connect?.available && !connect.devices.length && <p className="muted">No other device found on this network yet.</p>}
       </section>
     </div>
   );

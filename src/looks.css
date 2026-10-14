@@ -359,6 +359,8 @@
 .visualiser.preview.meter { height: 28px; }
 .visualiser.preview.blind { width: auto; max-width: 300px; }
 .setting .actions:has(> .visualiser.preview) { align-items: center; }
+/* A switch beside a button -- Connect's, beside the way to Devices -- level with it, as a 98 check box is not by itself. */
+.setting .actions:has(> .switch) { align-items: center; }
 .bangs { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .bang { display: inline-flex; align-items: baseline; gap: 7px; font-size: 13.5px; }
 .bang code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12.5px; padding: 2px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); white-space: pre; }
