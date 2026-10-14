@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore, type DragEvent, type MouseEvent } from 'react';
 import { ChevronDown, ListMinus, MoreHorizontal, Mic2, Play, Trash2 } from '../icons';
 import { send, usePart } from '../live';
-import { closeNowPlaying, openDialog, openMenu } from '../ui';
+import { closeNowPlaying, openDialog, openMenu, setPanel, useUi } from '../ui';
 import { bigArtwork, cls, formatTime, providerName } from '../util';
 import { HOSTED } from '../mode';
 import { useLooks } from '../looks';
@@ -49,7 +49,15 @@ export function PlaylistLayout() {
   const queue = usePart('queue');
   const looks = useLooks();
   const source = useSource();
-  const [tab, setTab] = useState<Tab>('queue');
+  const { panel } = useUi();
+  // On the tab the player bar's lyrics or queue button asked for, as the other layout opens on that panel.
+  const [tab, setTab] = useState<Tab>(panel);
+  useEffect(() => setTab(panel), [panel]);
+  /** A tab chosen here. The queue's and the lyrics' are the other layout's panels too, so it opens on them as well. */
+  const choose = (next: Tab) => {
+    setTab(next);
+    if (next !== 'source') setPanel(next);
+  };
   const track = playback?.track;
   const video = HOSTED && isYouTube(track);
   const shownTab = tab === 'source' && !source ? 'queue' : tab;
@@ -67,13 +75,13 @@ export function PlaylistLayout() {
 
       <section className="playlist pane">
         <div className="playlist-tabs" role="tablist">
-          <button role="tab" aria-selected={shownTab === 'queue'} className={cls('tab', shownTab === 'queue' && 'on')} onClick={() => setTab('queue')}>
+          <button role="tab" aria-selected={shownTab === 'queue'} className={cls('tab', shownTab === 'queue' && 'on')} onClick={() => choose('queue')}>
             Up next <small>({queue?.tracks.length ?? 0})</small>
           </button>
           {/* Straight after the queue, ahead of the tab that comes and goes with the playlist, so it never moves. */}
-          <button role="tab" aria-selected={shownTab === 'lyrics'} className={cls('tab', shownTab === 'lyrics' && 'on')} onClick={() => setTab('lyrics')}>Lyrics</button>
+          <button role="tab" aria-selected={shownTab === 'lyrics'} className={cls('tab', shownTab === 'lyrics' && 'on')} onClick={() => choose('lyrics')}>Lyrics</button>
           {source && (
-            <button role="tab" aria-selected={shownTab === 'source'} className={cls('tab', shownTab === 'source' && 'on')} onClick={() => setTab('source')}>
+            <button role="tab" aria-selected={shownTab === 'source'} className={cls('tab', shownTab === 'source' && 'on')} onClick={() => choose('source')}>
               <span className="ellipsis">{source.title}</span> <small>({source.tracks.length})</small>
             </button>
           )}

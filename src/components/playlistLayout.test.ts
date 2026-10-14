@@ -6,19 +6,27 @@ import { describe, expect, it } from 'vitest';
  * tab the lyrics the other layout shows, asked for in either build and kept in time with the song. Read from the
  * sources, as the player bars' test reads them, since the page's parts need a browser and Noctorium behind them.
  */
-const sources = import.meta.glob(['./PlaylistLayout.tsx', './NowPlaying.tsx', '../hosted/engine.ts'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const sources = import.meta.glob(['./PlaylistLayout.tsx', './NowPlaying.tsx', './Player.tsx', '../hosted/engine.ts'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const layout = sources['./PlaylistLayout.tsx'];
 const nowPlaying = sources['./NowPlaying.tsx'];
 const hosted = sources['../hosted/engine.ts'];
+const player = sources['./Player.tsx'];
 
 describe('the Playlist layout', () => {
   it('has the lyrics in the tab after Up next, ahead of the playlist’s, which comes and goes', () => {
     const tabs = layout.slice(layout.indexOf('className="playlist-tabs"'), layout.indexOf('className="spacer"'));
-    expect([...tabs.matchAll(/setTab\('(\w+)'\)/g)].map((m) => m[1])).toEqual(['queue', 'lyrics', 'source']);
+    expect([...tabs.matchAll(/choose\('(\w+)'\)/g)].map((m) => m[1])).toEqual(['queue', 'lyrics', 'source']);
     expect(tabs).toMatch(/>Lyrics<\/button>/);
     // Only the playlist's tab waits on anything; Up next and the lyrics are always there.
     expect(tabs.match(/\{\w+ && \(/g)).toEqual(['{source && (']);
-    expect(tabs.indexOf('{source && (')).toBeGreaterThan(tabs.indexOf("setTab('lyrics')"));
+    expect(tabs.indexOf('{source && (')).toBeGreaterThan(tabs.indexOf("choose('lyrics')"));
+  });
+
+  it('opens on the lyrics from the player bar’s lyrics button, as the other layout does', () => {
+    expect(player).toMatch(/data-button="LYRICS"[^>]*onClick=\{\(\) => openNowPlaying\('lyrics'\)\}/);
+    expect(layout).toContain('useState<Tab>(panel)');
+    expect(layout).toContain('useEffect(() => setTab(panel), [panel])');
+    expect(layout).toContain("if (next !== 'source') setPanel(next)");
   });
 
   it('shows in its lyrics tab the lyrics the other layout shows', () => {
