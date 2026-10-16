@@ -162,7 +162,11 @@ export interface Lyrics { trackKey?: string; loading: boolean; sources: LyricsSo
 
 export interface Account { status: 'disconnected' | 'checking' | 'connected' | 'warning' | 'error'; detail?: string; hint?: string }
 
-export interface Service { status: 'disconnected' | 'connecting' | 'awaiting_approval' | 'connected' | 'error'; username?: string; message?: string }
+/**
+ * A scrobbler: Last.fm, Libre.fm or ListenBrainz. While Last.fm or Libre.fm waits for Noctorium to be allowed,
+ * [approvalUrl] is the page to allow it on, to open or copy in this browser.
+ */
+export interface Service { status: 'disconnected' | 'connecting' | 'awaiting_approval' | 'connected' | 'error'; username?: string; message?: string; approvalUrl?: string }
 
 /** One of Bandcamp's genres, which Home can have a row of best-sellers for. */
 export interface Genre { name: string; title: string }
@@ -287,6 +291,8 @@ export interface Settings {
   /** Seconds a sleep timer fades out over; zero for none. */
   sleepFade?: number;
   lastfm: Service;
+  /** Libre.fm, signed in to as Last.fm is. The hosted player has neither, and says it is not connected. */
+  librefm: Service;
   listenbrainz: Service;
   scrobbles: number;
   connectEnabled: boolean;

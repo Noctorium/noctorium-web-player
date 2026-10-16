@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  ArrowLeft, ArrowRight, Check, ExternalLink, Headphones, Info, ListMusic, Monitor, Palette, Pause, Play, Search as SearchIcon, Shuffle,
+  ArrowLeft, ArrowRight, Check, ExternalLink, Headphones, Info, Link2, ListMusic, Monitor, Palette, Pause, Play, Search as SearchIcon, Shuffle,
   SkipForward, Smartphone, User, Globe, Heart,
 } from '../icons';
-import { send, usePart } from '../live';
+import { live, send, usePart } from '../live';
 import { go, useRoute } from '../router';
 import { SPEEDS, cls, providerName, speedName } from '../util';
 import { Badge, Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
@@ -44,7 +44,8 @@ function statusText(account: Account) {
 export function serviceText(service: Service) {
   switch (service.status) {
     case 'connected': return `Scrobbling as ${service.username ?? ''}`;
-    case 'awaiting_approval': return 'Approve it in the tab that opened, then press Finish';
+    // Core's own words for the wait: that it connects by itself once allowed, or that Finish is wanted now.
+    case 'awaiting_approval': return service.message ?? 'Allow Noctorium on its page, then press Finish';
     case 'connecting': return 'Connecting…';
     case 'error': return service.message ?? 'Not working';
     default: return 'Not connected';
@@ -147,10 +148,12 @@ export function SettingsPage() {
   const inSection = pages.filter((p) => p.section === page.section);
   const wanted = route.query.get('setting');
 
-  // The setting a search chose, brought into view and lit up for a moment once its page is drawn.
+  // The setting a search chose, brought into view and lit up for a moment once its page is drawn -- or, while it is
+  // not on the page, the one it is shown with.
   useLayoutEffect(() => {
     if (!wanted || !settings) return;
-    const element = document.querySelector<HTMLElement>(`[data-setting="${CSS.escape(wanted)}"]`);
+    const find = (id?: string) => (id ? document.querySelector<HTMLElement>(`[data-setting="${CSS.escape(id)}"]`) : null);
+    const element = find(wanted) ?? find(entriesFor(HOSTED).find((entry) => entry.id === wanted)?.shownWith);
     if (!element) return;
     // A tall one -- the themes -- from its top, so its name is in sight; anything else in the middle.
     const room = element.closest('.content')?.clientHeight ?? window.innerHeight;
@@ -294,17 +297,68 @@ function YouSettings({ settings }: { settings: Settings }) {
         <button className="button small" onClick={() => go('/devices')}>Devices</button>
         <Switch on={connectOn} change={(on) => send('connect', { on })} label="Noctorium Connect" />
       </Row>
-      <Row setting="lastfm" title="Last.fm" detail={serviceText(settings.lastfm)}>
-        {settings.lastfm.status === 'connected' ? <button className="button small danger" onClick={() => send('signOut', { service: 'lastfm' })}>Disconnect</button>
-          : settings.lastfm.status === 'awaiting_approval' ? <button className="button small primary" onClick={() => send('lastfmFinish')}>Finish</button>
-            : <button className="button small" onClick={() => send('lastfm')}>Connect</button>}
-      </Row>
+      <Scrobbler setting="lastfm" title="Last.fm" service={settings.lastfm} />
+      {waiting(settings.lastfm) && <SignInLink setting="lastfm-link" site="Last.fm" url={settings.lastfm.approvalUrl!} />}
+      <Scrobbler setting="librefm" title="Libre.fm" service={settings.librefm} />
+      {waiting(settings.librefm) && <SignInLink setting="librefm-link" site="Libre.fm" url={settings.librefm.approvalUrl!} />}
       <Row setting="listenbrainz" title="ListenBrainz" detail={serviceText(settings.listenbrainz)}>
         {settings.listenbrainz.status === 'connected' ? <button className="button small danger" onClick={() => send('signOut', { service: 'listenbrainz' })}>Disconnect</button>
           : <button className="button small" onClick={() => openDialog(<Prompt title="ListenBrainz" hint="Your user token, from listenbrainz.org/settings." secret submit={(token) => send('listenbrainz', { token })} />)}>Connect</button>}
       </Row>
       {settings.scrobbles > 0 && <p className="muted" style={{ fontSize: 13 }}>{settings.scrobbles} scrobbled this session.</p>}
     </>
+  );
+}
+
+/**
+ * Waiting on a page to allow Noctorium on. Core also says it waits after a Finish that found no sign-in begun at all,
+ * with nothing to allow; Connect then begins one.
+ */
+function waiting(service: Service) {
+  return service.status === 'awaiting_approval' && !!service.approvalUrl;
+}
+
+/**
+ * Last.fm or Libre.fm, which sign in the same way: Connect, Finish once Noctorium is allowed if it has not connected by
+ * itself, Disconnect. [setting] is also the command's name, as `noctorium web` knows it.
+ */
+function Scrobbler({ setting, title, service }: { setting: 'lastfm' | 'librefm'; title: string; service: Service }) {
+  return (
+    <Row setting={setting} title={title} detail={serviceText(service)}>
+      {service.status === 'connected' ? <button className="button small danger" onClick={() => send('signOut', { service: setting })}>Disconnect</button>
+        : waiting(service) ? <button className="button small primary" onClick={() => send(`${setting}Finish`)}>Finish</button>
+          : <button className="button small" onClick={() => send(setting)}>Connect</button>}
+    </Row>
+  );
+}
+
+/**
+ * The page a scrobbler's sign-in waits on, while it waits: to open here, or copy into any browser. Core opens it on the
+ * computer running Noctorium, which is often not the one in front of the listener, and a tab it opens here from afar
+ * is often blocked; this browser is the listener's own, so a click on Open is theirs. Allowed there, the sign-in
+ * finishes on that computer by itself.
+ */
+function SignInLink({ setting, site, url }: { setting: string; site: string; url: string }) {
+  const field = useRef<HTMLInputElement>(null);
+  const copy = () => {
+    // The clipboard is only there for a secure page, and this one, served over the house's network, often is not:
+    // then the field is selected, copied the old way where the browser still does that, and left selected where not.
+    const byHand = () => {
+      field.current?.focus();
+      field.current?.select();
+      let copied = false;
+      try { copied = document.execCommand('copy'); } catch { copied = false; }
+      live.notice(copied ? 'Link copied' : 'The link is selected: copy it from there', copied ? 'good' : 'normal');
+    };
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => live.notice('Link copied', 'good'), byHand);
+    else byHand();
+  };
+  return (
+    <Row setting={setting} title={`${site} sign-in link`} wide detail={`Open it here, or copy it into any browser, and allow Noctorium on ${site} there: it connects by itself.`}>
+      <input ref={field} className="field link-field" readOnly value={url} aria-label={`${site} sign-in link`} onFocus={(e) => e.currentTarget.select()} />
+      <button className="button small" onClick={copy}><Link2 size={14} /> Copy link</button>
+      <a className="button small" href={url} target="_blank" rel="noopener noreferrer">Open <ExternalLink size={13} /></a>
+    </Row>
   );
 }
 

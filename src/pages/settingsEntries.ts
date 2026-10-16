@@ -25,12 +25,19 @@ export const PAGES: Page[] = [
   { id: 'about', section: 'About', title: 'About' },
 ];
 
-export interface Entry extends SettingEntry { page: string; only?: 'hosted' | 'web' }
+/**
+ * A setting, the page it is on, and the build it is in when only one has it. One shown only some of the time names the
+ * setting it is shown with, lit up in its place while it is not on the page.
+ */
+export interface Entry extends SettingEntry { page: string; only?: 'hosted' | 'web'; shownWith?: string }
 
-const e = (page: string, id: string, title: string, description: string, keywords: string[] = [], only?: Entry['only']): Entry => {
+const e = (page: string, id: string, title: string, description: string, keywords: string[] = [], only?: Entry['only'], shownWith?: string): Entry => {
   const where = PAGES.find((p) => p.id === page)!;
-  return { id, page, title, description, keywords, only, section: where.title === where.section ? where.section : `${where.section} › ${where.title}` };
+  return { id, page, title, description, keywords, only, shownWith, section: where.title === where.section ? where.section : `${where.section} › ${where.title}` };
 };
+
+/** What a scrobbler's sign-in link is looked for by: most often, after a browser that never opened. */
+const SIGN_IN_LINK = ['copy link', 'link', 'open link', 'open again', 'browser did not open', 'no browser', 'address', 'url'];
 
 export const ENTRIES: Entry[] = [
   e('you', 'account', 'Noctorium account', 'Counts your listening, and lets Connect find your devices.', ['sign in', 'log in', 'login', 'stats', 'listening stats', 'profile'], 'web'),
@@ -39,6 +46,10 @@ export const ENTRIES: Entry[] = [
     'turn off connect', 'turn on connect', 'disable connect', 'enable connect', 'devices', 'other devices', 'play on another device', 'cast', 'remote', 'multiroom',
   ], 'web'),
   e('you', 'lastfm', 'Last.fm', 'Scrobbles what you play to your Last.fm profile.', ['scrobble', 'scrobbling', 'last fm', 'lastfm'], 'web'),
+  // A scrobbler's sign-in link is on the page only while its sign-in waits; found otherwise, the scrobbler is lit up.
+  e('you', 'lastfm-link', 'Last.fm sign-in link', 'While Last.fm waits, the page to allow Noctorium on: to open here, or copy into any browser.', SIGN_IN_LINK, 'web', 'lastfm'),
+  e('you', 'librefm', 'Libre.fm', 'Scrobbles what you play to your Libre.fm profile: the free and open Last.fm.', ['scrobble', 'scrobbling', 'libre.fm', 'libre', 'libre fm', 'librefm'], 'web'),
+  e('you', 'librefm-link', 'Libre.fm sign-in link', 'While Libre.fm waits, the page to allow Noctorium on: to open here, or copy into any browser.', SIGN_IN_LINK, 'web', 'librefm'),
   e('you', 'listenbrainz', 'ListenBrainz', 'Sends what you play to ListenBrainz, with your user token.', ['scrobble', 'scrobbling', 'listen history', 'token']),
 
   e('look-theme', 'theme', 'Theme', 'The colours everything is drawn in, and for the Windows ones, the whole skin.', ['dark mode', 'light mode', 'night mode', 'colors', 'colours', 'appearance', 'skin', 'windows 98', 'windows xp', 'catppuccin']),

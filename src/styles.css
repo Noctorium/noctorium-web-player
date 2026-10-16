@@ -802,6 +802,8 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 
 .field:focus { border-color: var(--accent); }
 textarea.field { min-height: 130px; resize: vertical; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+/* An address to read, select and copy: a scrobbler's sign-in page. */
+.field.link-field { font-family: ui-monospace, Consolas, monospace; font-size: 12px; text-overflow: ellipsis; }
 
 /* ------------------------------------------------------------------ dialogs, menus, notices */
 

@@ -179,7 +179,7 @@ export class HostedEngine {
       progressBarStyle: p.progressBarStyle, timeDisplay: p.timeDisplay, skipNonMusic: false, youtubeHistory: false,
       lyricsProvider: p.lyricsProvider, discord: false, animations: p.animations, taskbarClock: p.taskbarClock,
       youtube: { status: 'disconnected' }, soundcloud: { status: 'disconnected' }, youtubeChannel: '', soundCloudUsername: '',
-      spotifyConnected: false, spotifyConnecting: false, spotifyAccount: '', lastfm: { status: 'disconnected' },
+      spotifyConnected: false, spotifyConnecting: false, spotifyAccount: '', lastfm: { status: 'disconnected' }, librefm: { status: 'disconnected' },
       listenbrainz: this.listenbrainz, scrobbles: this.scrobbles, connectEnabled: false, desktopYouTube: false, desktopSoundCloud: false,
       version, autoplay: p.autoplay,
       progressBarStyles: seekBarStyles.map(([name, title]) => ({ name, title })),

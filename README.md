@@ -105,5 +105,5 @@ deployed with `vercel deploy --prod`.
 
 ---
 
-<sub>Free software under the GPL-3.0. Not affiliated with Google, YouTube, SoundCloud, Spotify, Last.fm,
+<sub>Free software under the GPL-3.0. Not affiliated with Google, YouTube, SoundCloud, Spotify, Last.fm, Libre.fm,
 ListenBrainz or Discord.</sub>
