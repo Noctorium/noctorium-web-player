@@ -205,6 +205,62 @@ export interface Spotify {
   devices: SpotifyDevice[];
   /** The device chosen, by Spotify's id; blank for whichever Spotify has active. */
   device: string;
+  /**
+   * Spotify with nobody signed in, from a Noctorium that has it: the public playlists the library follows, in the
+   * order they were added, each as last read; addingPublicPlaylist while one is read before it is added; and
+   * publicMessage, what the last addition or removal said, apart from [message], which is the sign-in's.
+   */
+  publicPlaylists?: SpotifyPublicPlaylist[];
+  addingPublicPlaylist?: boolean;
+  publicMessage?: string;
+  /** The import of Spotify's data download, while it runs and once it has. */
+  dataImport?: SpotifyImport;
+  /**
+   * Base's own words, shown as they are, as every player shows them: what following public playlists can and cannot
+   * do, over the box for a link; how to get Spotify's data download; and what its import leaves out.
+   */
+  publicLimits?: string;
+  dataExportHow?: string;
+  dataExportLimits?: string;
+  /** The largest file the import's upload takes, in bytes. */
+  importLimitBytes?: number;
+}
+
+/**
+ * One public Spotify playlist followed without a sign-in: [title] is blank until it has been read once, and
+ * [lastError] says why the last read did not work, the copy before it still the one in the library. [mayBeLonger]
+ * is a page that showed its most, the first hundred songs.
+ */
+export interface SpotifyPublicPlaylist {
+  id: string;
+  title: string;
+  owner: string;
+  songCount?: number;
+  mayBeLonger: boolean;
+  lastError?: string;
+  artworkUrl?: string;
+  /** Its address on Spotify. */
+  url: string;
+}
+
+/** What the last import of Spotify's data download made. */
+export interface SpotifyImportSummary { playlists: number; songs: number; likedSongs: number; replaced: number; emptyPlaylists: number; savedAlbums: number; message: string }
+
+/** The import of Spotify's data download: under way and how far, or what came of the last one -- [failed] when it did not happen. */
+export interface SpotifyImport { importing: boolean; progress?: string; message?: string; failed: boolean; summary?: SpotifyImportSummary }
+
+/**
+ * The link pasted last, and what came of it: canKeepInLibrary while it is a public Spotify playlist, read from its
+ * public page, that the library does not follow yet -- Keep in library is spotifyPublicAdd with its url.
+ */
+export interface Link {
+  status: 'idle' | 'opening' | 'done' | 'failed';
+  url?: string;
+  provider?: Provider;
+  kind?: 'track' | 'playlist' | 'short';
+  message?: string;
+  trackCount: number;
+  canKeepInLibrary: boolean;
 }
 
 /** VK, signed in with a browser's session, and what to read before signing in. */
@@ -421,6 +477,8 @@ export interface State {
   connect?: Connect;
   signIn?: SignIn;
   account?: NoctoriumAccount;
+  /** From a Noctorium that tells of pasted links; the hosted player sends none. */
+  link?: Link;
 }
 
 export type Command = { type: string; [field: string]: unknown };

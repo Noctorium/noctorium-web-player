@@ -1,14 +1,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  ArrowLeft, ArrowRight, Check, ExternalLink, Headphones, Info, Link2, ListMusic, Monitor, Palette, Pause, Play, Search as SearchIcon, Shuffle,
-  SkipForward, Smartphone, User, Globe, Heart,
+  ArrowLeft, ArrowRight, Check, ExternalLink, Headphones, Info, Link2, ListMusic, Monitor, Palette, Pause, Play, Plus, Search as SearchIcon, Shuffle,
+  SkipForward, Smartphone, TriangleAlert, Upload, User, Globe, Heart,
 } from '../icons';
 import { live, send, usePart } from '../live';
 import { go, useRoute } from '../router';
 import { SPEEDS, cls, providerName, speedName } from '../util';
 import { Badge, Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
-import type { Account, AppleMusic, Bandcamp, Choice, Deezer, Provider, Service, Settings, Spotify, Tidal, Vk } from '../types';
+import type { Account, AppleMusic, Bandcamp, Choice, Deezer, Playlist, Provider, Service, Settings, Spotify, Tidal, Vk } from '../types';
+import { followedAbout, sendSpotifyData } from '../spotifyWithoutSignIn';
 import { HOSTED } from '../mode';
 import { HostedAbout, HostedLibrary, HostedListenBrainz, HostedServices } from '../hosted/Settings';
 import { seekBarStyles } from '../seekbar';
@@ -722,6 +723,7 @@ function AboutSettings({ settings }: { settings: Settings }) {
  * running Noctorium, because that is where Spotify sends its answer.
  */
 function SpotifySettings({ spotify, warning }: { spotify: Spotify; warning?: string }) {
+  const library = usePart('library');
   // Where Spotify is open changes from minute to minute, so it is asked again each time this is shown.
   useEffect(() => { if (spotify.canPlay) send('spotifyDevices'); }, [spotify.canPlay]);
   const device = spotify.devices.find((d) => d.id === spotify.device);
@@ -753,7 +755,116 @@ function SpotifySettings({ spotify, warning }: { spotify: Spotify; warning?: str
           <button className="button small" onClick={() => send('spotifyDevices')}>Look again</button>
         </Row>
       )}
+      {/* The two ways in with nobody signed in, from a Noctorium that has them, under the sign-ins. */}
+      {spotify.publicLimits && <SpotifyPublicPlaylists spotify={spotify} limits={spotify.publicLimits} library={library?.playlists} />}
+      {spotify.dataExportHow && <SpotifyDataImport spotify={spotify} how={spotify.dataExportHow} />}
     </>
+  );
+}
+
+/**
+ * What Base says of a way in that has limits, as it says it, over the controls it is about: in the warning's colour,
+ * marked as a warning, and set apart from the setting's own words, so it is read before anything is added.
+ */
+function LimitsWarning({ text }: { text: string }) {
+  return <div className="limits-warning" role="note"><span aria-hidden><TriangleAlert size={16} /></span><span>{text}</span></div>;
+}
+
+/** What a way in leaves out, said beside it: quieter than a warning, but there to be read. */
+function LimitsNote({ text }: { text: string }) {
+  return <div className="limits-note" role="note"><span aria-hidden><Info size={14} /></span><span>{text}</span></div>;
+}
+
+/**
+ * Public Spotify playlists, followed by their links with nobody signed in -- for every listener whose sign-in Spotify
+ * refuses, which it does unless the Spotify app's owner has Premium. Base's warning of what that can and cannot do is
+ * over the box for a link, as every player has it; under the box, each playlist followed, as last read, with why its
+ * last read failed in the error colour, to open in the library or take out of it.
+ */
+function SpotifyPublicPlaylists({ spotify, limits, library }: { spotify: Spotify; limits: string; library?: Playlist[] }) {
+  const [link, setLink] = useState('');
+  const adding = !!spotify.addingPublicPlaylist;
+  const followed = spotify.publicPlaylists ?? [];
+  const add = () => {
+    const given = link.trim();
+    if (!given || adding) return;
+    send('spotifyPublicAdd', { link: given }).then((problem) => { if (!problem) setLink(''); });
+  };
+  return (
+    <Row setting="spotify-public" title="Public playlists, without signing in" wide
+      detail="A public Spotify playlist, by its link: in your library from then on, kept in step with Spotify, with no sign-in and no Premium.">
+      <div className="spotify-without">
+        <LimitsWarning text={limits} />
+        <form className="link-row" onSubmit={(e) => { e.preventDefault(); add(); }}>
+          <input className="field link-field" value={link} onChange={(e) => setLink(e.target.value)} disabled={adding}
+            placeholder="https://open.spotify.com/playlist/…" aria-label="A public Spotify playlist’s link" spellCheck={false} autoComplete="off" />
+          <button className="button small primary" type="submit" disabled={adding || !link.trim()}>
+            {adding ? <><span className="spinner small" aria-hidden /> Reading its page…</> : <><Plus size={14} /> Add</>}
+          </button>
+        </form>
+        {spotify.publicMessage && <p className="setting-said" role="status">{spotify.publicMessage}</p>}
+        {followed.length > 0 && (
+          <ul className="followed" aria-label="Public playlists followed">
+            {followed.map((p) => {
+              const listed = library?.find((l) => l.provider === 'SPOTIFY' && l.id === p.id);
+              const name = p.title || 'this playlist';
+              return (
+                <li key={p.id} className={cls('followed-item', p.lastError && 'failed')}>
+                  {p.artworkUrl ? <img src={p.artworkUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <span className="art" aria-hidden />}
+                  <div className="followed-text">
+                    <strong>{p.title || p.id}</strong>
+                    {followedAbout(p) && <small>{followedAbout(p)}</small>}
+                    {p.lastError && <small className="error-text">{p.lastError}</small>}
+                  </div>
+                  {listed && <button className="button small" onClick={() => { send('openPlaylist', { key: listed.key }); go(`/playlist/${encodeURIComponent(listed.key)}`); }}>Open</button>}
+                  <button className="button small danger" onClick={() => openDialog(
+                    <Confirm title={p.title ? `Take “${p.title}” out of the library?` : 'Take this playlist out of the library?'} detail="Nothing changes on Spotify; it is forgotten here."
+                      action="Take it out" danger yes={() => send('spotifyPublicRemove', { id: p.id })} />,
+                  )} aria-label={`Take ${name} out of the library`}>Remove</button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </Row>
+  );
+}
+
+/**
+ * Spotify's own data download, imported as playlists of Noctorium's own: every playlist the listener made, and their
+ * Liked Songs, with nobody signed in to Spotify. Base's words for how to get the file are the setting's own; the file
+ * is chosen here and sent to the computer running Noctorium, which says how far it has got and what it made.
+ */
+function SpotifyDataImport({ spotify, how }: { spotify: Spotify; how: string }) {
+  const picker = useRef<HTMLInputElement>(null);
+  const [sending, setSending] = useState<{ name: string; part: number }>();
+  const [refusal, setRefusal] = useState<string>();
+  const state = spotify.dataImport;
+  const busy = !!sending || !!state?.importing;
+  async function chosen(file?: File) {
+    if (!file) return;
+    setRefusal(undefined);
+    setSending({ name: file.name, part: 0 });
+    const problem = await sendSpotifyData(file, (part) => setSending({ name: file.name, part }), spotify.importLimitBytes);
+    setSending(undefined);
+    if (problem) setRefusal(problem);
+  }
+  const progress = sending ? `Sending ${sending.name}… ${Math.round(sending.part * 100)}%` : state?.importing ? state.progress ?? 'Importing…' : undefined;
+  // What came of it: the file turned away before it was sent, or the import's own word on the last file.
+  const result = busy ? undefined : refusal ? { text: refusal, failed: true } : state?.message ? { text: state.message, failed: state.failed } : undefined;
+  return (
+    <Row setting="spotify-import" title="Import from Spotify’s data download" wide detail={how}>
+      <div className="spotify-without">
+        <input ref={picker} type="file" accept=".zip,.json" hidden onChange={(e) => { chosen(e.target.files?.[0]); e.target.value = ''; }} />
+        <div className="import-row">
+          <button className="button small primary" disabled={busy} onClick={() => picker.current?.click()}><Upload size={14} /> Choose file…</button>
+          {progress && <span className="import-progress" role="status"><span className="spinner small" aria-hidden /> {progress}</span>}
+        </div>
+        {result && <p className={cls('setting-said', result.failed ? 'bad' : 'good')} role="status">{result.text}</p>}
+        {spotify.dataExportLimits && <LimitsNote text={spotify.dataExportLimits} />}
+      </div>
+    </Row>
   );
 }
 

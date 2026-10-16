@@ -780,6 +780,50 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 /* A service in beta says so under its name, in the warning's colour, before what it says of itself. */
 .setting .label small.beta-warning { display: flex; gap: 6px; align-items: flex-start; color: var(--warn); font-weight: 560; }
 .beta-warning > span { display: inline-flex; margin-top: 2px; flex: none; }
+
+/*
+ * Spotify with nobody signed in. Base's warning of what public playlists can and cannot do, over the box for a link,
+ * marked and set apart so it is read before anything is added; the box, what came of the last one, and the playlists
+ * followed; and the import of Spotify's download, with what it leaves out said quieter beside it.
+ */
+.spotify-without { display: flex; flex-direction: column; gap: 10px; width: 100%; min-width: 0; }
+.limits-warning {
+  display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 560; line-height: 1.45;
+  color: var(--warn); background: color-mix(in srgb, var(--warn) 11%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+}
+.limits-warning > span:first-child, .limits-note > span:first-child { display: inline-flex; margin-top: 1px; flex: none; }
+.limits-note { display: flex; gap: 8px; align-items: flex-start; color: var(--subtext); font-size: 12.5px; line-height: 1.45; }
+.link-row { display: flex; gap: 8px; align-items: center; }
+.link-row .field { flex: 1; min-width: 0; }
+:is(.link-row, .import-row, .keep-link) .button { flex: none; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+.setting-said { margin: 0; font-size: 13px; line-height: 1.45; }
+.setting-said.good { color: var(--good); }
+.setting-said.bad { color: var(--bad); }
+.followed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.followed-item { display: flex; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 35%, var(--card)); }
+.followed-item.failed { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+.followed-item img, .followed-item .art { width: 40px; height: 40px; border-radius: 6px; flex: none; object-fit: cover; background: var(--line); }
+.followed-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.followed-text strong { font-weight: 620; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.followed-text small { color: var(--subtext); font-size: 12.5px; line-height: 1.4; }
+.followed-text small.error-text { color: var(--bad); }
+.import-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.import-progress { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--subtext); }
+.spinner.small { width: 14px; height: 14px; border-width: 2px; display: inline-block; flex: none; }
+.button.primary .spinner.small { border-color: color-mix(in srgb, var(--on-accent) 35%, transparent); border-top-color: var(--on-accent); }
+
+/* A pasted link that can be kept: between the search box and the page, until it is kept or put away. */
+.keep-link {
+  display: flex; gap: 12px; align-items: center; margin: 0 28px 10px; padding: 10px 10px 10px 16px; border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+.keep-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.keep-text strong { font-size: 14px; font-weight: 640; }
+.keep-text small { color: var(--subtext); font-size: 12.5px; }
+@media (max-width: 860px) {
+  .keep-link { margin: 0 14px 8px; flex-wrap: wrap; }
+  .link-row { flex-wrap: wrap; }
+}
 .copy-row { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
 .copy-row .field { flex: 1; min-width: 0; }
 

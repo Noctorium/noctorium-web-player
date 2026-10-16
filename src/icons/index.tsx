@@ -9,7 +9,8 @@ import {
   Music2 as LucideMusic2, Palette as LucidePalette, Pause as LucidePause, Pencil as LucidePencil, Pin as LucidePin, Play as LucidePlay,
   Plus as LucidePlus, QrCode as LucideQrCode, Radio as LucideRadio, RefreshCw as LucideRefreshCw, Repeat as LucideRepeat, Repeat1 as LucideRepeat1,
   Save as LucideSave, Search as LucideSearch, Settings as LucideSettings, Shuffle as LucideShuffle, SkipBack as LucideSkipBack, SkipForward as LucideSkipForward,
-  SlidersHorizontal as LucideSlidersHorizontal, Smartphone as LucideSmartphone, Square as LucideSquare, Trash2 as LucideTrash2, User as LucideUser, UserPlus as LucideUserPlus,
+  SlidersHorizontal as LucideSlidersHorizontal, Smartphone as LucideSmartphone, Square as LucideSquare, Trash2 as LucideTrash2, TriangleAlert as LucideTriangleAlert,
+  Upload as LucideUpload, User as LucideUser, UserPlus as LucideUserPlus,
   Volume1 as LucideVolume1, Volume2 as LucideVolume2, VolumeX as LucideVolumeX, X as LucideX,
   type LucideIcon, type LucideProps,
 } from 'lucide-react';
@@ -105,7 +106,8 @@ const LUCIDE: Record<Exclude<IconName, 'HeartFilled'>, LucideIcon> = {
   Music2: LucideMusic2, Palette: LucidePalette, Pause: LucidePause, Pencil: LucidePencil, Pin: LucidePin, Play: LucidePlay,
   Plus: LucidePlus, QrCode: LucideQrCode, Radio: LucideRadio, RefreshCw: LucideRefreshCw, Repeat: LucideRepeat, Repeat1: LucideRepeat1,
   Save: LucideSave, Search: LucideSearch, Settings: LucideSettings, Shuffle: LucideShuffle, SkipBack: LucideSkipBack, SkipForward: LucideSkipForward,
-  SlidersHorizontal: LucideSlidersHorizontal, Smartphone: LucideSmartphone, Square: LucideSquare, Trash2: LucideTrash2, User: LucideUser, UserPlus: LucideUserPlus,
+  SlidersHorizontal: LucideSlidersHorizontal, Smartphone: LucideSmartphone, Square: LucideSquare, Trash2: LucideTrash2, TriangleAlert: LucideTriangleAlert,
+  Upload: LucideUpload, User: LucideUser, UserPlus: LucideUserPlus,
   Volume1: LucideVolume1, Volume2: LucideVolume2, VolumeX: LucideVolumeX, X: LucideX,
 };
 
@@ -210,6 +212,8 @@ export const SlidersHorizontal = make('SlidersHorizontal');
 export const Smartphone = make('Smartphone');
 export const Square = make('Square');
 export const Trash2 = make('Trash2');
+export const TriangleAlert = make('TriangleAlert');
+export const Upload = make('Upload');
 export const User = make('User');
 export const UserPlus = make('UserPlus');
 export const Volume1 = make('Volume1');

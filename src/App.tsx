@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Download, Home as HomeIcon, Library as LibraryIcon, ListMusic, MonitorSpeaker, Search as SearchIcon, Settings as SettingsIcon } from './icons';
+import { ArrowLeft, ArrowRight, BookmarkPlus, Download, Home as HomeIcon, Library as LibraryIcon, ListMusic, MonitorSpeaker, Search as SearchIcon, Settings as SettingsIcon, X } from './icons';
 import { live, send, useLive, usePart } from './live';
 import { HOSTED } from './mode';
 import { go, useRoute } from './router';
@@ -212,6 +212,31 @@ function TopBar() {
   );
 }
 
+/**
+ * The link pasted last, while it is a public Spotify playlist the library does not follow yet -- opened from its
+ * public page, with nobody signed in. Keep in library follows it, as Settings' public playlists are followed: in the
+ * library from then on, read afresh from its page with it. Put away for that link with the cross.
+ */
+function KeepLink() {
+  const link = usePart('link');
+  const adding = usePart('settings')?.spotify?.addingPublicPlaylist ?? false;
+  const [putAway, setPutAway] = useState<string>();
+  if (!link?.canKeepInLibrary || link.status !== 'done' || !link.url || putAway === link.url) return null;
+  const url = link.url;
+  return (
+    <div className="keep-link" role="status">
+      <div className="keep-text">
+        <strong>A public Spotify playlist, opened from its link</strong>
+        {link.message && <small>{link.message}</small>}
+      </div>
+      <button className="button small primary" disabled={adding} onClick={() => send('spotifyPublicAdd', { link: url })}>
+        {adding ? <><span className="spinner small" aria-hidden /> Reading its page…</> : <><BookmarkPlus size={14} /> Keep in library</>}
+      </button>
+      <button className="round-button" aria-label="Put this away" onClick={() => setPutAway(url)}><X size={16} /></button>
+    </div>
+  );
+}
+
 function TabBar() {
   const route = useRoute();
   const { nowPlaying } = useUi();
@@ -288,6 +313,7 @@ export function App() {
       <Sidebar />
       <main className="main">
         <TopBar />
+        {!HOSTED && <KeepLink />}
         <div className="content" key={route.page + (route.arg ?? '')}><Page /></div>
       </main>
       {nowPlaying && <NowPlaying />}

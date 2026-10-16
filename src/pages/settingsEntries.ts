@@ -90,6 +90,13 @@ export const ENTRIES: Entry[] = [
   e('services', 'spotify', 'Spotify', 'Your Spotify library, likes and search; with Premium, its songs on Spotify.', ['sign in', 'connect spotify', 'premium', 'spotify account'], 'web'),
   e('services', 'spotify-playback', 'Spotify songs play', 'In your Spotify app, or matched on YouTube Music.', ['play on spotify', 'premium', 'spotify connect'], 'web'),
   e('services', 'spotify-device', 'Spotify plays on', 'Which device your Spotify plays on.', ['speaker', 'device', 'spotify connect'], 'web'),
+  // Spotify for the listeners its sign-in turns away: found by what they would look for, Premium and all.
+  e('services', 'spotify-public', 'Public Spotify playlists', 'Public Spotify playlists followed by their links, with no sign-in, kept in step with Spotify.', [
+    'spotify public playlist', 'public playlist', 'follow a playlist', 'playlist link', 'spotify link', 'without premium', 'no premium', 'without signing in', 'no sign in',
+  ], 'web'),
+  e('services', 'spotify-import', 'Import Spotify’s data download', 'Your Spotify playlists and Liked Songs, from the file Spotify sends you, as playlists here.', [
+    'import spotify', 'spotify data', 'my_spotify_data', 'liked songs', 'download your data', 'spotify export', 'account data', 'zip', 'without premium', 'transfer playlists',
+  ], 'web'),
   e('services', 'bandcamp', 'Bandcamp collection', 'What you bought there and your wishlist, in the library.', ['collection', 'fan', 'purchases', 'wishlist', 'bandcamp account'], 'web'),
   e('services', 'bandcamp-genres', 'Bandcamp on Home', 'A row of Bandcamp’s best-sellers for each genre picked.', ['genres', 'best sellers', 'bestsellers'], 'web'),
   e('services', 'vk', 'VK Music', 'Through a signed-in browser’s vk.ru session.', ['vkontakte', 'vk', 'sign in', 'login'], 'web'),

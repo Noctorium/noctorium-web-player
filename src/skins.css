@@ -543,6 +543,20 @@
 .skin-98 .theme.on { box-shadow: var(--w-pressed); background: var(--w-dither) !important; padding: 7px 5px 5px 7px; outline: 1px dotted var(--w-text); outline-offset: -4px; }
 .skin-98 .theme .swatch { border-radius: 0; height: 26px; margin-bottom: 5px; box-shadow: inset 0 0 0 1px var(--w-shadow); }
 .skin-98 .theme small { font-size: 11px; opacity: 1; }
+/* Spotify without a sign-in: the warning a tooltip's yellow, boxed in the writing as 98's balloons were; the followed
+   playlists a list box's rows; a pasted link to keep the same yellow, between the address bar and the page. */
+.skin-98 .limits-warning, .skin-98 .keep-link { border-radius: 0; background: var(--w-tooltip); color: var(--w-text); border: 1px solid var(--w-text); font-size: 11px; font-weight: bold; }
+.skin-98 .limits-note, .skin-98 .setting-said, .skin-98 .import-progress, .skin-98 .followed-text small, .skin-98 .keep-text small { font-size: 11px; color: var(--w-text); }
+.skin-98 .keep-text small { font-weight: normal; }
+.skin-98 .keep-link { margin: 0 0 2px; padding: 4px 4px 4px 8px; }
+.skin-98 .keep-text strong { font-size: 11px; font-weight: bold; }
+.skin-98 .setting-said.good { color: var(--w-good); }
+.skin-98 .setting-said.bad, .skin-98 .followed-text small.error-text { color: var(--w-bad); }
+.skin-98 .followed { gap: 0; padding: 2px; background: var(--w-window); box-shadow: var(--w-sunken); }
+.skin-98 .followed-item { border: 0; border-radius: 0; background: none; padding: 3px 4px; gap: 8px; }
+.skin-98 .followed-item + .followed-item { border-top: 1px dotted var(--w-shadow); }
+.skin-98 .followed-item img, .skin-98 .followed-item .art { width: 32px; height: 32px; border-radius: 0; }
+.skin-98 .followed-text strong { font-size: 11px; font-weight: bold; color: var(--w-text); }
 
 /* ------------------------------------------------ dialogs, menus and notices */
 
@@ -1171,6 +1185,21 @@
 .skin-xp .theme.on { box-shadow: var(--x-focus); outline: 2px solid #316ac5; outline-offset: 1px; }
 .skin-xp .theme .swatch { border-radius: 2px; height: 26px; margin-bottom: 5px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2); }
 .skin-xp .theme small { font-size: 11px; opacity: 1; }
+/* Spotify without a sign-in: the warning XP's information bar, its yellow under a line; the followed playlists a
+   list's rows; a pasted link to keep the same bar, under the address bar as Internet Explorer's came. */
+.skin-xp .limits-warning, .skin-xp .keep-link { border-radius: 0; background: #ffffe1; color: #000; border: 1px solid #aca899; font-size: 11px; font-weight: bold; }
+.skin-xp .limits-warning > span:first-child { color: #a35f00; }
+.skin-xp .limits-note, .skin-xp .setting-said, .skin-xp .import-progress, .skin-xp .followed-text small, .skin-xp .keep-text small { font-size: 11px; color: #000; }
+.skin-xp .keep-text small { font-weight: normal; }
+.skin-xp .keep-link { margin: 0; padding: 3px 4px 3px 8px; border-width: 0 0 1px; }
+.skin-xp .keep-text strong { font-size: 11px; font-weight: bold; }
+.skin-xp .setting-said.good { color: #008000; }
+.skin-xp .setting-said.bad, .skin-xp .followed-text small.error-text { color: #c00000; }
+.skin-xp .followed { gap: 0; border: 1px solid #7f9db9; background: #fff; }
+.skin-xp .followed-item { border: 0; border-radius: 0; background: none; padding: 3px 6px; gap: 8px; }
+.skin-xp .followed-item + .followed-item { border-top: 1px solid #e3e1d4; }
+.skin-xp .followed-item img, .skin-xp .followed-item .art { width: 32px; height: 32px; border-radius: 2px; }
+.skin-xp .followed-text strong { font-size: 11px; font-weight: bold; }
 
 /* ------------------------------------------------ windows, menus and balloons */
 
