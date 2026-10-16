@@ -93,6 +93,11 @@ export const ENTRIES: Entry[] = [
   e('services', 'bandcamp', 'Bandcamp collection', 'What you bought there and your wishlist, in the library.', ['collection', 'fan', 'purchases', 'wishlist', 'bandcamp account'], 'web'),
   e('services', 'bandcamp-genres', 'Bandcamp on Home', 'A row of Bandcamp’s best-sellers for each genre picked.', ['genres', 'best sellers', 'bestsellers'], 'web'),
   e('services', 'vk', 'VK Music', 'Through a signed-in browser’s vk.ru session.', ['vkontakte', 'vk', 'sign in', 'login'], 'web'),
+  e('services', 'apple-music', 'Apple Music', 'Signed in with a browser’s media-user-token cookie, for your library and Home.', ['apple', 'applemusic', 'itunes', 'sign in', 'login', 'cookie', 'media-user-token', 'token'], 'web'),
+  e('services', 'apple-music-token', 'Apple Music developer token', 'A MusicKit developer token of your own, in place of the web player’s.', ['developer token', 'musickit', 'jwt'], 'web'),
+  e('services', 'deezer', 'Deezer profile', 'A public Deezer profile’s playlists, loved tracks and albums, in the library.', ['deezer', 'profile', 'flow', 'loved tracks'], 'web'),
+  e('services', 'tidal', 'Tidal', 'Signed in on Tidal’s own page, through a Tidal app of your own: its client id and secret.', ['tidal', 'sign in', 'login', 'connect tidal', 'client id', 'client secret', 'tidal app', 'developer'], 'web'),
+  e('services', 'tidal-redirect', 'Tidal redirect address', 'The address to register among your Tidal app’s redirect URIs, to copy.', ['redirect uri', 'redirect url', 'callback', 'loopback'], 'web'),
   e('services', 'youtube-history', 'Add what plays here to your YouTube history', 'So YouTube Music’s own recommendations follow it.', ['watch history', 'history', 'recommendations'], 'web'),
 
   e('device', 'downloads-folder', 'Downloads are saved to', 'A folder on the computer running Noctorium.', ['download location', 'save to', 'folder', 'path', 'offline'], 'web'),

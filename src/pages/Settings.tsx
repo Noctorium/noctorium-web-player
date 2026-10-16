@@ -8,7 +8,7 @@ import { go, useRoute } from '../router';
 import { SPEEDS, cls, providerName, speedName } from '../util';
 import { Badge, Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
-import type { Account, Bandcamp, Choice, Provider, Service, Settings, Spotify, Vk } from '../types';
+import type { Account, AppleMusic, Bandcamp, Choice, Deezer, Provider, Service, Settings, Spotify, Tidal, Vk } from '../types';
 import { HOSTED } from '../mode';
 import { HostedAbout, HostedLibrary, HostedListenBrainz, HostedServices } from '../hosted/Settings';
 import { seekBarStyles } from '../seekbar';
@@ -23,6 +23,7 @@ import { ALL as BANGS, bangFor, type SearchMode } from '../base/searchBangs';
 import { search as searchSettings, words, type SettingMatch } from '../base/settingsSearch';
 import { SECTIONS, entriesFor, pagesFor, type Entry, type Page, type Section } from './settingsEntries';
 import { connectSays } from './Other';
+import { betaWarning } from '../base/serviceStanding';
 
 const accents: Record<string, [string, string | null]> = {
   THEME: ['Theme’s own', null], VIOLET: ['Violet', '#b47cff'], MAGENTA: ['Magenta', '#ff6ec7'], EMBER: ['Ember', '#ff9757'],
@@ -83,15 +84,52 @@ function PhoneSignIn() {
 /**
  * One setting: its name and what it does, and its controls. [setting] is its name in settingsEntries.ts, which the
  * search finds it by, jumps to and lights up. A wide one has its controls under the words rather than beside them.
+ * A service's sign-in in beta carries [warning] under its name, above what it says of itself: see BetaWarning.
  */
-export function Row({ setting, title, detail, children, wide }: { setting: string; title: string; detail?: ReactNode; children?: ReactNode; wide?: boolean }) {
+export function Row({ setting, title, detail, children, wide, warning }: { setting: string; title: string; detail?: ReactNode; children?: ReactNode; wide?: boolean; warning?: string }) {
   return (
     // No inline style on these: a Windows skin takes a row whose controls are one styled box for a download's
     // progress bar.
     <div className={cls('setting', wide && 'wide')} data-setting={setting}>
-      <div className="label"><strong>{title}</strong>{detail && <small>{detail}</small>}</div>
+      <div className="label"><strong>{title}</strong>{warning && <BetaWarning text={warning} />}{detail && <small>{detail}</small>}</div>
       <div className="actions">{children}</div>
     </div>
+  );
+}
+
+/**
+ * What every Noctorium says at the sign-in or setup of a service in beta -- every one but YouTube Music, YouTube and
+ * SoundCloud -- in Base's words, which Noctorium sends: see base/serviceStanding.ts.
+ */
+function BetaWarning({ text }: { text: string }) {
+  return <small className="beta-warning" role="note"><span aria-hidden><Info size={13} /></span>{text}</small>;
+}
+
+/**
+ * A line of text to copy -- a sign-in's page, an address to register -- with Copy beside it. The clipboard is only there
+ * for a secure page, and this one, served over the house's network, often is not: then the field is selected, copied
+ * the old way where the browser still does that, and left selected where not.
+ */
+function CopyField({ value, label, what, children }: { value: string; label: string; what: 'link' | 'address'; children?: ReactNode }) {
+  const field = useRef<HTMLInputElement>(null);
+  const copied = what === 'link' ? 'Link copied' : 'Address copied';
+  const copy = () => {
+    const byHand = () => {
+      field.current?.focus();
+      field.current?.select();
+      let done = false;
+      try { done = document.execCommand('copy'); } catch { done = false; }
+      live.notice(done ? copied : `The ${what} is selected: copy it from there`, done ? 'good' : 'normal');
+    };
+    if (navigator.clipboard) navigator.clipboard.writeText(value).then(() => live.notice(copied, 'good'), byHand);
+    else byHand();
+  };
+  return (
+    <>
+      <input ref={field} className="field link-field" readOnly value={value} aria-label={label} onFocus={(e) => e.currentTarget.select()} />
+      <button className="button small" onClick={copy}><Link2 size={14} /> {what === 'link' ? 'Copy link' : 'Copy'}</button>
+      {children}
+    </>
   );
 }
 
@@ -339,25 +377,11 @@ function Scrobbler({ setting, title, service }: { setting: 'lastfm' | 'librefm';
  * finishes on that computer by itself.
  */
 function SignInLink({ setting, site, url }: { setting: string; site: string; url: string }) {
-  const field = useRef<HTMLInputElement>(null);
-  const copy = () => {
-    // The clipboard is only there for a secure page, and this one, served over the house's network, often is not:
-    // then the field is selected, copied the old way where the browser still does that, and left selected where not.
-    const byHand = () => {
-      field.current?.focus();
-      field.current?.select();
-      let copied = false;
-      try { copied = document.execCommand('copy'); } catch { copied = false; }
-      live.notice(copied ? 'Link copied' : 'The link is selected: copy it from there', copied ? 'good' : 'normal');
-    };
-    if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => live.notice('Link copied', 'good'), byHand);
-    else byHand();
-  };
   return (
     <Row setting={setting} title={`${site} sign-in link`} wide detail={`Open it here, or copy it into any browser, and allow Noctorium on ${site} there: it connects by itself.`}>
-      <input ref={field} className="field link-field" readOnly value={url} aria-label={`${site} sign-in link`} onFocus={(e) => e.currentTarget.select()} />
-      <button className="button small" onClick={copy}><Link2 size={14} /> Copy link</button>
-      <a className="button small" href={url} target="_blank" rel="noopener noreferrer">Open <ExternalLink size={13} /></a>
+      <CopyField value={url} label={`${site} sign-in link`} what="link">
+        <a className="button small" href={url} target="_blank" rel="noopener noreferrer">Open <ExternalLink size={13} /></a>
+      </CopyField>
     </Row>
   );
 }
@@ -447,7 +471,7 @@ function PlayerSettings({ settings }: { settings: Settings }) {
 }
 
 /** The services a badge style is shown by in its card. */
-const badgeSamples: Provider[] = ['YOUTUBE_MUSIC', 'YOUTUBE_VIDEO', 'SOUNDCLOUD', 'SPOTIFY', 'BANDCAMP', 'VK'];
+const badgeSamples: Provider[] = ['YOUTUBE_MUSIC', 'YOUTUBE_VIDEO', 'SOUNDCLOUD', 'SPOTIFY', 'BANDCAMP', 'VK', 'APPLE_MUSIC', 'DEEZER', 'TIDAL'];
 
 function NowPlayingSettings() {
   const looks = useLooks();
@@ -581,7 +605,8 @@ function SoundSettings({ settings }: { settings: Settings }) {
 
 const bangModes: [SearchMode, string][] = HOSTED
   ? [['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube videos'], ['SOUNDCLOUD', 'SoundCloud'], ['HYBRID', 'Both']]
-  : [['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube videos'], ['SOUNDCLOUD', 'SoundCloud'], ['SPOTIFY', 'Spotify'], ['BANDCAMP', 'Bandcamp'], ['VK', 'VK Music'], ['HYBRID', 'Every service']];
+  : [['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube videos'], ['SOUNDCLOUD', 'SoundCloud'], ['SPOTIFY', 'Spotify'], ['BANDCAMP', 'Bandcamp'], ['VK', 'VK Music'],
+    ['APPLE_MUSIC', 'Apple Music'], ['DEEZER', 'Deezer'], ['TIDAL', 'Tidal'], ['HYBRID', 'Every service']];
 
 function SearchSettings({ settings }: { settings: Settings }) {
   return (
@@ -614,7 +639,7 @@ function HybridSearch({ settings }: { settings: Settings }) {
     send('hybridSearch', { provider, on });
   };
   return (
-    <Row setting="hybrid-search" title="A search of every service asks" wide detail="Spotify only while its songs play on Spotify, and VK once signed in.">
+    <Row setting="hybrid-search" title="A search of every service asks" wide detail="Spotify only while its songs play on Spotify, VK once signed in, and Tidal through an app of your own. Apple Music, Deezer and Tidal are matched on YouTube Music to play, so a new Noctorium leaves them out.">
       <div className="chips" style={{ margin: 0 }}>
         {(settings.hybridServices ?? []).map((p) => (
           <button key={p} className={cls('chip', asked.includes(p) && 'on')} aria-pressed={asked.includes(p)} onClick={() => toggle(p)}>{providerName[p as Provider] ?? p}</button>
@@ -645,15 +670,19 @@ function ServicesSettings({ settings }: { settings: Settings }) {
         <button className="button small" onClick={() => openDialog(<Prompt title="Your SoundCloud profile" hint="The name in soundcloud.com/<name>, which is how SoundCloud finds your playlists." initial={settings.soundCloudUsername} submit={(name) => send('soundCloudUsername', { name })} />)}>Profile name</button>
         {sc.status === 'connected' && <button className="button small danger" onClick={() => openDialog(<Confirm title="Sign out of SoundCloud here?" action="Sign out" danger yes={() => send('signOut', { service: 'soundcloud' })} />)}>Sign out</button>}
       </Row>
-      {settings.spotify ? <SpotifySettings spotify={settings.spotify} /> : (
-        <Row setting="spotify" title="Spotify library" detail={settings.spotifyConnected ? `Connected${settings.spotifyAccount ? ` as ${settings.spotifyAccount}` : ''}` : settings.spotifyConnecting ? 'Waiting for Spotify…' : 'Your Spotify playlists, played from YouTube Music and SoundCloud. Approve it in a browser on the computer running Noctorium.'}>
+      {settings.spotify ? <SpotifySettings spotify={settings.spotify} warning={betaWarning('SPOTIFY', settings)} /> : (
+        <Row setting="spotify" title="Spotify library" warning={betaWarning('SPOTIFY', settings)} detail={settings.spotifyConnected ? `Connected${settings.spotifyAccount ? ` as ${settings.spotifyAccount}` : ''}` : settings.spotifyConnecting ? 'Waiting for Spotify…' : 'Your Spotify playlists, played from YouTube Music and SoundCloud. Approve it in a browser on the computer running Noctorium.'}>
           {settings.spotifyConnected
             ? <button className="button small danger" onClick={() => send('signOut', { service: 'spotify' })}>Disconnect</button>
             : <button className="button small" onClick={() => send('spotify')}>Connect</button>}
         </Row>
       )}
-      {settings.bandcamp && <BandcampSettings bandcamp={settings.bandcamp} />}
-      {settings.vk && <VkSettings vk={settings.vk} />}
+      {settings.bandcamp && <BandcampSettings bandcamp={settings.bandcamp} warning={betaWarning('BANDCAMP', settings)} />}
+      {settings.vk && <VkSettings vk={settings.vk} warning={betaWarning('VK', settings)} />}
+      {/* Searched, and their links opened, with nothing set up; what is set up adds the library and Home's rows. */}
+      {settings.appleMusic && <AppleMusicSettings apple={settings.appleMusic} warning={betaWarning('APPLE_MUSIC', settings)} />}
+      {settings.deezer && <DeezerSettings deezer={settings.deezer} warning={betaWarning('DEEZER', settings)} />}
+      {settings.tidal && <TidalSettings tidal={settings.tidal} warning={betaWarning('TIDAL', settings)} />}
       <Row setting="youtube-history" title="Add what plays here to your YouTube history" detail="So YouTube Music’s own recommendations follow it.">
         <Switch on={settings.youtubeHistory} change={(on) => send('youtubeHistory', { on })} label="YouTube history" />
       </Row>
@@ -677,7 +706,7 @@ function DeviceSettings({ settings }: { settings: Settings }) {
 function AboutSettings({ settings }: { settings: Settings }) {
   return (
     <>
-      <Row setting="about" title={`Noctorium ${settings.version}`} detail="YouTube Music, SoundCloud, Bandcamp, Spotify and VK in one library. Free software under the GPL-3.0.">
+      <Row setting="about" title={`Noctorium ${settings.version}`} detail="YouTube Music, SoundCloud, Bandcamp, Spotify, VK, Apple Music, Deezer and Tidal in one library. Free software under the GPL-3.0.">
         <button className="button small" onClick={() => send('checkUpdates')}>Check for updates</button>
         <button className="button small" onClick={() => send('diagnostics')}>Diagnostics</button>
         <a className="button small" href="https://github.com/Noctorium/noctorium-web-player" target="_blank" rel="noreferrer">Source <ExternalLink size={13} /></a>
@@ -692,7 +721,7 @@ function AboutSettings({ settings }: { settings: Settings }) {
  * then which device does is chosen here. Either sign-in opens Spotify's page in a browser on the computer
  * running Noctorium, because that is where Spotify sends its answer.
  */
-function SpotifySettings({ spotify }: { spotify: Spotify }) {
+function SpotifySettings({ spotify, warning }: { spotify: Spotify; warning?: string }) {
   // Where Spotify is open changes from minute to minute, so it is asked again each time this is shown.
   useEffect(() => { if (spotify.canPlay) send('spotifyDevices'); }, [spotify.canPlay]);
   const device = spotify.devices.find((d) => d.id === spotify.device);
@@ -703,7 +732,7 @@ function SpotifySettings({ spotify }: { spotify: Spotify }) {
     : 'Any account: your playlists, likes and search, its songs played from YouTube Music. Approved in a browser on the computer running Noctorium.';
   return (
     <>
-      <Row setting="spotify" title="Spotify" detail={<><span className={cls('status', spotify.connected && 'connected')}>{status}</span> · {spotify.message ?? about}</>}>
+      <Row setting="spotify" title="Spotify" warning={warning} detail={<><span className={cls('status', spotify.connected && 'connected')}>{status}</span> · {spotify.message ?? about}</>}>
         {spotify.connected
           ? <button className="button small danger" onClick={() => openDialog(<Confirm title="Disconnect Spotify?" detail="Your Spotify playlists leave the library, and its songs their hearts." action="Disconnect" danger yes={() => send('signOut', { service: 'spotify' })} />)}>Disconnect</button>
           : <button className="button small" disabled={spotify.connecting} onClick={() => send('spotify')}>Connect</button>}
@@ -732,10 +761,10 @@ function SpotifySettings({ spotify }: { spotify: Spotify }) {
  * VK, through a browser's vk.ru session: VK offers no music to other apps, so what that means is said before the
  * two cookies are asked for, every time. Core checks them with VK before keeping them.
  */
-function VkSettings({ vk }: { vk: Vk }) {
+function VkSettings({ vk, warning }: { vk: Vk; warning?: string }) {
   const status = vk.checking ? 'Checking with VK…' : vk.connected ? `Signed in as ${vk.account}` : 'Not signed in';
   return (
-    <Row setting="vk" title="VK Music" detail={<>
+    <Row setting="vk" title="VK Music" warning={warning} detail={<>
       <span className={cls('status', vk.connected && !vk.checking && 'connected')}>{status}</span>
       {vk.message ? ` · ${vk.message}` : !vk.connected ? ' · Through a signed-in browser’s vk.ru session; what that means is said first.' : ''}
     </>}>
@@ -757,11 +786,117 @@ function VkSignIn({ notice }: { notice: string[] }) {
 }
 
 /**
+ * Apple Music, signed in with the token Apple's own web player keeps once somebody has signed in on Apple's page. This
+ * page cannot show Apple's sign-in to Noctorium, nor read another site's cookies, so the token is pasted from a browser
+ * that is signed in, after saying where it is; Noctorium checks it with Apple before keeping it. Its developer token
+ * is the web player's unless the listener has a MusicKit one of their own.
+ */
+function AppleMusicSettings({ apple, warning }: { apple: AppleMusic; warning?: string }) {
+  const status = apple.checking ? 'Checking with Apple…'
+    : apple.connected ? `Signed in${apple.storefront ? ` · the ${apple.storefront.toUpperCase()} store` : ''}` : 'Not signed in';
+  return (
+    <>
+      <Row setting="apple-music" title="Apple Music" warning={warning} detail={<>
+        <span className={cls('status', apple.connected && !apple.checking && 'connected')}>{status}</span>
+        {apple.message ? ` · ${apple.message}` : !apple.connected ? ' · Search, albums and links work without signing in; signing in adds your playlists, your songs and Home’s rows.' : ''}
+      </>}>
+        <button className="button small" disabled={apple.checking} onClick={() => openDialog(<AppleMusicSignIn how={apple.how} />)}>{apple.connected ? 'Sign in again' : 'Sign in'}</button>
+        {apple.connected && <button className="button small danger" onClick={() => openDialog(<Confirm title="Sign out of Apple Music here?" detail="The token is forgotten on the computer running Noctorium; nothing changes at Apple." action="Sign out" danger yes={() => send('signOut', { service: 'applemusic' })} />)}>Sign out</button>}
+      </Row>
+      <Row setting="apple-music-token" title="Apple Music developer token" detail={apple.ownDeveloperToken ? 'Your own MusicKit developer token is in use.' : 'Optional: a MusicKit developer token of your own, made with your key, in place of the one Apple’s web player is served.'}>
+        <button className="button small" onClick={() => openDialog(<Prompt title="Apple Music developer token" hint="A MusicKit developer token of your own, made with your key." secret submit={(token) => send('appleMusicDeveloperToken', { token })} />)}>{apple.ownDeveloperToken ? 'Change' : 'Use your own'}</button>
+        {apple.ownDeveloperToken && <button className="button small danger" onClick={() => send('appleMusicDeveloperToken', { token: '' })}>Use the web player’s</button>}
+      </Row>
+    </>
+  );
+}
+
+function AppleMusicSignIn({ how }: { how: string[] }) {
+  const [text, setText] = useState('');
+  const sign = () => { closeDialog(); send('appleMusicSignIn', { text: text.trim() }); };
+  return (
+    <Dialog title="Signing in to Apple Music" buttons={<><button className="button" onClick={closeDialog}>Cancel</button><button className="button primary" disabled={!text.trim()} onClick={sign}>Sign in</button></>}>
+      {how.map((paragraph, i) => <p key={i}>{paragraph}</p>)}
+      <textarea className="field" autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="media-user-token=…" spellCheck={false} autoComplete="off" />
+    </Dialog>
+  );
+}
+
+/**
+ * Deezer, a public profile rather than a sign-in, as Bandcamp's collection is: Deezer shows one to anybody and lets no
+ * new application sign anybody in, so its link, a share link or its number is all it takes. Noctorium checks it with
+ * Deezer before keeping it, and says so here.
+ */
+function DeezerSettings({ deezer, warning }: { deezer: Deezer; warning?: string }) {
+  const status = deezer.checking ? 'Checking with Deezer…'
+    : deezer.found ? `${deezer.name ? `${deezer.name} · ` : ''}deezer.com/profile/${deezer.profileId}` : 'Not set';
+  return (
+    <Row setting="deezer" title="Deezer profile" warning={warning} detail={<>
+      <span className={cls('status', deezer.found && !deezer.checking && 'connected')}>{status}</span>
+      {deezer.message ? ` · ${deezer.message}` : !deezer.found ? ' · A public profile’s playlists, loved tracks and albums, in the library. Not a sign-in: a profile is public.' : ''}
+    </>}>
+      <button className="button small" disabled={deezer.checking} onClick={() => openDialog(
+        <Prompt title="Your Deezer profile" hint="Your profile’s link — deezer.com/profile/<number> — a share link, or the number." initial={deezer.profileId} submit={(profile) => send('deezerProfile', { profile })} />,
+      )}>{deezer.found ? 'Change' : 'Your profile'}</button>
+      {deezer.found && <button className="button small danger" onClick={() => openDialog(
+        <Confirm title="Take your Deezer profile out of the library?" detail="Nothing changes on Deezer; the profile is forgotten here." action="Take it out" danger yes={() => send('deezerProfile', { profile: '' })} />,
+      )}>Remove</button>}
+    </Row>
+  );
+}
+
+/**
+ * Tidal, signed in on its own page through a Tidal app of the listener's own until Noctorium has one: registered, free,
+ * at developer.tidal.com, with the redirect address under it among its redirect URIs. Tidal sends its answer to that
+ * address, on the computer running Noctorium, so the sign-in is approved in a browser on that computer.
+ */
+function TidalSettings({ tidal, warning }: { tidal: Tidal; warning?: string }) {
+  const status = tidal.connecting ? 'Waiting for Tidal…'
+    : tidal.connected ? `Connected${tidal.account ? ` as ${tidal.account}` : ''}` : tidal.configured ? 'Not connected' : 'Needs a Tidal app of your own';
+  const about = tidal.connected ? 'Your collection in the library, and your mixes on Home.'
+    : !tidal.configured ? 'Register one, free, at developer.tidal.com, and give its client id here.'
+      : `Approved in a browser on the computer running Noctorium.${tidal.readsCatalogue ? ' Searched with your app’s secret until then.' : ''}`;
+  return (
+    <>
+      <Row setting="tidal" title="Tidal" warning={warning} detail={<><span className={cls('status', tidal.connected && 'connected')}>{status}</span> · {tidal.message ?? about}</>}>
+        {tidal.connected
+          ? <button className="button small danger" onClick={() => openDialog(<Confirm title="Disconnect Tidal?" detail="Your Tidal collection leaves the library; nothing changes at Tidal." action="Disconnect" danger yes={() => send('signOut', { service: 'tidal' })} />)}>Disconnect</button>
+          : <button className="button small" disabled={tidal.connecting || !tidal.configured} onClick={() => send('tidal')}>Connect</button>}
+        <button className="button small" onClick={() => openDialog(<TidalApp tidal={tidal} />)}>{tidal.ownApp ? 'Your Tidal app' : 'Use your own Tidal app'}</button>
+      </Row>
+      <Row setting="tidal-redirect" title="Tidal redirect address" wide detail="Among your Tidal app’s redirect URIs, exactly as written: Tidal sends its answer there, to the computer running Noctorium.">
+        <CopyField value={tidal.redirectUri} label="Tidal redirect address" what="address" />
+      </Row>
+    </>
+  );
+}
+
+/** A Tidal app of the listener's own: its client id, and its secret where they want Tidal searched signed out. */
+function TidalApp({ tidal }: { tidal: Tidal }) {
+  const [id, setId] = useState('');
+  const [secret, setSecret] = useState('');
+  const save = () => { closeDialog(); send('tidalApp', { clientId: id.trim(), secret: secret.trim() }); };
+  return (
+    <Dialog title="Your own Tidal app" buttons={<>
+      {tidal.ownApp && <button className="button danger" onClick={() => { closeDialog(); send('tidalApp', { clientId: '', secret: '' }); }}>Stop using it</button>}
+      <button className="button" onClick={closeDialog}>Cancel</button>
+      <button className="button primary" disabled={!id.trim()} onClick={save}>Save</button>
+    </>}>
+      <p>Noctorium has no Tidal app of its own yet. Register one, free, at <a href={tidal.developerPortal} target="_blank" rel="noopener noreferrer">developer.tidal.com</a>, with this among its redirect URIs:</p>
+      <div className="copy-row"><CopyField value={tidal.redirectUri} label="Tidal redirect address" what="address" /></div>
+      <p>Then give its client id here: that is enough to sign in. Its secret as well lets Tidal be searched before you do. Both are kept in the computer’s credential store.</p>
+      <input className="field" autoFocus placeholder="Client id" value={id} onChange={(e) => setId(e.target.value)} spellCheck={false} autoComplete="off" style={{ marginBottom: 10 }} />
+      <input className="field" type="password" placeholder="Client secret (optional)" value={secret} onChange={(e) => setSecret(e.target.value)} autoComplete="off" onKeyDown={(e) => { if (e.key === 'Enter' && id.trim()) save(); }} />
+    </Dialog>
+  );
+}
+
+/**
  * Bandcamp, which is a name rather than a sign-in: Bandcamp shows a fan's collection and wishlist to anybody, so
  * the name in their address is all it takes. Noctorium checks it with Bandcamp before keeping it, and says so
  * here. Under it, the genres Home has a row of Bandcamp's best-sellers for.
  */
-function BandcampSettings({ bandcamp }: { bandcamp: Bandcamp }) {
+function BandcampSettings({ bandcamp, warning }: { bandcamp: Bandcamp; warning?: string }) {
   // Ticked here at once and sent whole each time, so a second tick before the first has come back is not lost.
   const [genres, setGenres] = useState(bandcamp.genres);
   useEffect(() => setGenres(bandcamp.genres), [bandcamp.genres.join()]);
@@ -776,7 +911,7 @@ function BandcampSettings({ bandcamp }: { bandcamp: Bandcamp }) {
   const desktop = bandcamp.desktop && bandcamp.desktop.toLowerCase() !== bandcamp.username.toLowerCase() ? bandcamp.desktop : undefined;
   return (
     <>
-      <Row setting="bandcamp" title="Bandcamp collection" detail={<>
+      <Row setting="bandcamp" title="Bandcamp collection" warning={warning} detail={<>
         <span className={cls('status', named && !bandcamp.checking && 'connected')}>{status}</span>
         {bandcamp.message ? ` · ${bandcamp.message}` : !named ? ' · What you bought there and your wishlist, in the library. Not a sign-in: a collection is public.' : ''}
       </>}>

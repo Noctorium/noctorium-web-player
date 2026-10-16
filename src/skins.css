@@ -534,6 +534,7 @@
 .skin-98 .setting + .setting { border-top: 1px solid var(--w-shadow); box-shadow: inset 0 1px var(--w-highlight); }
 .skin-98 .setting .label strong { font-weight: bold; font-size: 11px; }
 .skin-98 .setting .label small { color: var(--w-text); font-size: 11px; }
+.skin-98 .setting .label small.beta-warning { color: var(--w-text); font-weight: bold; }
 .skin-98 .status { font-size: 11px; }
 .skin-98 .status.connected { color: var(--w-good); }
 .skin-98 .status.error, .skin-98 .status.warning { color: var(--w-bad); }
@@ -1161,6 +1162,7 @@
 .skin-xp .setting + .setting { border-top: 1px solid #e3e1d4; }
 .skin-xp .setting .label strong { font-weight: bold; font-size: 11px; }
 .skin-xp .setting .label small { color: #000; font-size: 11px; }
+.skin-xp .setting .label small.beta-warning { color: #a35f00; font-weight: bold; }
 .skin-xp .status { font-size: 11px; }
 .skin-xp .status.connected { color: #008000; }
 .skin-xp .status.error, .skin-xp .status.warning { color: #c00000; }

@@ -26,6 +26,7 @@
   --sp: #1ed760;
   --good: #5fe3b0;
   --bad: #ff6b6b;
+  --warn: #ffc266;
   color-scheme: dark;
   font-family: 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
   font-size: 15px;
@@ -38,6 +39,7 @@
   --shadow: 0 18px 50px rgb(0 0 0 / 0.16);
   --good: #1e8e3e;
   --bad: #c62828;
+  --warn: #a35f00;
 }
 
 * { box-sizing: border-box; }
@@ -378,6 +380,11 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 .badge.SPOTIFY { background: var(--sp); color: #000; }
 .badge.BANDCAMP { background: #408294; }
 .badge.VK { background: #0077ff; }
+.badge.APPLE_MUSIC { background: #fa243c; }
+.badge.DEEZER { background: #a238ff; }
+/* Tidal's own black, which a dark page would swallow as a chip: ringed there in the faintest white. */
+.badge.TIDAL { background: #000000; }
+:root:not(.light) .badge.TIDAL { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.32); }
 .badge.LOCAL { background: var(--card); color: var(--subtext); }
 
 /*
@@ -770,6 +777,11 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 .status { font-size: 13px; font-weight: 600; }
 .status.connected { color: var(--good); }
 .status.error, .status.warning { color: var(--bad); }
+/* A service in beta says so under its name, in the warning's colour, before what it says of itself. */
+.setting .label small.beta-warning { display: flex; gap: 6px; align-items: flex-start; color: var(--warn); font-weight: 560; }
+.beta-warning > span { display: inline-flex; margin-top: 2px; flex: none; }
+.copy-row { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
+.copy-row .field { flex: 1; min-width: 0; }
 
 .switch { width: 44px; height: 26px; border-radius: 999px; background: color-mix(in srgb, var(--subtext) 30%, transparent); position: relative; transition: background 0.2s; flex: none; }
 .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.2s; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }

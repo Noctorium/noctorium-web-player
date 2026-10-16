@@ -87,7 +87,8 @@ function useTheme() {
 /** The services a bang can choose, by its mode, for the search box to say where a search is going. */
 const bangNames: Record<string, string> = {
   HYBRID: 'every service', YOUTUBE_MUSIC: providerName.YOUTUBE_MUSIC, YOUTUBE_VIDEO: 'YouTube videos', SOUNDCLOUD: providerName.SOUNDCLOUD,
-  SPOTIFY: providerName.SPOTIFY, BANDCAMP: providerName.BANDCAMP, VK: providerName.VK,
+  SPOTIFY: providerName.SPOTIFY, BANDCAMP: providerName.BANDCAMP, VK: providerName.VK, APPLE_MUSIC: providerName.APPLE_MUSIC,
+  DEEZER: providerName.DEEZER, TIDAL: providerName.TIDAL,
 };
 
 function luminance(hex: string) {

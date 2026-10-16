@@ -31,6 +31,12 @@ export const ALL: ReadonlyMap<string, SearchMode> = new Map<string, SearchMode>(
   ['bc', 'BANDCAMP'],
   ['bandcamp', 'BANDCAMP'],
   ['vk', 'VK'],
+  ['dz', 'DEEZER'],
+  ['deezer', 'DEEZER'],
+  ['td', 'TIDAL'],
+  ['tidal', 'TIDAL'],
+  ['am', 'APPLE_MUSIC'],
+  ['applemusic', 'APPLE_MUSIC'],
   ['all', 'HYBRID'],
 ]);
 

@@ -20,7 +20,8 @@ describe('bangs in a search box', () => {
     const every: [string, SearchMode][] = [
       ['!ytm', 'YOUTUBE_MUSIC'], ['!yt', 'YOUTUBE_MUSIC'], ['!YouTube', 'YOUTUBE_MUSIC'], ['!ytv', 'YOUTUBE_VIDEO'],
       ['!SC', 'SOUNDCLOUD'], ['!soundcloud', 'SOUNDCLOUD'], ['!sp', 'SPOTIFY'], ['!Spotify', 'SPOTIFY'], ['!bc', 'BANDCAMP'],
-      ['!bandcamp', 'BANDCAMP'], ['!vk', 'VK'], ['!VK', 'VK'], ['!all', 'HYBRID'],
+      ['!bandcamp', 'BANDCAMP'], ['!vk', 'VK'], ['!VK', 'VK'], ['!dz', 'DEEZER'], ['!Deezer', 'DEEZER'], ['!td', 'TIDAL'],
+      ['!tidal', 'TIDAL'], ['!am', 'APPLE_MUSIC'], ['!AppleMusic', 'APPLE_MUSIC'], ['!all', 'HYBRID'],
     ];
     for (const [bang, mode] of every) {
       expect(parse(`${bang} around the world`).bang?.mode, bang).toBe(mode);
@@ -67,11 +68,14 @@ describe('bangs in a search box', () => {
     expect(bangFor('SOUNDCLOUD')).toBe('!sc');
     expect(bangFor('YOUTUBE_MUSIC')).toBe('!yt');
     expect(bangFor('HYBRID')).toBe('!all');
-    const modes: SearchMode[] = ['HYBRID', 'SOUNDCLOUD', 'YOUTUBE_MUSIC', 'YOUTUBE_VIDEO', 'BANDCAMP', 'SPOTIFY', 'VK'];
+    expect(bangFor('APPLE_MUSIC')).toBe('!am');
+    const modes: SearchMode[] = ['HYBRID', 'SOUNDCLOUD', 'YOUTUBE_MUSIC', 'YOUTUBE_VIDEO', 'BANDCAMP', 'SPOTIFY', 'VK', 'DEEZER', 'TIDAL', 'APPLE_MUSIC'];
     for (const mode of modes) expect(parse(`${bangFor(mode)} x`).bang?.mode, mode).toBe(mode);
   });
 
   it('has the same table as Base', () => {
-    expect([...ALL.keys()]).toEqual(['ytm', 'yt', 'youtube', 'ytv', 'sc', 'soundcloud', 'sp', 'spotify', 'bc', 'bandcamp', 'vk', 'all']);
+    expect([...ALL.keys()]).toEqual([
+      'ytm', 'yt', 'youtube', 'ytv', 'sc', 'soundcloud', 'sp', 'spotify', 'bc', 'bandcamp', 'vk', 'dz', 'deezer', 'td', 'tidal', 'am', 'applemusic', 'all',
+    ]);
   });
 });

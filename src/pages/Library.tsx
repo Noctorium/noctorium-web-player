@@ -16,10 +16,10 @@ export function Library() {
   const settings = usePart('settings');
   useEffect(() => { send('refreshLibrary'); }, []);
   // Bandcamp's are a fan's collection, a playlist for each release in it, and their wishlist; VK's, My music and
-  // then the account's playlists.
+  // then the account's playlists; Deezer's, a public profile's playlists, loved tracks and albums.
   const groups: [Provider, string][] = [
     ['YOUTUBE_MUSIC', 'YouTube Music'], ['YOUTUBE_VIDEO', 'YouTube'], ['SOUNDCLOUD', 'SoundCloud'], ['SPOTIFY', 'Spotify'],
-    ['BANDCAMP', 'Bandcamp'], ['VK', 'VK Music'],
+    ['BANDCAMP', 'Bandcamp'], ['VK', 'VK Music'], ['APPLE_MUSIC', 'Apple Music'], ['DEEZER', 'Deezer'], ['TIDAL', 'Tidal'],
   ];
   const fan = settings?.bandcamp?.username;
   return (

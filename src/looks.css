@@ -340,7 +340,8 @@
 .choice-card strong { font-weight: 650; font-size: 14px; }
 .choice-card small { color: var(--subtext); font-size: 12.5px; line-height: 1.35; }
 .icon-sample { display: flex; gap: 6px; color: var(--text); margin-bottom: 4px; }
-.badge-sample { display: flex; gap: 5px; align-items: center; margin-bottom: 4px; }
+/* Every service's badge, onto a second line where the card is narrower than all of them. */
+.badge-sample { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 4px; }
 .setting.wide { flex-direction: column; align-items: stretch; }
 .setting.wide .actions { justify-content: flex-start; }
 .chips.flush { margin: 0; }

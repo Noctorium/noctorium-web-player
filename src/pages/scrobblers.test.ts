@@ -39,12 +39,16 @@ describe('Last.fm and Libre.fm', () => {
 
   it('copies the link in this browser, with the field to copy from where the clipboard is not there, and opens it as a plain link', () => {
     const link = settings.slice(settings.indexOf('function SignInLink('), settings.indexOf('// ------------------------------------------------------------------ Look'));
-    expect(link).toContain('navigator.clipboard.writeText(url)');
+    // The field and its Copy are the ones Tidal's redirect address is copied with too.
+    const field = settings.slice(settings.indexOf('function CopyField('), settings.indexOf('function Block('));
+    expect(link).toContain('<CopyField value={url} label={`${site} sign-in link`} what="link">');
+    expect(field).toContain('navigator.clipboard.writeText(value)');
     // Served over the house's network as plain http, the page has no clipboard: the field is selected instead.
-    expect(link).toContain('if (navigator.clipboard)');
-    expect(link).toContain('field.current?.select()');
-    expect(link).toContain('<input ref={field} className="field link-field" readOnly value={url}');
-    expect(link).toContain('Copy link</button>');
+    expect(field).toContain('if (navigator.clipboard)');
+    expect(field).toContain('field.current?.select()');
+    expect(field).toContain('<input ref={field} className="field link-field" readOnly value={value}');
+    expect(field).toContain("{what === 'link' ? 'Copy link' : 'Copy'}</button>");
+    expect(field).toContain("const copied = what === 'link' ? 'Link copied' : 'Address copied';");
     expect(link).toContain('<a className="button small" href={url} target="_blank" rel="noopener noreferrer">Open');
   });
 

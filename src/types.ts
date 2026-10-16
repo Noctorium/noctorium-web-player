@@ -3,7 +3,8 @@
  * Noctorium-cli field for field; a change there is a change here.
  */
 
-export type Provider = 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'SOUNDCLOUD' | 'SPOTIFY' | 'BANDCAMP' | 'VK' | 'LOCAL';
+export type Provider =
+  | 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'SOUNDCLOUD' | 'SPOTIFY' | 'BANDCAMP' | 'VK' | 'APPLE_MUSIC' | 'DEEZER' | 'TIDAL' | 'LOCAL';
 
 export interface Artist { id: string; name: string; provider: Provider }
 
@@ -103,7 +104,7 @@ export interface Home { sections: Section[]; loading: boolean; recent: Track[]; 
 
 export interface Search {
   query: string;
-  mode: 'HYBRID' | 'SOUNDCLOUD' | 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'BANDCAMP' | 'SPOTIFY' | 'VK';
+  mode: 'HYBRID' | 'SOUNDCLOUD' | 'YOUTUBE_MUSIC' | 'YOUTUBE_VIDEO' | 'BANDCAMP' | 'SPOTIFY' | 'VK' | 'DEEZER' | 'TIDAL' | 'APPLE_MUSIC';
   loading: boolean;
   tracks: Track[];
   playlists: Playlist[];
@@ -215,6 +216,54 @@ export interface Vk {
   notice: string[];
 }
 
+/**
+ * Apple Music, signed in with the token Apple's web player keeps in its media-user-token cookie, pasted here: a page
+ * cannot read another site's cookies, nor show Apple's sign-in to Noctorium.
+ */
+export interface AppleMusic {
+  connected: boolean;
+  checking: boolean;
+  /** The storefront the catalogue is read in, "us" or "gb": the account's once signed in, the computer's before. */
+  storefront: string;
+  /** A MusicKit developer token of the listener's own is in use, rather than the one Apple's web player is served. */
+  ownDeveloperToken: boolean;
+  message?: string;
+  /** Where the cookie is, and what signing in adds. */
+  how: string[];
+}
+
+/** Deezer: a public profile rather than a sign-in, whose playlists, loved tracks and albums the library shows. */
+export interface Deezer {
+  /** The profile's number, deezer.com/profile/<number>; blank for none. */
+  profileId: string;
+  found: boolean;
+  /** The profile's own name, as Deezer gave it. */
+  name: string;
+  checking: boolean;
+  message?: string;
+}
+
+/**
+ * Tidal: its own sign-in page, through a Tidal app of the listener's own until Noctorium has one, which answers to
+ * [redirectUri] on the computer running Noctorium -- so the browser that signs in has to be on that computer.
+ */
+export interface Tidal {
+  /** A Tidal app is in force, so signing in is possible. */
+  configured: boolean;
+  /** It is the listener's own, from developer.tidal.com. */
+  ownApp: boolean;
+  /** Tidal's catalogue can be read: somebody is signed in, or the app's secret is known. */
+  readsCatalogue: boolean;
+  connected: boolean;
+  connecting: boolean;
+  account: string;
+  /** The address to register among the app's redirect URIs, exactly as written. */
+  redirectUri: string;
+  /** Where a Tidal app is registered. */
+  developerPortal: string;
+  message?: string;
+}
+
 export interface Theme {
   name: string;
   title: string;
@@ -283,6 +332,16 @@ export interface Settings {
   spotify?: Spotify;
   bandcamp?: Bandcamp;
   vk?: Vk;
+  /** Apple Music, Deezer and Tidal, from a Noctorium that has them. */
+  appleMusic?: AppleMusic;
+  deezer?: Deezer;
+  tidal?: Tidal;
+  /**
+   * What goes above the sign-in or setup of each service in beta, by provider: Base's one warning, for Spotify,
+   * Bandcamp, VK, Apple Music, Deezer and Tidal, and none for YouTube Music, YouTube or SoundCloud. A Noctorium from
+   * before the warning sends none, and Base's own, in base/serviceStanding.ts, stands in.
+   */
+  betaWarnings?: Partial<Record<Provider, string>>;
   /** How fast it plays, 1 being as recorded, from 0.5 to 2. */
   playbackSpeed?: number;
   /** The services a Hybrid search asks, by name, and every one it could. */

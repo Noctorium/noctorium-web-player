@@ -65,7 +65,10 @@ const DEFAULTS: Prefs = {
   iconSet: 'STANDARD', homePlay: 'AUTOPLAY', serviceBadgeStyle: 'MARKS',
 };
 
-/** The searches the hosted player can make; Bandcamp, Spotify and VK are Noctorium's, on a computer or a phone. */
+/**
+ * The searches the hosted player can make; Bandcamp, Spotify, VK, Apple Music, Deezer and Tidal are Noctorium's, on a
+ * computer or a phone.
+ */
 const SEARCHABLE = new Set<Search['mode']>(['HYBRID', 'YOUTUBE_MUSIC', 'SOUNDCLOUD', 'YOUTUBE_VIDEO']);
 
 const LIKED = 'liked';
@@ -981,7 +984,7 @@ export class HostedEngine {
     };
     this.store.part('search', this.search);
     if (!q) return;
-    if (!searching) throw new Problem('Bandcamp, Spotify and VK are searched by Noctorium on your computer or phone');
+    if (!searching) throw new Problem('Bandcamp, Spotify, VK, Apple Music, Deezer and Tidal are searched by Noctorium on your computer or phone');
     try {
       const found = await ask<Omit<Search, 'query' | 'mode' | 'loading'>>('search', { q, mode });
       if (id !== this.searchId) return;

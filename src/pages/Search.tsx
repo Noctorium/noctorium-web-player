@@ -2,30 +2,25 @@ import { useEffect } from 'react';
 import { Play, Search as SearchIcon, User } from '../icons';
 import { send, usePart } from '../live';
 import { useRoute, go } from '../router';
-import { bigArtwork, cls, isArtist, providerName } from '../util';
+import { bigArtwork, cls, isArtist, opensReleases, playlistKind, providerName } from '../util';
 import { Badge, Cover, Empty, Spinner } from '../components/Common';
 import { PlaylistCard, Shelf } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
-import type { Search as SearchState } from '../types';
+import type { Playlist as PlaylistState, Search as SearchState } from '../types';
 import { HOSTED } from '../mode';
 import { parse as parseBangs } from '../base/searchBangs';
 
 /**
- * Bandcamp, Spotify and VK are read by Noctorium itself, so the hosted player, which has none behind it,
- * searches the other two.
+ * Bandcamp, Spotify, VK, Apple Music, Deezer and Tidal are read by Noctorium itself, so the hosted player, which has
+ * none behind it, searches the other two.
  */
 const modes: [SearchState['mode'], string][] = HOSTED
   ? [['HYBRID', 'Both'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos']]
   : [
     ['HYBRID', 'All'], ['YOUTUBE_MUSIC', 'YouTube Music'], ['SOUNDCLOUD', 'SoundCloud'], ['YOUTUBE_VIDEO', 'YouTube videos'],
-    ['BANDCAMP', 'Bandcamp'], ['SPOTIFY', 'Spotify'], ['VK', 'VK Music'],
+    ['BANDCAMP', 'Bandcamp'], ['SPOTIFY', 'Spotify'], ['VK', 'VK Music'], ['APPLE_MUSIC', 'Apple Music'], ['DEEZER', 'Deezer'],
+    ['TIDAL', 'Tidal'],
   ];
-
-/**
- * The services whose search answers with albums and artists as playlists, which is how they open -- and with
- * the same again as bare names, which are left out for them.
- */
-const opened = new Set<string>(['BANDCAMP', 'SPOTIFY']);
 
 export function Search() {
   const route = useRoute();
@@ -47,13 +42,15 @@ export function Search() {
     return <Empty icon={<SearchIcon size={44} />} title={`${bang.bang.typed}: ${active === 'HYBRID' ? 'every service' : activeName}`}>Now type what to look for there.</Empty>;
   }
   const top = search?.tracks[0];
-  // Bandcamp's and Spotify's albums and artists come as playlists, which is how they open, and are shown as what
-  // they are. They come a second time as bare names in `albums` and `artists`, which are left out for them.
-  const playlists = search?.playlists.filter((p) => !opened.has(p.provider)) ?? [];
-  const releases = search?.playlists.filter((p) => opened.has(p.provider) && !isArtist(p)) ?? [];
+  // Bandcamp's, Spotify's, Apple Music's, Deezer's and Tidal's albums and artists come as playlists, which is how they
+  // open, and are shown as what they are; their playlists are playlists still. The albums and artists come a second
+  // time as bare names in `albums` and `artists`, which are left out for them.
+  const release = (p: PlaylistState) => opensReleases(p.provider) && !isArtist(p) && playlistKind(p) !== 'Playlist';
+  const playlists = search?.playlists.filter((p) => !release(p) && !isArtist(p)) ?? [];
+  const releases = search?.playlists.filter(release) ?? [];
   const bands = search?.playlists.filter(isArtist) ?? [];
-  const albums = search?.albums.filter((a) => !opened.has(a.provider)) ?? [];
-  const artists = search?.artists.filter((a) => !opened.has(a.provider)) ?? [];
+  const albums = search?.albums.filter((a) => !opensReleases(a.provider)) ?? [];
+  const artists = search?.artists.filter((a) => !opensReleases(a.provider)) ?? [];
   const nothing = !search?.tracks.length && !search?.playlists.length && !search?.albums.length && !search?.artists.length;
   return (
     <>

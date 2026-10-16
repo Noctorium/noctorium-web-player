@@ -8,14 +8,14 @@ import { HOSTED } from '../mode';
 import { HostedWelcome } from '../hosted/Welcome';
 
 /**
- * Which service's rows Home shows, by core's names for them. Bandcamp, Spotify and VK are read by Noctorium,
- * so the hosted player has only the two.
+ * Which service's rows Home shows, by core's names for them. Bandcamp, Spotify, VK, Apple Music, Deezer and Tidal are
+ * read by Noctorium, so the hosted player has only the two.
  */
 const filters = HOSTED
   ? [['all', 'Both services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud']]
   : [
     ['all', 'All services'], ['youtube_music', 'YouTube Music'], ['soundcloud', 'SoundCloud'], ['bandcamp', 'Bandcamp'],
-    ['spotify', 'Spotify'], ['vk', 'VK Music'],
+    ['spotify', 'Spotify'], ['vk', 'VK Music'], ['apple_music', 'Apple Music'], ['deezer', 'Deezer'], ['tidal', 'Tidal'],
   ];
 
 function greeting() {
@@ -30,7 +30,8 @@ export function Home() {
   const home = usePart('home');
   const settings = usePart('settings');
   const signedIn = settings?.youtube.status === 'connected' || settings?.soundcloud.status === 'connected' ||
-    settings?.spotifyConnected || !!settings?.vk?.connected || !!settings?.bandcamp?.username;
+    settings?.spotifyConnected || !!settings?.vk?.connected || !!settings?.bandcamp?.username ||
+    !!settings?.appleMusic?.connected || !!settings?.deezer?.found || !!settings?.tidal?.connected;
   return (
     <>
       <h1 className="page-title">{greeting()}</h1>

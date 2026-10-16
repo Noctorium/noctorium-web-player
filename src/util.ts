@@ -26,6 +26,9 @@ export function likeKey(track: Track): string {
     case 'SPOTIFY': return `spotify:${track.id}`;
     case 'BANDCAMP': return `bc:${track.id}`;
     case 'VK': return `vk:${track.id}`;
+    case 'APPLE_MUSIC': return `am:${track.id}`;
+    case 'DEEZER': return `dz:${track.id}`;
+    case 'TIDAL': return `td:${track.id}`;
     default: return `local:${track.id}`;
   }
 }
@@ -63,18 +66,26 @@ export function canKeep(track: Track): boolean {
   return keepsFiles(track.provider);
 }
 
-/** An artist, which Bandcamp and Spotify open as a playlist of what they put out. */
-export function isArtist(playlist: Playlist): boolean {
-  return (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('band:')) ||
-    (playlist.provider === 'SPOTIFY' && playlist.id.startsWith('artist:'));
+/**
+ * The services whose albums and artists open as playlists of their songs, their ids saying which, as Base's
+ * Playlist.isArtistPage and isAlbumPage read them for every service at once. Their search answers with the same
+ * albums and artists again as bare names, which are left out for them.
+ */
+export function opensReleases(provider: Provider): boolean {
+  return provider === 'BANDCAMP' || provider === 'SPOTIFY' || provider === 'APPLE_MUSIC' || provider === 'DEEZER' || provider === 'TIDAL';
 }
 
-/** What a playlist is, for the line above its name: Bandcamp and Spotify open albums and artists as playlists. */
+/** An artist, which Bandcamp, Spotify, Apple Music, Deezer and Tidal open as a playlist of what they put out. */
+export function isArtist(playlist: Playlist): boolean {
+  if (playlist.provider === 'BANDCAMP') return playlist.id.startsWith('band:');
+  return opensReleases(playlist.provider) && playlist.id.startsWith('artist:');
+}
+
+/** What a playlist is, for the line above its name: Bandcamp, Spotify and the later ones open albums and artists as playlists. */
 export function playlistKind(playlist: Playlist): 'Artist' | 'Album' | 'Single' | 'Playlist' {
   if (isArtist(playlist)) return 'Artist';
-  if (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('album:')) return 'Album';
   if (playlist.provider === 'BANDCAMP' && playlist.id.startsWith('track:')) return 'Single';
-  if (playlist.provider === 'SPOTIFY' && playlist.id.startsWith('album:')) return 'Album';
+  if (opensReleases(playlist.provider) && playlist.id.startsWith('album:')) return 'Album';
   return playlist.id.startsWith('OLAK') || playlist.id.startsWith('MPRE') ? 'Album' : 'Playlist';
 }
 
@@ -93,6 +104,9 @@ export const providerName: Record<Provider, string> = {
   SPOTIFY: 'Spotify',
   BANDCAMP: 'Bandcamp',
   VK: 'VK Music',
+  APPLE_MUSIC: 'Apple Music',
+  DEEZER: 'Deezer',
+  TIDAL: 'Tidal',
   LOCAL: HOSTED ? 'This browser' : 'This computer',
 };
 
@@ -103,6 +117,10 @@ export const providerBadge: Record<Provider, string> = {
   SPOTIFY: 'SP',
   BANDCAMP: 'BC',
   VK: 'VK',
+  // Base's ServiceMarks.letters for the services that came after.
+  APPLE_MUSIC: 'AM',
+  DEEZER: 'DZ',
+  TIDAL: 'TD',
   LOCAL: 'PC',
 };
 

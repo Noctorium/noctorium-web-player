@@ -54,6 +54,12 @@ describe('the settings and their search', () => {
     expect(first('volumn boost')).toBe('booster');
     expect(first('bang')).toBe('bangs');
     expect(first('search shortcut')).toBe('bangs');
+    expect(first('apple music')).toBe('apple-music');
+    expect(first('deezer')).toBe('deezer');
+    expect(first('tidal')).toBe('tidal');
+    expect(first('client id')).toBe('tidal');
+    expect(first('developer token')).toBe('apple-music-token');
+    expect(first('tidal', true)).toBeUndefined();
   });
 
   it('finds the badges by their marks, logos and letters, in either build', () => {
