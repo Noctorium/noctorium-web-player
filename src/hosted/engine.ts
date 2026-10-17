@@ -1047,8 +1047,10 @@ export class HostedEngine {
    * cover has been read, so the page eases from one to the other rather than through the theme's own.
    */
   private refreshArtwork() {
-    this.emitSettings();
     const url = this.playback.track?.artworkUrl;
+    // A song with no cover has no colour, and the theme's own stands.
+    if (!url) this.artworkColour = undefined;
+    this.emitSettings();
     if (!wantsArtwork(this.prefs.theme, this.prefs.accent) || !url) return;
     const key = this.playback.track?.key;
     coverColour(url).then((colour) => {
