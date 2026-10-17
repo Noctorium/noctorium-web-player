@@ -14,7 +14,7 @@ import { version } from '../../package.json';
 import { ask } from './api';
 import { choose, findLyrics } from './lyrics';
 import { everything, forget, load, save } from './store';
-import { accents, artworkAccent, colours, themes } from './themes';
+import { accents, colours, coverColour, themes, wantsArtwork } from './themes';
 import { youtube } from './youtube';
 
 /*
@@ -123,7 +123,8 @@ export class HostedEngine {
   private openError?: string;
   private openWanted?: string;
   private lyrics: Lyrics = { loading: false, sources: [] };
-  private accentFromArtwork?: string;
+  /** The playing cover's colour, for the artwork's accent and Afterglow's light: see refreshArtwork. */
+  private artworkColour?: string;
   /** Playlists seen on a card or in search, so one opened from there keeps the title the card showed. */
   private known = new Map<string, Playlist>();
   private fetched = new Map<string, { playlist: Playlist; at: number }>();
@@ -178,7 +179,7 @@ export class HostedEngine {
   private emitSettings() {
     const p = this.prefs;
     const settings: Settings = {
-      theme: p.theme, themes, colours: colours(p.theme, p.accent, this.accentFromArtwork), accent: p.accent, accents: Object.keys(accents),
+      theme: p.theme, themes, colours: colours(p.theme, p.accent, this.artworkColour), accent: p.accent, accents: Object.keys(accents),
       progressBarStyle: p.progressBarStyle, timeDisplay: p.timeDisplay, skipNonMusic: false, youtubeHistory: false,
       lyricsProvider: p.lyricsProvider, discord: false, animations: p.animations, taskbarClock: p.taskbarClock,
       youtube: { status: 'disconnected' }, soundcloud: { status: 'disconnected' }, youtubeChannel: '', soundCloudUsername: '',
@@ -401,12 +402,12 @@ export class HostedEngine {
         if (!themes.some((t) => t.name === c.name)) throw new Problem('No such theme');
         this.prefs.theme = String(c.name);
         this.savePrefs();
-        return this.refreshAccent();
+        return this.refreshArtwork();
       case 'accent':
         if (!(String(c.name) in accents)) throw new Problem('No such accent');
         this.prefs.accent = String(c.name);
         this.savePrefs();
-        return this.refreshAccent();
+        return this.refreshArtwork();
       case 'seekBar':
         if (!seekBarStyles.some(([name]) => name === c.name)) throw new Problem('No such seek bar');
         this.prefs.progressBarStyle = String(c.name);
@@ -532,7 +533,7 @@ export class HostedEngine {
     this.format = {};
     this.setPlayback({ status: 'resolving', track, error: undefined, positionMs: startMs, durationMs: track.durationMs ?? 0 });
     this.remember(track);
-    if (this.prefs.accent === 'ARTWORK') this.refreshAccent();
+    if (wantsArtwork(this.prefs.theme, this.prefs.accent)) this.refreshArtwork();
     const loop = this.looping();
     const { volume, muted } = this.prefs;
 
@@ -1040,15 +1041,19 @@ export class HostedEngine {
     });
   }
 
-  private refreshAccent() {
+  /**
+   * The playing cover's colour, looked for while anything is drawn in it -- the artwork's accent, or a light that
+   * follows the artwork -- and the settings sent again with it. The last song's colour stands until the next one's
+   * cover has been read, so the page eases from one to the other rather than through the theme's own.
+   */
+  private refreshArtwork() {
     this.emitSettings();
     const url = this.playback.track?.artworkUrl;
-    if (this.prefs.accent !== 'ARTWORK' || !url) return;
-    const light = themes.find((t) => t.name === this.prefs.theme)?.light ?? false;
+    if (!wantsArtwork(this.prefs.theme, this.prefs.accent) || !url) return;
     const key = this.playback.track?.key;
-    artworkAccent(url, light).then((colour) => {
+    coverColour(url).then((colour) => {
       if (this.playback.track?.key !== key) return;
-      this.accentFromArtwork = colour;
+      this.artworkColour = colour;
       this.emitSettings();
     });
   }

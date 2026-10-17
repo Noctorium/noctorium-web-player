@@ -335,7 +335,36 @@ export interface Theme {
   skin?: string;
   /** With the 98 skin, the scheme it is drawn in: 98's own grey, or Noctorium 98's night. */
   windows98?: Windows98;
+  /**
+   * The colour of writing on the accent, as Base's onAccent has it: near-black on the Glow themes' white, white on a
+   * deep accent. Absent from a Noctorium from before it was sent, and then worked out here the same way.
+   */
+  onAccent?: string;
+  /** The light the Glow themes lay across their page, under everything on it; absent for every other theme. */
+  glow?: Glow;
 }
+
+/**
+ * Base's ThemeGlow: colour laid over the page in each of the shapes, one gradient each, at strength times the shape's
+ * own where it is brightest, fading through Base's falloff to nothing. In the theme in force the colour is the light
+ * for the song playing -- the cover's, for Afterglow -- and in the list of themes each one's own.
+ */
+export interface Glow {
+  colour: string;
+  followsArtwork: boolean;
+  /** Base's GlowPlacement: ARTWORK or TOP. The shapes are what is drawn; the name is for saying so. */
+  placement: string;
+  strength: number;
+  shapes: GlowShape[];
+}
+
+/**
+ * One of a glow's gradients: a pool, a circle centred x and y of the page's width and height from its top left and
+ * reaching radius of its longer side; or a band, across the whole width from the top to depth of the way down.
+ */
+export type GlowShape =
+  | { kind: 'pool'; x: number; y: number; radius: number; strength: number }
+  | { kind: 'band'; depth: number; strength: number };
 
 /**
  * Base's Windows98Palette: every colour the 98 skin draws its bevels, title bars, lists and desktop in, as 98 drew

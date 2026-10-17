@@ -8,7 +8,7 @@ import { go, useRoute } from '../router';
 import { SPEEDS, cls, providerName, speedName } from '../util';
 import { Badge, Confirm, Dialog, Prompt, QrDialog, Spinner, Switch } from '../components/Common';
 import { closeDialog, openDialog } from '../ui';
-import type { Account, AppleMusic, Bandcamp, Choice, Deezer, Playlist, Provider, Service, Settings, Spotify, Tidal, Vk } from '../types';
+import type { Account, AppleMusic, Bandcamp, Choice, Deezer, Playlist, Provider, Service, Settings, Spotify, Theme, Tidal, Vk } from '../types';
 import { followedAbout, sendSpotifyData } from '../spotifyWithoutSignIn';
 import { HOSTED } from '../mode';
 import { HostedAbout, HostedLibrary, HostedListenBrainz, HostedServices } from '../hosted/Settings';
@@ -389,6 +389,19 @@ function SignInLink({ setting, site, url }: { setting: string; site: string; url
 
 // ------------------------------------------------------------------ Look
 
+/**
+ * A theme's page in its swatch: its colour, and a Glow theme's light in it -- the light's own colour fading into the
+ * page from where it lies, from the top for a band and up from below for pools. As faint as it is on the page it
+ * would hardly show in a swatch this small, and Velvet and Smoke differ in nothing else.
+ */
+function swatchPage(theme: Theme): string {
+  const light = theme.glow;
+  if (!light) return theme.background;
+  return light.shapes.some((shape) => shape.kind === 'band')
+    ? `linear-gradient(to bottom, ${light.colour}, ${theme.background} 85%)`
+    : `radial-gradient(circle at 50% 75%, ${light.colour}, ${theme.background} 80%)`;
+}
+
 /** The theme, the accent, the clock and the animations: the same in every Noctorium, hosted or not. */
 function ThemeSettings({ settings }: { settings: Settings }) {
   const skinned = !!skinOf(settings);
@@ -398,7 +411,7 @@ function ThemeSettings({ settings }: { settings: Settings }) {
         <div className="themes">
           {settings.themes.map((t) => (
             <button key={t.name} className={cls('theme', settings.theme === t.name && 'on')} style={{ background: t.card, color: t.text }} onClick={() => send('theme', { name: t.name })}>
-              <div className="swatch"><i style={{ background: t.background }} /><i style={{ background: t.panel }} /><i style={{ background: t.card }} /><i style={{ background: t.accent }} /></div>
+              <div className="swatch"><i style={{ background: swatchPage(t) }} /><i style={{ background: t.panel }} /><i style={{ background: t.card }} /><i style={{ background: t.accent }} /></div>
               {t.title}
               <small>{t.family}</small>
             </button>

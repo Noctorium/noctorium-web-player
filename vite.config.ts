@@ -19,8 +19,9 @@ export default defineConfig(({ mode }) => ({
     sourcemap: false,
     chunkSizeWarningLimit: 900,
   },
-  // The ports of Base's pieces have Base's own tests, case for case; `npm test` runs them.
-  test: { include: ['src/**/*.test.ts'], environment: 'node' },
+  // The ports of Base's pieces have Base's own tests, case for case; `npm test` runs them. The page's stylesheet is
+  // read whole by the tests of the rules it draws a Glow theme's light with, rather than passed over as CSS is.
+  test: { include: ['src/**/*.test.ts'], environment: 'node', css: { include: [/\/styles\.css/] } },
   server: {
     port: 5173,
     proxy: {

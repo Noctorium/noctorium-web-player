@@ -272,7 +272,7 @@ export function LikeButton({ size = 18 }: { size?: number }) {
   if (!track || !canLike(likes, track)) return null;
   const liked = isLiked(likes, track);
   return (
-    <button className={cls('round-button', liked && 'on')} aria-label={liked ? 'Unlike' : 'Like'} onClick={() => send('like', { track })}>
+    <button className={cls('round-button like', liked && 'on')} aria-label={liked ? 'Unlike' : 'Like'} onClick={() => send('like', { track })}>
       <Heart size={size} fill={liked ? 'currentColor' : 'none'} />
     </button>
   );

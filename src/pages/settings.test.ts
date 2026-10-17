@@ -71,6 +71,13 @@ describe('the settings and their search', () => {
     }
   });
 
+  it('finds the Glow themes by their names, their family’s and by black, in either build', () => {
+    for (const hosted of [false, true]) {
+      const first = (query: string) => search(query, entriesFor(hosted))[0]?.entry.id;
+      for (const query of ['glow', 'afterglow', 'cinder', 'velvet', 'smoke', 'black', 'dark mode']) expect(first(query), query).toBe('theme');
+    }
+  });
+
   it('describes every setting, for the search to look in', () => {
     for (const entry of ENTRIES) expect(entry.description?.length, entry.id).toBeGreaterThan(10);
   });

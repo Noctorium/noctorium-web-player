@@ -52,6 +52,36 @@ body {
   overflow: hidden;
 }
 
+/*
+ * A Glow theme's light (base/glow.ts): its gradients, --glow-image, laid on the page under everything on it -- on the
+ * page itself, and on the now playing screen, which paints itself the page's colour over the page -- in the colour
+ * --glow, eased from one song's cover to the next's as the desktop eases it. Fixed to the window, where Base places
+ * it, so the two line up; the sidebar, the player bar, cards and panels keep their own colours over it.
+ */
+@property --glow { syntax: '<color>'; inherits: true; initial-value: transparent; }
+:root.glow { transition: --glow 0.6s ease; }
+:root.glow.no-motion { transition: none; }
+:root.glow body, :root.glow .now-playing { background-color: var(--bg); background-image: var(--glow-image); background-attachment: fixed; }
+
+/*
+ * A white accent -- Afterglow's, Velvet's and Smoke's -- is the writing's own colour, so a button that is on is told
+ * from one that is off by more than being drawn in it: a dot under it, or in a toolbar, pressed in. A liked heart is
+ * filled already.
+ */
+:root.accent-is-writing .round-button.on:not(.like) { position: relative; }
+:root.accent-is-writing .round-button.on:not(.like)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+:root.accent-is-writing .tool.on:not([data-button="LIKE"]) { background: var(--press); }
+
 button {
   font: inherit;
   color: inherit;
@@ -718,6 +748,9 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
   z-index: 0;
 }
 
+/* On a Glow theme its light is the backdrop, and the blurred cover would only hide it. */
+:root.glow .now-playing .backdrop { display: none; }
+
 .now-playing .backdrop::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 35%, transparent), var(--bg) 92%); }
 .now-playing > *:not(.backdrop):not(.np-close) { position: relative; z-index: 1; }
 
@@ -740,6 +773,9 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
   overflow: hidden;
   backdrop-filter: blur(20px);
 }
+
+/* Over a Glow theme's light a panel is a panel, in its own colour, as Base has panels cover the light. */
+:root.glow .panel { background: var(--card); backdrop-filter: none; }
 
 .panel .tabs { display: flex; gap: 6px; padding: 14px 14px 10px; }
 .panel .body { overflow: auto; min-height: 0; flex: 1; padding: 0 8px 14px; }
@@ -830,7 +866,8 @@ h2.shelf-title { font-size: 21px; letter-spacing: -0.01em; margin: 34px 0 4px; f
 .switch { width: 44px; height: 26px; border-radius: 999px; background: color-mix(in srgb, var(--subtext) 30%, transparent); position: relative; transition: background 0.2s; flex: none; }
 .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.2s; box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); }
 .switch.on { background: var(--accent); }
-.switch.on::after { transform: translateX(18px); }
+/* On, the thumb is the colour of writing on the accent, which on a white accent is near-black. */
+.switch.on::after { transform: translateX(18px); background: var(--on-accent); }
 
 .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
 .theme { border-radius: 12px; padding: 10px; border: 2px solid transparent; text-align: left; font-size: 13px; font-weight: 600; }

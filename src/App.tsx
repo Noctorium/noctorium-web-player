@@ -19,6 +19,8 @@ import { STANDARD_98, windows98Of, windows98Properties } from './windows98';
 import { setIconSet } from './icons';
 import { useLooks } from './looks';
 import { parse as parseBangs } from './base/searchBangs';
+import { accentIsWriting, onAccent } from './base/contrast';
+import { glowImage } from './base/glow';
 import { providerName } from './util';
 
 const allPages = [
@@ -41,6 +43,10 @@ const YouTubeStage = HOSTED ? lazy(() => import('./hosted/Stage')) : null;
  * The theme's colours on the page, so every Noctorium theme is this page's theme too -- and for the Windows themes
  * their skin, a class on the root that skins.css dresses the whole page from, with 98's drawn in the scheme of the
  * theme in force: its own grey, or Noctorium 98's night.
+ *
+ * And for the Glow themes their light: its colour as --glow, which styles.css eases from one song's to the next, and
+ * its gradients as --glow-image, laid on the page under everything; drawn for the window's size, since a pool's
+ * radius is a share of the window's longer side, and drawn again when the window changes size.
  */
 function useTheme() {
   const settings = usePart('settings');
@@ -62,13 +68,31 @@ function useTheme() {
     root.style.setProperty('--text', c.text);
     root.style.setProperty('--subtext', c.subtext);
     root.style.setProperty('--accent', c.accent);
-    root.style.setProperty('--on-accent', luminance(c.accent) > 0.6 ? '#111111' : '#ffffff');
+    // Base's colour for writing on the accent, from Noctorium where it says so and worked out the same way where not.
+    root.style.setProperty('--on-accent', c.onAccent ?? onAccent(c.accent));
+    root.classList.toggle('accent-is-writing', accentIsWriting(c.accent, c.text, c.light));
+    if (c.glow) root.style.setProperty('--glow', c.glow.colour);
+    else root.style.removeProperty('--glow');
     root.classList.toggle('light', c.light);
     root.classList.toggle('no-motion', settings.animations === false);
     root.classList.toggle('skin-98', skin === '98');
     root.classList.toggle('skin-xp', skin === 'xp');
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c.panel);
   }, [settings?.colours, settings?.animations, settings?.theme]);
+  const light = settings?.colours?.glow;
+  const shapes = light && JSON.stringify([light.strength, light.shapes]);
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('glow', !!light);
+    if (!light) {
+      root.style.removeProperty('--glow-image');
+      return;
+    }
+    const draw = () => root.style.setProperty('--glow-image', glowImage(light, window.innerWidth, window.innerHeight));
+    draw();
+    window.addEventListener('resize', draw);
+    return () => window.removeEventListener('resize', draw);
+  }, [shapes]);
   useEffect(() => {
     const t = playback?.track;
     document.title = t ? `${t.title} · ${t.artistLine} — Noctorium` : 'Noctorium';
@@ -90,12 +114,6 @@ const bangNames: Record<string, string> = {
   SPOTIFY: providerName.SPOTIFY, BANDCAMP: providerName.BANDCAMP, VK: providerName.VK, APPLE_MUSIC: providerName.APPLE_MUSIC,
   DEEZER: providerName.DEEZER, TIDAL: providerName.TIDAL,
 };
-
-function luminance(hex: string) {
-  const n = parseInt(hex.slice(1), 16);
-  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => v / 255);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
 
 /** Space, the arrows and a few letters, wherever the page is, except while typing. */
 function useKeys() {

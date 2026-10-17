@@ -1,14 +1,19 @@
-import type { Theme, Windows98 } from '../types';
+import type { Glow, Theme, Windows98 } from '../types';
 import { NOCTORIUM_98, STANDARD_98 } from '../windows98';
+import { onAccent } from '../base/contrast';
+import { artworkColour, glow, resolvedColour } from '../base/glow';
 
 /*
  * Every Noctorium theme, as Base's Themes.kt has them, for the hosted player, which has no Noctorium to ask.
  * The same six colours and a switch, and for the Windows ones their skin -- with 98's scheme for the two drawn as
- * 98; a change there is a change here.
+ * 98 -- and for the Glow ones their light; a change there is a change here.
  */
 
 const t = (name: string, title: string, family: string, background: string, panel: string, card: string, text: string, subtext: string, accent: string, light = false, skin?: string, windows98?: Windows98): Theme =>
-  ({ name, title, family, background, panel, card, text, subtext, accent, light, skin, windows98 });
+  ({ name, title, family, background, panel, card, text, subtext, accent, light, skin, windows98, onAccent: onAccent(accent) });
+
+/** A theme with a light laid across its page. */
+const lit = (theme: Theme, light: Glow): Theme => ({ ...theme, glow: light });
 
 export const themes: Theme[] = [
   t('NOCTORIUM_NIGHT', 'Night', 'Noctorium', '#000000', '#07050A', '#15101C', '#F8F4FF', '#CFC5DA', '#B47CFF'),
@@ -28,6 +33,12 @@ export const themes: Theme[] = [
   t('TOKYO_NIGHT', 'Tokyo Night', 'Tokyo Night', '#1A1B26', '#16161E', '#24283B', '#C0CAF5', '#A9B1D6', '#7AA2F7'),
   t('SOLARIZED_DARK', 'Solarized Dark', 'Solarized', '#002B36', '#073642', '#0D3D49', '#EEE8D5', '#93A1A1', '#268BD2'),
   t('SOLARIZED_LIGHT', 'Solarized Light', 'Solarized', '#FDF6E3', '#EEE8D5', '#E7E0C9', '#073642', '#586E75', '#268BD2', true),
+  // Near-black pages lit by a soft light: Afterglow's in the playing cover's colour, red until there is one, Cinder's
+  // that red held still, Velvet's plum and Smoke's grey across the top. White is the accent of three of them.
+  lit(t('AFTERGLOW', 'Afterglow', 'Glow', '#0B0A0A', '#121111', '#1A1A1A', '#F6F2F1', '#A8A2A0', '#FFF7F4'), glow('#C41E0C', 'ARTWORK', 0.34, true)),
+  lit(t('CINDER', 'Cinder', 'Glow', '#0B0A0A', '#121111', '#1A1A1A', '#F6F2F1', '#A8A2A0', '#D93826'), glow('#C41E0C', 'ARTWORK', 0.28)),
+  lit(t('VELVET', 'Velvet', 'Glow', '#0A0A0A', '#0F0F0F', '#141414', '#F7F7F7', '#A7A7A7', '#FFFFFF'), glow('#7A2450', 'TOP', 0.2)),
+  lit(t('SMOKE', 'Smoke', 'Glow', '#0A0A0A', '#0F0F0F', '#141414', '#F7F7F7', '#A7A7A7', '#FFFFFF'), glow('#8C8C8C', 'TOP', 0.1)),
   t('WINDOWS_98', '98', 'Windows', '#C0C0C0', '#B4B4B4', '#FFFFFF', '#000000', '#3A3A3A', '#000080', true, 'WINDOWS_98', STANDARD_98),
   t('WINDOWS_98_NOCTORIUM', 'Noctorium 98', 'Windows', '#231B2E', '#1B1524', '#0B0810', '#F8F4FF', '#CFC5DA', '#B47CFF', false, 'WINDOWS_98', NOCTORIUM_98),
   t('WINDOWS_XP', 'XP', 'Windows', '#ECE9D8', '#D6DFF7', '#FFFFFF', '#000000', '#4D4D4D', '#245EDC', true, 'WINDOWS_XP'),
@@ -44,18 +55,33 @@ export const accents: Record<string, string | null> = {
   ARTWORK: null,
 };
 
-/** The theme with the chosen accent in it -- the artwork's when that is chosen and one was found. */
+/**
+ * The theme in force, as Noctorium tells it to the page: with the chosen accent in it -- for "Match the artwork",
+ * [artwork], the playing cover's colour as artworkColour finds it, while it has one -- the colour of writing on that
+ * accent, and the theme's light, if it has one, in the colour it takes from the cover.
+ */
 export function colours(theme: string, accent: string, artwork?: string): Theme {
   const base = themes.find((x) => x.name === theme) ?? themes[0];
-  const chosen = accent === 'ARTWORK' ? artwork : accents[accent];
-  return chosen ? { ...base, accent: chosen } : base;
+  const chosen = (accent === 'ARTWORK' ? artwork : accents[accent]) ?? base.accent;
+  return {
+    ...base,
+    accent: chosen,
+    onAccent: onAccent(chosen),
+    glow: base.glow && { ...base.glow, colour: resolvedColour(base.glow, artwork) },
+  };
+}
+
+/** Whether anything is drawn in the cover's colour: the artwork's accent, or a light that follows the artwork. */
+export function wantsArtwork(theme: string, accent: string): boolean {
+  return accent === 'ARTWORK' || !!themes.find((x) => x.name === theme)?.glow?.followsArtwork;
 }
 
 /**
- * The cover's most vivid colour, kept light enough to read on a dark theme and dark enough on a light one.
- * Every cover the services serve allows a page to read it, so a small copy is drawn and its pixels counted.
+ * The colour the cover at [url] is known by, as every Noctorium finds it -- see artworkColour -- or undefined for a
+ * cover with no colour in it, or one that could not be read. Every cover the services serve allows a page to read it,
+ * so a small copy is drawn, a hundred and twenty-eight pixels across, and its pixels counted.
  */
-export function artworkAccent(url: string, light: boolean): Promise<string | undefined> {
+export function coverColour(url: string): Promise<string | undefined> {
   return new Promise((resolve) => {
     const image = new Image();
     image.crossOrigin = 'anonymous';
@@ -63,40 +89,19 @@ export function artworkAccent(url: string, light: boolean): Promise<string | und
     image.onerror = () => resolve(undefined);
     image.onload = () => {
       try {
+        const width = 128;
+        const height = Math.max(1, Math.round((width * image.naturalHeight) / (image.naturalWidth || width)));
         const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 24;
+        canvas.width = width;
+        canvas.height = height;
         const context = canvas.getContext('2d', { willReadFrequently: true });
         if (!context) return resolve(undefined);
-        context.drawImage(image, 0, 0, 24, 24);
-        const data = context.getImageData(0, 0, 24, 24).data;
-        let best: [number, number, number] | undefined;
-        let score = -1;
-        for (let i = 0; i < data.length; i += 4) {
-          const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
-          const max = Math.max(r, g, b);
-          const min = Math.min(r, g, b);
-          const saturation = max === 0 ? 0 : (max - min) / max;
-          const value = max / 255;
-          const s = saturation * 0.75 + value * 0.25 - (value < 0.2 ? 1 : 0);
-          if (s > score) { score = s; best = [r, g, b]; }
-        }
-        if (!best || score < 0.25) return resolve(undefined);
-        resolve(readable(best, light));
+        context.drawImage(image, 0, 0, width, height);
+        resolve(artworkColour(context.getImageData(0, 0, width, height).data, width, height));
       } catch {
         resolve(undefined);
       }
     };
     image.src = url;
   });
-}
-
-function readable([r, g, b]: [number, number, number], light: boolean): string {
-  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  const target = light ? Math.min(lum, 0.45) : Math.max(lum, 0.55);
-  const factor = lum === 0 ? 1 : target / lum;
-  const mix = (c: number) => {
-    const scaled = light ? c * factor : c + (255 - c) * Math.max(0, (target - lum) / (1 - lum || 1));
-    return Math.round(Math.min(255, Math.max(0, scaled))).toString(16).padStart(2, '0');
-  };
-  return `#${mix(r)}${mix(g)}${mix(b)}`.toUpperCase();
 }

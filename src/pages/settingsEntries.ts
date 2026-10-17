@@ -52,7 +52,7 @@ export const ENTRIES: Entry[] = [
   e('you', 'librefm-link', 'Libre.fm sign-in link', 'While Libre.fm waits, the page to allow Noctorium on: to open here, or copy into any browser.', SIGN_IN_LINK, 'web', 'librefm'),
   e('you', 'listenbrainz', 'ListenBrainz', 'Sends what you play to ListenBrainz, with your user token.', ['scrobble', 'scrobbling', 'listen history', 'token']),
 
-  e('look-theme', 'theme', 'Theme', 'The colours everything is drawn in, and for the Windows ones, the whole skin.', ['dark mode', 'light mode', 'night mode', 'colors', 'colours', 'appearance', 'skin', 'windows 98', 'windows xp', 'catppuccin']),
+  e('look-theme', 'theme', 'Theme', 'The colours everything is drawn in, and for the Windows ones, the whole skin.', ['dark mode', 'light mode', 'night mode', 'colors', 'colours', 'appearance', 'skin', 'windows 98', 'windows xp', 'catppuccin', 'glow', 'afterglow', 'cinder', 'velvet', 'smoke', 'black']),
   e('look-theme', 'taskbar-clock', 'Show the clock', 'The time at the right of the taskbar the 98 and XP themes draw.', ['time', 'clock', 'tray', 'taskbar']),
   e('look-theme', 'accent', 'Accent', 'The colour of the playing song, the buttons that are on, the seek bar.', ['color', 'colour', 'highlight', 'tint', 'artwork colour']),
   e('look-theme', 'animations', 'Animations', 'Pages ease in and covers lift; off makes every change instant.', ['motion', 'reduce motion', 'transitions', 'effects', 'animation']),
