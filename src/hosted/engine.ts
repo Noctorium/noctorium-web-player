@@ -981,16 +981,17 @@ export class HostedEngine {
 
   private artistPages = new Map<string, { provider: Track['provider']; name: string; profile?: string }>();
 
-  private async artistTracks(page: { provider: Track['provider']; name: string; profile?: string }): Promise<Track[]> {
+  /** Their songs, and their own picture where the service shows one (a SoundCloud profile's). */
+  private async artistTracks(page: { provider: Track['provider']; name: string; profile?: string }): Promise<{ tracks: Track[]; picture?: string }> {
     if (page.profile) {
       const found = await ask<Playlist>('playlist', { key: `sc:user:${page.profile}` }).catch(() => undefined);
-      if (found?.tracks?.length) return found.tracks;
+      if (found?.tracks?.length) return { tracks: found.tracks, picture: found.artworkUrl };
     }
     const plain = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').replace(/ topic$/, '').trim();
     const mode = page.provider === 'SOUNDCLOUD' || page.provider === 'YOUTUBE_VIDEO' ? page.provider : 'YOUTUBE_MUSIC';
     const found = (await ask<{ tracks: Track[] }>('search', { q: page.name, mode })).tracks;
     const theirs = found.filter((t) => t.artists.some((a) => plain(a.name) === plain(page.name)));
-    return theirs.length ? theirs : found;
+    return { tracks: theirs.length ? theirs : found };
   }
 
   private async fetchPlaylist(key: string): Promise<Playlist> {
@@ -998,8 +999,8 @@ export class HostedEngine {
     if (cached && Date.now() - cached.at < 10 * 60_000) return cached.playlist;
     const artist = this.artistPages.get(key);
     if (artist) {
-      const tracks = await this.artistTracks(artist);
-      const playlist = { ...this.known.get(key)!, tracks, trackCount: tracks.length, artworkUrl: tracks[0]?.artworkUrl };
+      const { tracks, picture } = await this.artistTracks(artist);
+      const playlist = { ...this.known.get(key)!, tracks, trackCount: tracks.length, artworkUrl: picture ?? tracks[0]?.artworkUrl };
       this.fetched.set(key, { playlist, at: Date.now() });
       return playlist;
     }

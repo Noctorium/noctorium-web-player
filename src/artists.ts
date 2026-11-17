@@ -30,6 +30,17 @@ export function openArtist(artist: Pick<Artist, 'provider' | 'name'> & { id?: st
   go(`/playlist/${encodeURIComponent(artistKey(artist.provider, name))}`);
 }
 
+/** Their page on the service itself, for "On …": the SoundCloud profile where it is known, else the service's search. */
+export function artistPageUrl(provider: Provider, name: string, sourceUrl?: string): string | undefined {
+  const q = encodeURIComponent(name);
+  switch (provider) {
+    case 'SOUNDCLOUD': return sourceUrl?.replace(/\/tracks$/, '') ?? `https://soundcloud.com/search/people?q=${q}`;
+    case 'YOUTUBE_MUSIC': return `https://music.youtube.com/search?q=${q}`;
+    case 'YOUTUBE_VIDEO': return `https://www.youtube.com/results?search_query=${q}`;
+    default: return sourceUrl;
+  }
+}
+
 /** The artist of [track], opened: what pressing the name under a song does. */
 export function openArtistOf(track: Track) {
   const first = track.artists[0];

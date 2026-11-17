@@ -51,7 +51,12 @@ export function Search() {
   const releases = search?.playlists.filter(release) ?? [];
   const bands = search?.playlists.filter(isArtist) ?? [];
   const albums = search?.albums.filter((a) => !opensReleases(a.provider)) ?? [];
-  const artists = search?.artists.filter((a) => !opensReleases(a.provider)) ?? [];
+  // Only the artists who are who was searched for: the services list anybody near the words -- "odesza" brought BRONSON.
+  const plain = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').replace(/^the /, '').replace(/ topic$/, '').trim();
+  const words = plain(bang.query || query);
+  const artists = search?.artists
+    .filter((a) => !opensReleases(a.provider))
+    .filter((a) => { const name = plain(a.name); return !!name && (words.includes(name) || name.includes(words)); }) ?? [];
   const nothing = !search?.tracks.length && !search?.playlists.length && !search?.albums.length && !search?.artists.length;
   return (
     <>

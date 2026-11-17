@@ -10,6 +10,7 @@ import { closeDialog, openDialog } from '../ui';
 import { useState } from 'react';
 import type { Provider } from '../types';
 import { HOSTED } from '../mode';
+import { artistPageUrl } from '../artists';
 
 export function Library() {
   const library = usePart('library');
@@ -106,17 +107,20 @@ export function PlaylistPage() {
   if (!playlist) return library?.openLoading ? <div style={{ padding: 60, display: 'grid', placeItems: 'center' }}><Spinner /></div> : <Empty icon={<LibraryIcon size={44} />} title="This playlist is not open">It may have been deleted, or the library is still loading.</Empty>;
   const tracks = open?.tracks ?? [];
   const kind = playlistKind(playlist);
+  // An artist's page: round, as an artist is shown, with their page on the service and none of a playlist's saving.
+  const artist = kind === 'Artist';
+  const artistPage = artist ? artistPageUrl(playlist.provider, playlist.title, playlist.sourceUrl) : undefined;
   return (
     <>
       <div className="hero">
-        <Cover url={bigArtwork(playlist.artworkUrl ?? tracks[0]?.artworkUrl)} />
+        <Cover url={bigArtwork(playlist.artworkUrl ?? tracks[0]?.artworkUrl)} round={artist} />
         <div style={{ minWidth: 0 }}>
           <div className="kind">{kind}</div>
           <h1>{playlist.title}</h1>
           <div className="meta">
             <Badge provider={playlist.provider} />
-            {playlist.ownerName && <span>{playlist.ownerName}</span>}
-            <span>· {plural(playlist.trackCount ?? tracks.length, 'track')}</span>
+            {playlist.ownerName && playlist.ownerName !== 'Artist' && playlist.ownerName !== providerName[playlist.provider] && <span>{playlist.ownerName}</span>}
+            <span>{artist ? `On ${providerName[playlist.provider]} · ` : '· '}{plural(playlist.trackCount ?? tracks.length, artist ? 'song' : 'track')}</span>
             {tracks.length > 0 && <span>· {totalTime(tracks)}</span>}
             {playlist.isPublic != null && <span>· {playlist.isPublic ? <><Globe size={13} /> Public</> : <><Lock size={13} /> Private</>}</span>}
           </div>
@@ -129,12 +133,17 @@ export function PlaylistPage() {
         {!HOSTED && keepsFiles(playlist.provider) && (
           <button className="button" disabled={!tracks.some(canKeep)} onClick={() => send('download', { tracks: tracks.filter(canKeep) })}><Download size={16} /> Download</button>
         )}
-        {!keepsFiles(playlist.provider) && playlist.sourceUrl && (
+        {artistPage && (
+          <button className="button" onClick={() => window.open(artistPage, '_blank', 'noopener')}>
+            <ExternalLink size={16} /> On {providerName[playlist.provider]}
+          </button>
+        )}
+        {!artist && !keepsFiles(playlist.provider) && playlist.sourceUrl && (
           <button className="button" onClick={() => window.open(playlist.sourceUrl, '_blank', 'noopener')}>
             <ExternalLink size={16} /> {playlist.provider === 'BANDCAMP' && (kind === 'Album' || kind === 'Single') ? 'Buy it on Bandcamp' : `On ${providerName[playlist.provider]}`}
           </button>
         )}
-        {HOSTED && (library?.playlists.some((p) => p.key === playlist.key)
+        {HOSTED && !artist && (library?.playlists.some((p) => p.key === playlist.key)
           ? <button className="button" onClick={() => send('unsavePlaylist', { key: playlist.key })}><BookmarkCheck size={16} /> In your library</button>
           : <button className="button" disabled={!open} onClick={() => send('savePlaylist', { playlist: open })}><BookmarkPlus size={16} /> Save to your library</button>)}
         {playlist.editable && (
