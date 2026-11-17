@@ -34,6 +34,8 @@ export interface Store {
 }
 
 interface Prefs {
+  /** A music link pasted into the search box plays at once, with no Enter. Off unless switched on. */
+  playLinksFromSearch?: boolean;
   theme: string;
   accent: string;
   progressBarStyle: string;
@@ -185,7 +187,7 @@ export class HostedEngine {
       youtube: { status: 'disconnected' }, soundcloud: { status: 'disconnected' }, youtubeChannel: '', soundCloudUsername: '',
       spotifyConnected: false, spotifyConnecting: false, spotifyAccount: '', lastfm: { status: 'disconnected' }, librefm: { status: 'disconnected' },
       listenbrainz: this.listenbrainz, scrobbles: this.scrobbles, connectEnabled: false, desktopYouTube: false, desktopSoundCloud: false,
-      version, autoplay: p.autoplay,
+      version, autoplay: p.autoplay, playLinksFromSearch: !!p.playLinksFromSearch,
       progressBarStyles: seekBarStyles.map(([name, title]) => ({ name, title })),
       visualiser: p.visualiser, visualiserStyles: VISUALISER_STYLES.map(({ name, title, description }) => ({ name, title, description })),
       queueColumns: p.queueColumns, allQueueColumns: QUEUE_COLUMNS.map(({ name, title, heading }) => ({ name, title, description: heading })),
@@ -308,6 +310,11 @@ export class HostedEngine {
       }
       case 'jump': return this.playIndex(Number(c.index));
       case 'openPlaylist': return this.openPlaylist(String(c.key));
+      case 'openArtist': return this.openArtist(String(c.provider) as Track['provider'], String(c.name ?? ''), String(c.id ?? ''), String(c.sourceUrl ?? ''));
+      case 'playLinksFromSearch':
+        this.prefs = { ...this.prefs, playLinksFromSearch: !!c.on };
+        save('prefs', this.prefs);
+        return this.emitSettings();
       case 'openLocal':
       case 'refreshLibrary': return this.emitLibrary();
       case 'search': return this.runSearch(String(c.query ?? ''));
@@ -554,7 +561,12 @@ export class HostedEngine {
     try {
       stream = await this.stream(track);
     } catch (error) {
-      if (generation === this.generation) this.failed(error instanceof Error ? error.message : 'SoundCloud would not play this');
+      if (generation !== this.generation) return;
+      const why = error instanceof Error ? error.message : 'SoundCloud would not play this';
+      // SoundCloud refusing the song -- locked, Go+ only, not offered here, gone -- is not the end of it: the same
+      // song from YouTube Music plays instead, said so. A failure to reach anything at all would fail there too.
+      if (!/could not be reached|took too long|online/i.test(why) && await this.playElsewhere(track, why, generation)) return;
+      if (generation === this.generation) this.failed(why);
       return;
     }
     if (generation !== this.generation) return;
@@ -563,6 +575,39 @@ export class HostedEngine {
     this.format = { codec: stream.mime };
     this.emitPlayback();
     audio.command({ command: 'load', generation, url: stream.url, hls: stream.hls, volume, muted, loop: this.looping(), boostPercent });
+  }
+
+  /**
+   * The same song as [track] from YouTube Music, played in its place: the closest-titled result by the same artist,
+   * within fifteen seconds of its length when both are known. False when there is none.
+   */
+  private async playElsewhere(track: Track, why: string, generation: number): Promise<boolean> {
+    const plain = (text: string) => text.toLowerCase().replace(/\(.*?\)|\[.*?\]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    const title = plain(track.title.includes(' - ') ? track.title.split(' - ').slice(1).join(' - ') : track.title);
+    const artist = plain(track.artists[0]?.name ?? '');
+    let found: Track[] = [];
+    try {
+      found = (await ask<{ tracks: Track[] }>('search', { q: `${track.artists[0]?.name ?? ''} ${track.title}`.trim(), mode: 'YOUTUBE_MUSIC' })).tracks;
+    } catch {
+      return false;
+    }
+    if (generation !== this.generation || !title) return false;
+    const match = found.find((candidate) => {
+      const theirs = plain(candidate.title);
+      const sameSong = theirs === title || theirs.includes(title) || title.includes(theirs);
+      const sameArtist = !artist || plain(candidate.artistLine).includes(artist) || artist.includes(plain(candidate.artistLine));
+      const sameLength = !track.durationMs || !candidate.durationMs || Math.abs(track.durationMs - candidate.durationMs) < 15_000;
+      return isYouTube(candidate) && sameSong && sameArtist && sameLength;
+    });
+    if (!match) return false;
+    const index = this.queue.currentIndex;
+    const tracks = [...this.queue.tracks];
+    tracks[index] = { ...match, title: track.title, artworkUrl: track.artworkUrl ?? match.artworkUrl };
+    this.queue = { ...this.queue, tracks };
+    this.emitQueue();
+    this.store.notice(`${why} Playing it from YouTube Music instead.`);
+    await this.playIndex(index, this.pendingSeek ?? 0);
+    return true;
   }
 
   /** Whether the song goes round: repeat one, unless the music is to stop after it. */
@@ -919,9 +964,45 @@ export class HostedEngine {
     for (const p of playlists) if (!this.known.has(p.key)) this.known.set(p.key, p);
   }
 
+  /**
+   * An artist's page, opened as a playlist: on SoundCloud their profile's tracks, where the song said whose they are,
+   * and otherwise the songs a search of their service finds that are theirs (every one, when none says so).
+   */
+  private openArtist(provider: Track['provider'], name: string, id: string, sourceUrl: string) {
+    if (!name.trim()) return;
+    const key = `${provider}:artist-named:${name.trim()}`;
+    const profile = provider === 'SOUNDCLOUD'
+      ? (/^https:\/\/soundcloud\.com\/[^/?#]+$/.test(id) ? id : /^(https:\/\/soundcloud\.com\/[^/?#]+)\/[^?#]/.exec(sourceUrl)?.[1])
+      : undefined;
+    this.artistPages.set(key, { provider, name: name.trim(), profile });
+    this.known.set(key, { key, id: `artist-named:${name.trim()}`, title: name.trim(), provider, ownerName: 'Artist', editable: false } as Playlist);
+    return this.openPlaylist(key);
+  }
+
+  private artistPages = new Map<string, { provider: Track['provider']; name: string; profile?: string }>();
+
+  private async artistTracks(page: { provider: Track['provider']; name: string; profile?: string }): Promise<Track[]> {
+    if (page.profile) {
+      const found = await ask<Playlist>('playlist', { key: `sc:user:${page.profile}` }).catch(() => undefined);
+      if (found?.tracks?.length) return found.tracks;
+    }
+    const plain = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').replace(/ topic$/, '').trim();
+    const mode = page.provider === 'SOUNDCLOUD' || page.provider === 'YOUTUBE_VIDEO' ? page.provider : 'YOUTUBE_MUSIC';
+    const found = (await ask<{ tracks: Track[] }>('search', { q: page.name, mode })).tracks;
+    const theirs = found.filter((t) => t.artists.some((a) => plain(a.name) === plain(page.name)));
+    return theirs.length ? theirs : found;
+  }
+
   private async fetchPlaylist(key: string): Promise<Playlist> {
     const cached = this.fetched.get(key);
     if (cached && Date.now() - cached.at < 10 * 60_000) return cached.playlist;
+    const artist = this.artistPages.get(key);
+    if (artist) {
+      const tracks = await this.artistTracks(artist);
+      const playlist = { ...this.known.get(key)!, tracks, trackCount: tracks.length, artworkUrl: tracks[0]?.artworkUrl };
+      this.fetched.set(key, { playlist, at: Date.now() });
+      return playlist;
+    }
     const found = await ask<Playlist>('playlist', { key });
     const listed = this.known.get(key) ?? this.saved.find((p) => p.key === key);
     const playlist: Playlist = listed ? {

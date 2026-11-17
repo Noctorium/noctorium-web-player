@@ -697,6 +697,11 @@ function ServicesSettings({ settings }: { settings: Settings }) {
       {settings.appleMusic && <AppleMusicSettings apple={settings.appleMusic} warning={betaWarning('APPLE_MUSIC', settings)} />}
       {settings.deezer && <DeezerSettings deezer={settings.deezer} warning={betaWarning('DEEZER', settings)} />}
       {settings.tidal && <TidalSettings tidal={settings.tidal} warning={betaWarning('TIDAL', settings)} />}
+      {settings.playLinksFromSearch != null && (
+        <Row setting="links-in-search" title="Play links pasted into Search at once" detail="A YouTube, YouTube Music or SoundCloud link plays as soon as it is pasted, with no Enter and no Link page.">
+          <Switch on={!!settings.playLinksFromSearch} change={(on) => send('playLinksFromSearch', { on })} label="Play links pasted into Search" />
+        </Row>
+      )}
       <Row setting="youtube-history" title="Add what plays here to your YouTube history" detail="So YouTube Music’s own recommendations follow it.">
         <Switch on={settings.youtubeHistory} change={(on) => send('youtubeHistory', { on })} label="YouTube history" />
       </Row>

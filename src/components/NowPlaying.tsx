@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, ExternalLink, RefreshCw, UserPlus } from '../icons';
 import { send, usePart } from '../live';
 import { closeNowPlaying, setPanel, useUi } from '../ui';
+import { openArtistOf, opensArtist } from '../artists';
 import { bigArtwork, cls, providerName } from '../util';
 import { Badge, Cover, Empty, Spinner } from './Common';
 import { Controls, LikeButton, SeekBar, usePosition } from './Player';
@@ -55,7 +56,12 @@ function SideBySide() {
           : <Cover url={big} />}
         <div className="words">
           <h1>{track.title}</h1>
-          <div className="artist">{track.artistLine}</div>
+          <div className="artist">
+            {opensArtist(track)
+              ? <span className="artist-link" role="link" tabIndex={0} title={`Open ${track.artists[0]?.name ?? track.artistLine}`}
+                onClick={() => openArtistOf(track)} onKeyDown={(e) => { if (e.key === 'Enter') openArtistOf(track); }}>{track.artistLine}</span>
+              : track.artistLine}
+          </div>
           <div className="faint" style={{ fontSize: 13, marginTop: 6, display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
             <Badge provider={track.provider} /> {track.album?.title ?? providerName[track.provider]}{playback?.onSpotify ? ' · on Spotify' : ''}
           </div>

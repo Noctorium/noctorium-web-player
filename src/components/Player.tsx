@@ -6,6 +6,7 @@ import {
 import { audio } from '../audio';
 import { live, send, usePart } from '../live';
 import { openMenu, openNowPlaying, useUi, closeNowPlaying } from '../ui';
+import { openArtistOf, opensArtist } from '../artists';
 import { SPEEDS, canLike, cls, formatTime, isLiked, speedName } from '../util';
 import { Cover, Spinner } from './Common';
 import { StartButton, TrayClock, taskbarMenu, useSkin } from './Skin';
@@ -358,7 +359,13 @@ function NowSong({ like = true }: { like?: boolean }) {
         <div className="title ellipsis">{track.title}</div>
         <div className="artist ellipsis">
           {playback?.status === 'resolving' ? 'Finding the audio…' : playback?.status === 'error' ? (playback.error ?? 'Could not play this')
-            : playback?.onSpotify ? `${track.artistLine} · on Spotify` : track.artistLine}
+            : opensArtist(track)
+              ? <span className="artist-link" role="link" tabIndex={0} title={`Open ${track.artists[0]?.name ?? track.artistLine}`}
+                onClick={(e) => { e.stopPropagation(); openArtistOf(track); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); openArtistOf(track); } }}>
+                {playback?.onSpotify ? `${track.artistLine} · on Spotify` : track.artistLine}
+              </span>
+              : playback?.onSpotify ? `${track.artistLine} · on Spotify` : track.artistLine}
         </div>
       </div>
       {like && <span className="hide-small"><LikeButton /></span>}
@@ -383,7 +390,9 @@ export function SongMenu({ track }: { track: Track }) {
           <hr />
         </>
       )}
-      <button onClick={find(track.artists[0]?.name ?? track.artistLine)}><User size={17} /> Find {track.artists[0]?.name ?? 'the artist'}</button>
+      {opensArtist(track)
+        ? <button onClick={() => openArtistOf(track)}><User size={17} /> Go to {track.artists[0]?.name ?? 'the artist'}</button>
+        : <button onClick={find(track.artists[0]?.name ?? track.artistLine)}><User size={17} /> Find {track.artists[0]?.name ?? 'the artist'}</button>}
       {track.album && <button onClick={find(`${track.album.title} ${track.artists[0]?.name ?? ''}`.trim())}><Disc3 size={17} /> Find the album</button>}
       <hr />
       <TrackMenu track={track} />

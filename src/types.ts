@@ -402,6 +402,8 @@ export interface Settings {
   timeDisplay: string;
   skipNonMusic: boolean;
   youtubeHistory: boolean;
+  /** A music link pasted into the search box plays at once, with no Enter. Missing from a Noctorium before 0.31.1. */
+  playLinksFromSearch?: boolean;
   lyricsProvider?: string;
   discord: boolean;
   animations: boolean;

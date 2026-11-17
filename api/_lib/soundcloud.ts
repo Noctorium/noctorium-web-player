@@ -120,6 +120,17 @@ export async function search(query: string): Promise<Found> {
 export async function playlist(key: string): Promise<Playlist> {
   const [kind, ...rest] = key.split(':');
   const value = rest.join(':');
+  // An artist's page: a profile's own tracks, newest first.
+  if (kind === 'user') {
+    const user = await api('/resolve', { url: value });
+    if (user?.kind !== 'user') throw new Upstream('That is not a SoundCloud profile');
+    const listed = await api(`/users/${encodeURIComponent(String(user.id))}/tracks`, { limit: 100, linked_partitioning: 1 });
+    const tracks = (listed.collection ?? []).map(trackFrom).filter((t: Track | undefined): t is Track => !!t);
+    return {
+      key: `sc:user:${value}`, id: String(user.id), title: user.username ?? 'SoundCloud', provider: 'SOUNDCLOUD', ownerName: 'Artist',
+      artworkUrl: artwork(user.avatar_url), trackCount: tracks.length, editable: false, sourceUrl: user.permalink_url, tracks,
+    };
+  }
   const set = kind === 'sys' ? await api(`/system-playlists/${encodeURIComponent(value)}`)
     : kind === 'url' ? await api('/resolve', { url: value })
       : await api(`/playlists/${encodeURIComponent(value)}`);
@@ -154,8 +165,8 @@ export interface Stream { url: string; hls: boolean; mime?: string }
  */
 export async function stream(id: string): Promise<Stream> {
   const json = await api(`/tracks/${encodeURIComponent(id)}`);
-  if (json.policy === 'SNIP') throw new Upstream('SoundCloud plays only thirty seconds of this without Go+');
-  if (json.policy === 'BLOCK') throw new Upstream('SoundCloud does not play this where the server is');
+  if (json.policy === 'SNIP') throw new Upstream('This is a SoundCloud Go+ track, so only subscribers can hear it on SoundCloud.');
+  if (json.policy === 'BLOCK') throw new Upstream('SoundCloud does not offer this track here.');
   // A plain MP3's address stops working about ten minutes after it is handed out, which a browser still
   // reading a long mix would notice; a stream's addresses last a couple of hours. So a long track streams.
   const long = (json.full_duration ?? json.duration ?? 0) > 8 * 60_000;
@@ -173,7 +184,8 @@ export async function stream(id: string): Promise<Stream> {
     const reply = await api(choice.url, { track_authorization: json.track_authorization }).catch(() => undefined);
     if (reply?.url) return { url: reply.url, hls: choice.format.protocol === 'hls', mime: choice.format.mime_type || undefined };
   }
-  throw new Upstream('SoundCloud offered no stream a browser can play');
+  // Locked (DRM) tracks list only encrypted streams, none of which a page may read.
+  throw new Upstream("SoundCloud locks this track, so it only plays in SoundCloud's own app.");
 }
 
 /** A SoundCloud address pasted into the search box: a track to play, or a set to open. */

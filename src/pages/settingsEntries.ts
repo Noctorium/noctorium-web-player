@@ -105,6 +105,7 @@ export const ENTRIES: Entry[] = [
   e('services', 'deezer', 'Deezer profile', 'A public Deezer profile’s playlists, loved tracks and albums, in the library.', ['deezer', 'profile', 'flow', 'loved tracks'], 'web'),
   e('services', 'tidal', 'Tidal', 'Signed in on Tidal’s own page, through a Tidal app of your own: its client id and secret.', ['tidal', 'sign in', 'login', 'connect tidal', 'client id', 'client secret', 'tidal app', 'developer'], 'web'),
   e('services', 'tidal-redirect', 'Tidal redirect address', 'The address to register among your Tidal app’s redirect URIs, to copy.', ['redirect uri', 'redirect url', 'callback', 'loopback'], 'web'),
+  e('services', 'links-in-search', 'Play links pasted into Search at once', 'A music link plays as soon as it is pasted, with no Enter and no Link page.', ['paste link', 'link in search', 'url', 'links page']),
   e('services', 'youtube-history', 'Add what plays here to your YouTube history', 'So YouTube Music’s own recommendations follow it.', ['watch history', 'history', 'recommendations'], 'web'),
 
   e('device', 'downloads-folder', 'Downloads are saved to', 'A folder on the computer running Noctorium.', ['download location', 'save to', 'folder', 'path', 'offline'], 'web'),

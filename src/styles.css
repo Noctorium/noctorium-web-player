@@ -1107,3 +1107,7 @@ textarea.field { min-height: 130px; resize: vertical; font-family: ui-monospace,
 @media (max-width: 860px) {
   .tracks.suggested .track { grid-template-columns: 44px minmax(0, 1fr) 104px; }
 }
+
+/* The artist's name under a song: the way to their page, underlined when pointed at. */
+.artist-link { cursor: pointer; }
+.artist-link:hover, .artist-link:focus-visible { text-decoration: underline; color: var(--text); outline: none; }

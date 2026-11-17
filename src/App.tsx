@@ -184,9 +184,17 @@ function TopBar() {
   const connection = useLive((l) => l.connection);
   const [text, setText] = useState(route.page === 'search' ? route.query.get('q') ?? '' : '');
   const timer = useRef<number>(0);
+  const playLinks = !!usePart('settings')?.playLinksFromSearch;
   useEffect(() => { if (route.page === 'search') setText(route.query.get('q') ?? ''); }, [route]);
 
   function typed(value: string) {
+    // A music link pasted in plays at once when Settings says so: no Enter, no Link page.
+    const pasted = value.trim();
+    if (playLinks && pasted.length - text.trim().length >= 8 && /^https?:\/\//.test(pasted)) {
+      setText(value);
+      send('openLink', { text: pasted }).then((e) => !e && live.notice('Opening the link…'));
+      return;
+    }
     setText(value);
     window.clearTimeout(timer.current);
     // Search as it is typed, a moment after the typing stops, and replace rather than stack the history.

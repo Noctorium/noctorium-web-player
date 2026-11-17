@@ -8,6 +8,7 @@ import { PlaylistCard, Shelf } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
 import type { Playlist as PlaylistState, Search as SearchState } from '../types';
 import { HOSTED } from '../mode';
+import { openArtist } from '../artists';
 import { parse as parseBangs } from '../base/searchBangs';
 
 /**
@@ -107,7 +108,7 @@ export function Search() {
         <Shelf title="Artists">
           {bands.map((p) => <PlaylistCard key={p.key} playlist={p} />)}
           {artists.map((a) => (
-            <div key={`${a.provider}:${a.id}`} className="card" role="button" tabIndex={0} style={{ textAlign: 'center' }} onClick={() => go(`/search?q=${encodeURIComponent(a.name)}`)}>
+            <div key={`${a.provider}:${a.id}`} className="card" role="button" tabIndex={0} style={{ textAlign: 'center' }} onClick={() => openArtist(a)}>
               <div className="cover" style={{ borderRadius: '50%', display: 'grid', placeItems: 'center' }}><User size={52} className="faint" /></div>
               <div className="card-title ellipsis">{a.name}</div>
               <div className="card-sub">{providerName[a.provider]}</div>

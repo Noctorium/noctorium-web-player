@@ -77,6 +77,7 @@ export function opensReleases(provider: Provider): boolean {
 
 /** An artist, which Bandcamp, Spotify, Apple Music, Deezer and Tidal open as a playlist of what they put out. */
 export function isArtist(playlist: Playlist): boolean {
+  if (playlist.id.startsWith('artist-named:')) return true;
   if (playlist.provider === 'BANDCAMP') return playlist.id.startsWith('band:');
   return opensReleases(playlist.provider) && playlist.id.startsWith('artist:');
 }
