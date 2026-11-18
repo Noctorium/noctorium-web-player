@@ -58,9 +58,41 @@ export function Search() {
     .filter((a) => !opensReleases(a.provider))
     .filter((a) => { const name = plain(a.name); return !!name && (words.includes(name) || name.includes(words)); }) ?? [];
   const nothing = !search?.tracks.length && !search?.playlists.length && !search?.albums.length && !search?.artists.length;
+  // Everything, or playlists alone: what the search looks for.
+  const kind = search?.kind === 'PLAYLISTS' ? 'PLAYLISTS' : 'MUSIC';
+  const kinds = (
+    <div className="chips kind-chips" style={{ marginTop: 14 }}>
+      {([['MUSIC', 'Everything'], ['PLAYLISTS', 'Playlists']] as const).map(([name, label]) => (
+        <button key={name} className={cls('chip', kind === name && 'on')} onClick={() => send('searchKind', { kind: name })}>{label}</button>
+      ))}
+    </div>
+  );
+  if (kind === 'PLAYLISTS') {
+    return (
+      <>
+        {kinds}
+        <div className="chips" style={{ marginTop: 8 }}>
+          {modes.map(([mode, label]) => (
+            <button key={mode} className={cls('chip', active === mode && 'on')} disabled={!!bang.bang && active !== mode} onClick={() => send('searchMode', { mode })}>{label}</button>
+          ))}
+          {search?.loading && <Spinner />}
+        </div>
+        {search?.playlists.length ? (
+          <section>
+            <h2 className="shelf-title">Playlists</h2>
+            <p className="shelf-subtitle">“{bang.query || query}”</p>
+            <div className="grid">{search.playlists.map((p) => <PlaylistCard key={p.key} playlist={p} />)}</div>
+          </section>
+        ) : search && !search.loading && search.query === query ? (
+          <Empty icon={<SearchIcon size={44} />} title={`No playlists for “${query}”`}>Try other words, or another service.</Empty>
+        ) : null}
+      </>
+    );
+  }
   return (
     <>
-      <div className="chips" style={{ marginTop: 14 }}>
+      {kinds}
+      <div className="chips" style={{ marginTop: 8 }}>
         {modes.map(([mode, label]) => (
           <button key={mode} className={cls('chip', active === mode && 'on')} disabled={!!bang.bang && active !== mode} onClick={() => send('searchMode', { mode })}>{label}</button>
         ))}

@@ -116,6 +116,26 @@ export interface Search {
    */
   searchBang?: string;
   activeSearchMode?: Search['mode'];
+  /** What the search looks for: everything (MUSIC), or only PLAYLISTS. */
+  kind?: 'MUSIC' | 'RADIO' | 'ARTISTS' | 'PLAYLISTS';
+}
+
+/** A row of an artist's page: Albums, Singles & EPs, Playlists, as the service has them. */
+export interface ArtistRow { title: string; playlists: Playlist[] }
+
+/** What an artist's page shows besides their songs. */
+export interface ArtistPage {
+  name: string;
+  provider: Provider;
+  picture?: string;
+  banner?: string;
+  about?: string;
+  /** "7.22M followers". */
+  followers?: string;
+  pageUrl?: string;
+  /** How many of the open page's first songs are their most played. */
+  popular: number;
+  rows: ArtistRow[];
 }
 
 export interface Library {
@@ -130,6 +150,8 @@ export interface Library {
   openLoading: boolean;
   openError?: string;
   enriching: boolean;
+  /** The artist whose page is open. */
+  artist?: ArtistPage;
 }
 
 export interface Channel { pageId: string; name: string; authUser: number; photoUrl?: string; handle?: string; selected: boolean }
@@ -476,6 +498,9 @@ export interface Settings {
   iconSets?: Choice[];
   homePlay?: string;
   homePlays?: Choice[];
+  /** How Home is laid out, by Base's HomeLayout: one so far. */
+  homeLayout?: string;
+  homeLayouts?: Choice[];
   /**
    * How the badge that says where a song comes from is drawn, by ServiceBadgeStyle's name -- MARKS, each service's
    * own, or LETTERS, as the badges were -- and the choices. A Noctorium from before the marks sends neither.

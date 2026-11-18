@@ -116,6 +116,27 @@ export async function search(query: string): Promise<Found> {
   };
 }
 
+/** Playlists and albums for [query], as SoundCloud's own search lists them. */
+export async function searchPlaylists(query: string): Promise<Playlist[]> {
+  const sets = await api('/search/playlists', { q: query, limit: 20 });
+  return (sets.collection ?? []).map(playlistFrom).filter((p: Playlist | undefined): p is Playlist => !!p);
+}
+
+/** What a profile's page lists besides its newest tracks: its most played tracks, its albums and its playlists. */
+export async function collections(profile: string): Promise<{ popular: Track[]; albums: Playlist[]; playlists: Playlist[] }> {
+  const user = await api('/resolve', { url: profile });
+  if (user?.kind !== 'user') throw new Upstream('That is not a SoundCloud profile');
+  const id = encodeURIComponent(String(user.id));
+  const part = (path: string) => api(`/users/${id}/${path}`, { limit: 20, linked_partitioning: 1 }).catch(() => ({ collection: [] }));
+  const [top, albums, lists] = await Promise.all([part('toptracks'), part('albums'), part('playlists_without_albums')]);
+  const sets = (reply: Json) => (reply.collection ?? []).map(playlistFrom).filter((p: Playlist | undefined): p is Playlist => !!p);
+  return {
+    popular: (top.collection ?? []).map(trackFrom).filter((t: Track | undefined): t is Track => !!t),
+    albums: sets(albums),
+    playlists: sets(lists),
+  };
+}
+
 /** A set by the key the page knows it by: `pl:<id>`, `sys:<urn>` or `url:<address>`. */
 export async function playlist(key: string): Promise<Playlist> {
   const [kind, ...rest] = key.split(':');

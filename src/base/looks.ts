@@ -68,6 +68,11 @@ export const SERVICE_BADGE_STYLES: Choice[] = [
   { name: 'LETTERS', title: 'Letters', description: 'The service’s short name, YTM, SC or SP, as the badges always had it.' },
 ];
 
+/** How Home is laid out, as Base's HomeLayout: one so far, with more to come. */
+export const HOME_LAYOUTS: Choice[] = [
+  { name: 'CLASSIC', title: 'Classic', description: 'The greeting, then your pinned songs, what you played last and each service’s rows of cards.' },
+];
+
 /** What playing a song from Home or a search plays after it, as Base's HomePlay. */
 export const HOME_PLAYS: Choice[] = [
   { name: 'AUTOPLAY', title: 'Autoplay after it', description: 'The song, then songs like it, as a radio started from it.' },

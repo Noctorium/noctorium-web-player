@@ -20,6 +20,8 @@ let clientVersion = '1.20260928.13.00';
 const FILTER = {
   songs: 'EgWKAQIIAWoKEAkQBRAKEAMQBA%3D%3D',
   videos: 'EgWKAQIQAWoKEAkQChAFEAMQBA%3D%3D',
+  playlists: 'EgWKAQIoAWoKEAkQBRAKEAMQBA%3D%3D',
+  albums: 'EgWKAQIYAWoKEAkQBRAKEAMQBA%3D%3D',
 };
 
 const TYPE_WORDS = new Set(['Song', 'Video', 'Single', 'EP', 'Album', 'Playlist', 'Artist', 'Episode', 'Podcast', 'Profile', 'Station']);
@@ -324,6 +326,18 @@ export async function search(query: string, videos: boolean, locale: Locale): Pr
     found.artists = unique(found.artists, (a) => a.id);
   }
   return found;
+}
+
+/** Playlists for [query], as YouTube Music's own Playlists tab lists them. */
+export async function searchPlaylists(query: string, locale: Locale): Promise<Playlist[]> {
+  const reply = await call('search', { query, params: FILTER.playlists }, locale);
+  return unique(collect(reply, 'musicResponsiveListItemRenderer').map((row) => browseRow(row).playlist).filter((p): p is Playlist => !!p), (p) => p.key);
+}
+
+/** Albums for [query], as YouTube Music's Albums tab lists them, each as the playlist of its songs. */
+export async function searchAlbums(query: string, locale: Locale): Promise<Album[]> {
+  const reply = await call('search', { query, params: FILTER.albums }, locale);
+  return unique(collect(reply, 'musicResponsiveListItemRenderer').map((row) => browseRow(row).album).filter((a): a is Album => !!a), (a) => a.id);
 }
 
 /** A playlist or an album, whole, with a page of continuation at a time up to [limit] tracks. */

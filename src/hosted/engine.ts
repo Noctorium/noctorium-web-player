@@ -1,5 +1,6 @@
 import type {
   Command, Home, Library, Likes, LocalPlaylist, Lyrics, Playback, Playlist, Queue, Search, Section, Service, Settings, State, Track,
+  ArtistPage,
 } from '../types';
 import { audio } from '../audio';
 import { go } from '../router';
@@ -9,7 +10,7 @@ import { sound } from '../sound';
 import * as VolumeBoost from '../base/volumeBoost';
 import { parse as parseBangs } from '../base/searchBangs';
 import { describe as describeFormat, queueDurationMs, type StreamFormat } from '../base/streamFormat';
-import { DEFAULT_QUEUE_COLUMNS, HOME_PLAYS, ICON_SETS, normalisedColumns, QUEUE_COLUMNS, SERVICE_BADGE_STYLES, VISUALISER_STYLES } from '../base/looks';
+import { DEFAULT_QUEUE_COLUMNS, HOME_LAYOUTS, HOME_PLAYS, ICON_SETS, normalisedColumns, QUEUE_COLUMNS, SERVICE_BADGE_STYLES, VISUALISER_STYLES } from '../base/looks';
 import { version } from '../../package.json';
 import { ask } from './api';
 import { choose, findLyrics } from './lyrics';
@@ -56,6 +57,8 @@ interface Prefs {
   statusBar: boolean;
   iconSet: string;
   homePlay: string;
+  /** How Home is laid out, as Base's HomeLayout. */
+  homeLayout?: string;
   /** The services' badges with their marks, or with their letters, as Base's ServiceBadgeStyle. */
   serviceBadgeStyle: string;
 }
@@ -192,6 +195,7 @@ export class HostedEngine {
       visualiser: p.visualiser, visualiserStyles: VISUALISER_STYLES.map(({ name, title, description }) => ({ name, title, description })),
       queueColumns: p.queueColumns, allQueueColumns: QUEUE_COLUMNS.map(({ name, title, heading }) => ({ name, title, description: heading })),
       statusBar: p.statusBar, iconSet: p.iconSet, iconSets: ICON_SETS, homePlay: p.homePlay, homePlays: HOME_PLAYS,
+      homeLayout: p.homeLayout ?? 'CLASSIC', homeLayouts: HOME_LAYOUTS,
       serviceBadgeStyle: p.serviceBadgeStyle, serviceBadgeStyles: SERVICE_BADGE_STYLES,
     };
     this.store.part('settings', settings);
@@ -234,6 +238,7 @@ export class HostedEngine {
     const library: Library = {
       playlists: this.saved, local: [this.likedList(), ...this.playlists], loading: false, loaded: true, needsSoundCloudUsername: false,
       open: this.open, openLoading: this.openLoading, openError: this.openError, enriching: false,
+      artist: this.open ? this.artistShown.get(this.open.key) : undefined,
     };
     this.store.part('library', library);
   }
@@ -293,6 +298,7 @@ export class HostedEngine {
       case 'visualiser': return this.choose('visualiser', c.name, VISUALISER_STYLES, 'No such visualiser');
       case 'iconSet': return this.choose('iconSet', c.name, ICON_SETS, 'No such icon set');
       case 'homePlay': return this.choose('homePlay', c.name, HOME_PLAYS, 'No such choice');
+      case 'homeLayout': return this.choose('homeLayout', c.name, HOME_LAYOUTS, 'No such layout');
       case 'serviceBadgeStyle': return this.choose('serviceBadgeStyle', c.name, SERVICE_BADGE_STYLES, 'No such badges');
       case 'statusBar': this.prefs.statusBar = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'queueColumns':
@@ -318,6 +324,9 @@ export class HostedEngine {
       case 'openLocal':
       case 'refreshLibrary': return this.emitLibrary();
       case 'search': return this.runSearch(String(c.query ?? ''));
+      case 'searchKind':
+        this.search = { ...this.search, kind: c.kind === 'PLAYLISTS' ? 'PLAYLISTS' : 'MUSIC' };
+        return this.runSearch(this.search.query, true);
       case 'searchMode':
         this.search = { ...this.search, mode: c.mode as Search['mode'] };
         save('searchMode', this.search.mode);
@@ -444,7 +453,7 @@ export class HostedEngine {
     }
   }
 
-  private choose(pref: 'visualiser' | 'iconSet' | 'homePlay' | 'serviceBadgeStyle', name: unknown, choices: { name: string }[], refusal: string) {
+  private choose(pref: 'visualiser' | 'iconSet' | 'homePlay' | 'homeLayout' | 'serviceBadgeStyle', name: unknown, choices: { name: string }[], refusal: string) {
     if (!choices.some((choice) => choice.name === name)) throw new Problem(refusal);
     this.prefs[pref] = String(name);
     this.savePrefs();
@@ -981,6 +990,9 @@ export class HostedEngine {
 
   private artistPages = new Map<string, { provider: Track['provider']; name: string; profile?: string }>();
 
+  /** What each artist's page shows besides their songs, by its key: see [artistTracks]. */
+  private artistShown = new Map<string, ArtistPage>();
+
   /** Their songs, and their own picture where the service shows one (a SoundCloud profile's). */
   private async artistTracks(page: { provider: Track['provider']; name: string; profile?: string }): Promise<{ tracks: Track[]; picture?: string }> {
     if (page.profile) {
@@ -999,7 +1011,19 @@ export class HostedEngine {
     if (cached && Date.now() - cached.at < 10 * 60_000) return cached.playlist;
     const artist = this.artistPages.get(key);
     if (artist) {
-      const { tracks, picture } = await this.artistTracks(artist);
+      const [{ tracks: songs, picture }, extra] = await Promise.all([
+        this.artistTracks(artist),
+        ask<{ popular: Track[]; rows: ArtistPage['rows'] }>('artist', { provider: artist.provider, name: artist.name, profile: artist.profile ?? '' })
+          .catch(() => ({ popular: [] as Track[], rows: [] as ArtistPage['rows'] })),
+      ]);
+      // Their most played first, then the rest of their songs, each once.
+      const seen = new Set<string>();
+      const tracks = [...extra.popular, ...songs].filter((t) => { const k = `${t.provider}:${t.id}`; if (seen.has(k)) return false; seen.add(k); return true; });
+      extra.rows.forEach((row) => this.learn(row.playlists));
+      this.artistShown.set(key, {
+        name: artist.name, provider: artist.provider, picture, popular: extra.popular.length, rows: extra.rows,
+        pageUrl: artist.profile,
+      });
       const playlist = { ...this.known.get(key)!, tracks, trackCount: tracks.length, artworkUrl: picture ?? tracks[0]?.artworkUrl };
       this.fetched.set(key, { playlist, at: Date.now() });
       return playlist;
@@ -1069,7 +1093,7 @@ export class HostedEngine {
     if (!q) return;
     if (!searching) throw new Problem('Bandcamp, Spotify, VK, Apple Music, Deezer and Tidal are searched by Noctorium on your computer or phone');
     try {
-      const found = await ask<Omit<Search, 'query' | 'mode' | 'loading'>>('search', { q, mode });
+      const found = await ask<Omit<Search, 'query' | 'mode' | 'loading'>>('search', { q, mode, kind: this.search.kind ?? 'MUSIC' });
       if (id !== this.searchId) return;
       this.learn(found.playlists);
       this.learn(found.albums.map((a) => ({

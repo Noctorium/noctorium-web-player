@@ -143,3 +143,17 @@ export function cls(...names: (string | false | undefined | null)[]) {
 export function plural(n: number, one: string, many = `${one}s`) {
   return `${n.toLocaleString()} ${n === 1 ? one : many}`;
 }
+
+/**
+ * Whether [p] is a service's own collection of the songs liked there -- YouTube Music's Liked Music, SoundCloud's
+ * Liked tracks, Spotify's Liked Songs, Deezer's Loved tracks -- which the library shows first, wide.
+ */
+export function isLikedCollection(p: { provider: string; id: string }): boolean {
+  switch (p.provider) {
+    case 'YOUTUBE_MUSIC': case 'YOUTUBE_VIDEO': return p.id === 'LM';
+    case 'SOUNDCLOUD': return p.id === 'likes';
+    case 'SPOTIFY': return p.id === 'liked-songs';
+    case 'DEEZER': return p.id.startsWith('loved:');
+    default: return false;
+  }
+}

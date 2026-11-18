@@ -74,6 +74,16 @@ export async function GET(request: Request): Promise<Response> {
         const q = (url.searchParams.get('q') ?? '').trim().slice(0, 200);
         if (!q) return json({ tracks: [], playlists: [], albums: [], artists: [] }, 3600);
         const mode = url.searchParams.get('mode') ?? 'HYBRID';
+        // Playlists only: each service's own Playlists tab.
+        if (url.searchParams.get('kind') === 'PLAYLISTS') {
+          const [yt, sc] = await Promise.allSettled([
+            mode === 'SOUNDCLOUD' ? Promise.resolve([]) : youtube.searchPlaylists(q, where),
+            mode === 'YOUTUBE_MUSIC' || mode === 'YOUTUBE_VIDEO' ? Promise.resolve([]) : soundcloud.searchPlaylists(q),
+          ]);
+          if (yt.status === 'rejected' && sc.status === 'rejected') throw yt.reason;
+          const playlists = interleave(yt.status === 'fulfilled' ? yt.value : [], sc.status === 'fulfilled' ? sc.value : []);
+          return json({ tracks: [], playlists, albums: [], artists: [] }, 900);
+        }
         if (mode === 'SOUNDCLOUD') return json({ ...(await soundcloud.search(q)), albums: [] }, 900);
         if (mode === 'YOUTUBE_MUSIC' || mode === 'YOUTUBE_VIDEO') return json(await youtube.search(q, mode === 'YOUTUBE_VIDEO', where), 900);
         // Both: whichever answers, side by side, so one service being down still leaves the other.
@@ -87,6 +97,35 @@ export async function GET(request: Request): Promise<Response> {
           albums: a.albums,
           artists: interleave(a.artists, b.artists),
         }, 900);
+      }
+      // An artist's page besides their songs: their most played, and their albums and playlists, row by row.
+      case 'artist': {
+        const provider = url.searchParams.get('provider') ?? '';
+        const name = (url.searchParams.get('name') ?? '').trim().slice(0, 200);
+        const profile = url.searchParams.get('profile') ?? '';
+        if (provider === 'SOUNDCLOUD' && /^https:\/\/soundcloud\.com\/[^/?#]+$/.test(profile)) {
+          const found = await soundcloud.collections(profile);
+          const rows = [
+            ...(found.albums.length ? [{ title: 'Albums', playlists: found.albums }] : []),
+            ...(found.playlists.length ? [{ title: 'Playlists', playlists: found.playlists }] : []),
+          ];
+          return json({ popular: found.popular.slice(0, 5), rows }, 1800);
+        }
+        if ((provider === 'YOUTUBE_MUSIC' || provider === 'YOUTUBE_VIDEO') && name) {
+          const plain = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').replace(/ topic$/, '').trim();
+          const [albums, lists] = await Promise.all([youtube.searchAlbums(name, where).catch(() => []), youtube.searchPlaylists(name, where).catch(() => [])]);
+          const theirAlbums = albums.filter((a) => a.artists.some((x) => plain(x.name) === plain(name))).map((a) => ({
+            key: a.id, id: a.id.replace(/^yt:/, ''), title: a.title, provider: a.provider, ownerName: a.artists.map((x) => x.name).join(', '),
+            artworkUrl: a.artworkUrl, editable: false,
+          }));
+          const theirLists = lists.filter((p) => p.ownerName && plain(p.ownerName) === plain(name));
+          const rows = [
+            ...(theirAlbums.length ? [{ title: 'Albums', playlists: theirAlbums }] : []),
+            ...(theirLists.length ? [{ title: `Playlists by ${name}`, playlists: theirLists }] : []),
+          ];
+          return json({ popular: [], rows }, 1800);
+        }
+        return json({ popular: [], rows: [] }, 3600);
       }
       case 'home': {
         const [yt, sc] = await Promise.allSettled([youtube.home(where), soundcloud.home()]);

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { BookmarkCheck, BookmarkPlus, Download, ExternalLink, Globe, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from '../icons';
+import { BookmarkCheck, BookmarkPlus, Download, ExternalLink, Globe, Heart, Library as LibraryIcon, Lock, Pencil, Play, Plus, RefreshCw, Shuffle, Trash2 } from '../icons';
 import { send, usePart } from '../live';
 import { go, useRoute } from '../router';
-import { bigArtwork, canKeep, keepsFiles, playlistKind, plural, providerName, totalTime } from '../util';
+import { bigArtwork, canKeep, isLikedCollection, keepsFiles, playlistKind, plural, providerName, totalTime } from '../util';
 import { Badge, Confirm, Cover, Dialog, Empty, Prompt, Spinner } from '../components/Common';
-import { LocalCard, PlaylistCard } from '../components/Cards';
+import { LocalCard, PlaylistCard, Shelf } from '../components/Cards';
 import { TrackList } from '../components/Tracks';
 import { closeDialog, openDialog } from '../ui';
 import { useState } from 'react';
@@ -42,8 +42,32 @@ export function Library() {
         </div>
       )}
       {library?.error && <div className="banner">{library.error}</div>}
+      {/* Liked songs first, as wide cards of their own: what is opened most, found first. */}
+      {(() => {
+        const liked = library?.playlists.filter(isLikedCollection) ?? [];
+        const yours = HOSTED ? library?.local.find((p) => p.id === 'liked') : undefined;
+        if (!liked.length && !yours) return null;
+        return (
+          <div className="liked-row">
+            {yours && (
+              <button className="liked-card" onClick={() => go(`/local/${encodeURIComponent(yours.id)}`)}>
+                <span className="liked-heart"><Heart size={28} fill="currentColor" /></span>
+                <span className="liked-words"><b>{yours.title}</b><span>{plural(yours.tracks.length, 'song')}</span></span>
+                <Play size={22} fill="currentColor" />
+              </button>
+            )}
+            {liked.map((p) => (
+              <button key={p.key} className="liked-card" onClick={() => { send('openPlaylist', { key: p.key }); go(`/playlist/${encodeURIComponent(p.key)}`); }}>
+                <span className="liked-heart"><Heart size={28} fill="currentColor" /></span>
+                <span className="liked-words"><b>{p.title}</b><span>{providerName[p.provider]}{p.trackCount != null ? ` · ${plural(p.trackCount, 'song')}` : ''}</span></span>
+                <Play size={22} fill="currentColor" />
+              </button>
+            ))}
+          </div>
+        );
+      })()}
       {groups.map(([provider, title]) => {
-        const lists = library?.playlists.filter((p) => p.provider === provider) ?? [];
+        const lists = library?.playlists.filter((p) => p.provider === provider && !isLikedCollection(p)) ?? [];
         if (!lists.length) return null;
         return (
           <section key={provider}>
@@ -53,11 +77,12 @@ export function Library() {
           </section>
         );
       })}
-      {library?.local.length ? (
+      {/* The hosted player's own liked songs head the page, above, rather than sitting among its playlists. */}
+      {library?.local.some((p) => !(HOSTED && p.id === 'liked')) ? (
         <section>
           <h2 className="shelf-title">{HOSTED ? 'Yours' : 'On the computer'}</h2>
           <p className="shelf-subtitle">{HOSTED ? 'Kept in this browser' : 'Kept in Noctorium, not on a service'}</p>
-          <div className="grid">{library.local.map((p) => <LocalCard key={p.id} playlist={p} />)}</div>
+          <div className="grid">{library.local.filter((p) => !(HOSTED && p.id === 'liked')).map((p) => <LocalCard key={p.id} playlist={p} />)}</div>
         </section>
       ) : null}
       {library && !library.loading && !library.playlists.length && !library.local.length && (
@@ -109,11 +134,14 @@ export function PlaylistPage() {
   const kind = playlistKind(playlist);
   // An artist's page: round, as an artist is shown, with their page on the service and none of a playlist's saving.
   const artist = kind === 'Artist';
-  const artistPage = artist ? artistPageUrl(playlist.provider, playlist.title, playlist.sourceUrl) : undefined;
+  const about = artist && library?.artist?.name === playlist.title ? library.artist : undefined;
+  const artistPage = artist ? about?.pageUrl ?? artistPageUrl(playlist.provider, playlist.title, playlist.sourceUrl) : undefined;
+  const popular = about && !library?.openLoading ? Math.min(about.popular, tracks.length) : 0;
   return (
     <>
+      {about?.banner && <div className="artist-banner" style={{ backgroundImage: `url("${about.banner}")` }} />}
       <div className="hero">
-        <Cover url={bigArtwork(playlist.artworkUrl ?? tracks[0]?.artworkUrl)} round={artist} />
+        <Cover url={bigArtwork(about?.picture ?? about?.banner ?? playlist.artworkUrl ?? tracks[0]?.artworkUrl)} round={artist} />
         <div style={{ minWidth: 0 }}>
           <div className="kind">{kind}</div>
           <h1>{playlist.title}</h1>
@@ -123,7 +151,9 @@ export function PlaylistPage() {
             <span>{artist ? `On ${providerName[playlist.provider]} · ` : '· '}{plural(playlist.trackCount ?? tracks.length, artist ? 'song' : 'track')}</span>
             {tracks.length > 0 && <span>· {totalTime(tracks)}</span>}
             {playlist.isPublic != null && <span>· {playlist.isPublic ? <><Globe size={13} /> Public</> : <><Lock size={13} /> Private</>}</span>}
+            {about?.followers && <span>· {about.followers}</span>}
           </div>
+          {about?.about && <p className="artist-about">{about.about}</p>}
         </div>
       </div>
       <div className="toolbar">
@@ -158,7 +188,18 @@ export function PlaylistPage() {
         {(library?.openLoading || library?.enriching) && <Spinner />}
       </div>
       {library?.openError && <div className="banner">{library.openError}</div>}
-      <TrackList tracks={tracks} context={{ kind: 'playlist', playlist: open ?? playlist }} />
+      {/* An artist's page: their most played, their albums and playlists row by row, then the rest of their songs. */}
+      {popular > 0 && (
+        <>
+          <h2 className="shelf-title">Popular</h2>
+          <TrackList tracks={tracks.slice(0, popular)} context={{ kind: 'playlist', playlist: open ?? playlist }} />
+        </>
+      )}
+      {about?.rows.map((row) => (
+        <Shelf key={row.title} title={row.title}>{row.playlists.map((p) => <PlaylistCard key={p.key} playlist={p} />)}</Shelf>
+      ))}
+      {(popular > 0 || !!about?.rows.length) && tracks.length > popular && <h2 className="shelf-title">{popular > 0 ? 'More songs' : 'Songs'}</h2>}
+      <TrackList tracks={tracks.slice(popular)} context={{ kind: 'playlist', playlist: open ?? playlist }} startIndex={popular} />
     </>
   );
 }

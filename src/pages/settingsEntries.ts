@@ -62,6 +62,7 @@ export const ENTRIES: Entry[] = [
   e('look-player', 'seek-bar', 'Seek bar', 'How the song’s progress is drawn: Minimal, Bars, Ruler, Slider and the rest.', ['progress bar', 'scrubber', 'timeline', 'slider', 'waveform', 'scrub']),
   e('look-player', 'time-display', 'The figure on the right of the seek bar', 'The song’s whole length, or the time left.', ['remaining', 'countdown', 'time left', 'duration', 'elapsed']),
   e('look-player', 'icons', 'Icons', 'The icon set every button is drawn with: Standard, Rounded, Outlined, Sharp, Filled, Two-tone or Line.', ['icon set', 'icon theme', 'icon style', 'glyphs', 'symbols', 'material']),
+  e('look-player', 'home-layout', 'Home layout', 'How Home is laid out: Classic, with more layouts to come.', ['home layout', 'home style', 'home design', 'layouts', 'home page look']),
   e('look-player', 'service-badges', 'Service badge style', 'Each service’s own mark on the badges that say where a song comes from, or the letters, YTM, SC or SP, as before.', ['logo', 'logos', 'service logos', 'service icons', 'brand icons', 'provider icons', 'badge', 'badges', 'marks', 'letters', 'abbreviations', 'youtube logo', 'spotify logo', 'soundcloud logo', 'simple icons']),
 
   e('look-now-playing', 'now-playing-layout', 'Now playing layout', 'The record beside the queue, or the Playlist: a cover panel, the queue as a table, an info bar.', ['now playing screen', 'playlist view', 'full screen', 'table view', 'album art', 'layout']),

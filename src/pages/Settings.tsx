@@ -19,7 +19,7 @@ import { Visualiser } from '../components/Visualiser';
 import { BarPreview, LayoutPreview } from '../components/LookPreviews';
 import { setLook, useLooks } from '../looks';
 import { ICON_SET_NAMES } from '../icons';
-import { HOME_PLAYS, ICON_SETS, NOW_PLAYING_LAYOUTS, PLAYER_BARS, QUEUE_COLUMNS, SERVICE_BADGE_STYLES, VISUALISER_STYLES, normalisedColumns } from '../base/looks';
+import { HOME_LAYOUTS, HOME_PLAYS, ICON_SETS, NOW_PLAYING_LAYOUTS, PLAYER_BARS, QUEUE_COLUMNS, SERVICE_BADGE_STYLES, VISUALISER_STYLES, normalisedColumns } from '../base/looks';
 import { ALL as BANGS, bangFor, type SearchMode } from '../base/searchBangs';
 import { search as searchSettings, words, type SettingMatch } from '../base/settingsSearch';
 import { SECTIONS, entriesFor, pagesFor, type Entry, type Page, type Section } from './settingsEntries';
@@ -471,6 +471,10 @@ function PlayerSettings({ settings }: { settings: Settings }) {
         />
         <p className="setting-note">Standard and Line are Lucide (ISC); the others are Material Icons (Apache 2.0), in the styles the desktop and the phone draw them in.</p>
       </Block>
+      <Row setting="home-layout" title="Home layout" wide
+        detail={<>{(settings.homeLayouts?.length ? settings.homeLayouts : HOME_LAYOUTS).find((c) => c.name === (settings.homeLayout ?? 'CLASSIC'))?.description} More layouts are on their way.</>}>
+        <Chips choices={(settings.homeLayouts?.length ? settings.homeLayouts : HOME_LAYOUTS).map((c) => [c.name, c.title])} chosen={settings.homeLayout ?? 'CLASSIC'} choose={(name) => send('homeLayout', { name })} />
+      </Row>
       <Block setting="service-badges" title="Service badge style">
         <Cards
           choices={badgeStyles}
