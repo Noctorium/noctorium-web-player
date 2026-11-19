@@ -1132,3 +1132,25 @@ textarea.field { min-height: 130px; resize: vertical; font-family: ui-monospace,
   mask-image: linear-gradient(to bottom, #000 55%, transparent);
 }
 .artist-about { color: var(--subtext); font-size: 13px; line-height: 1.5; margin: 10px 0 0; max-width: 680px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* The first-time setup, over the whole page until it is finished or skipped. */
+.setup { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--bg); overflow: auto; padding: 24px 16px; }
+.setup-card { width: min(640px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.setup-top { width: 100%; display: flex; align-items: center; margin-bottom: 28px; }
+.setup-dots { display: flex; gap: 6px; flex: 1; }
+.setup-dots i { width: 8px; height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--text) 18%, transparent); }
+.setup-dots i.past { background: var(--accent); }
+.setup-dots i.now { width: 22px; }
+.setup-progress { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 1.4px; }
+.setup h1 { margin: 0; font-size: 32px; }
+.setup-about { color: var(--subtext); max-width: 560px; line-height: 1.5; margin: 0 0 14px; }
+.setup-themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 12px; width: 100%; }
+.setup-theme { display: flex; flex-direction: column; gap: 7px; padding: 10px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text) 14%, transparent); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.setup-theme.on { border: 2px solid var(--accent); font-weight: 700; }
+.setup-swatch { display: flex; height: 44px; border-radius: 9px; overflow: hidden; }
+.setup-swatch i { flex: 1; }
+.setup-chips { justify-content: center; }
+.setup-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px; background: var(--card); text-align: left; }
+.setup-row div { flex: 1; display: flex; flex-direction: column; }
+.setup-row span { color: var(--subtext); font-size: 13px; }
+.setup-bottom { width: 100%; display: flex; align-items: center; margin-top: 26px; }

@@ -500,6 +500,11 @@ export interface Settings {
   homePlays?: Choice[];
   /** How Home is laid out, by Base's HomeLayout: one so far. */
   homeLayout?: string;
+  /**
+   * Whether the first-time setup is finished or skipped. Absent from a Noctorium from before there was one, which is
+   * taken as done: see components/FirstTimeSetup.tsx.
+   */
+  setupDone?: boolean;
   homeLayouts?: Choice[];
   /**
    * How the badge that says where a song comes from is drawn, by ServiceBadgeStyle's name -- MARKS, each service's

@@ -59,6 +59,8 @@ interface Prefs {
   homePlay: string;
   /** How Home is laid out, as Base's HomeLayout. */
   homeLayout?: string;
+  /** Whether the first-time setup is finished or skipped: see firstVisit below. */
+  setupDone?: boolean;
   /** The services' badges with their marks, or with their letters, as Base's ServiceBadgeStyle. */
   serviceBadgeStyle: string;
 }
@@ -107,6 +109,9 @@ function move<T>(items: T[], from: number, to: number): T[] {
 }
 
 export class HostedEngine {
+  // Before anything is read: whether this browser has kept anything of Noctorium's at all. Nothing is a first visit,
+  // the one time the setup is offered; somebody who used the player before there was a setup is never shown it.
+  private readonly firstVisit = Object.keys(everything()).length === 0;
   private prefs: Prefs = { ...DEFAULTS, ...load<Partial<Prefs>>('prefs', {}) };
   private likes: Track[] = load('likes', []);
   private playlists: LocalPlaylist[] = load('playlists', []);
@@ -153,6 +158,10 @@ export class HostedEngine {
   constructor(private store: Store) {
     this.prefs.queueColumns = normalisedColumns(this.prefs.queueColumns ?? DEFAULT_QUEUE_COLUMNS);
     this.prefs.boostPercent = VolumeBoost.clamp(this.prefs.boostPercent);
+    if (this.firstVisit && this.prefs.setupDone === undefined) {
+      this.prefs.setupDone = false;
+      this.savePrefs();
+    }
     const current = this.queue.tracks[this.queue.currentIndex];
     this.playback = {
       status: 'idle', track: current, volume: this.prefs.volume, positionMs: current ? load('position', 0) : 0,
@@ -196,6 +205,7 @@ export class HostedEngine {
       queueColumns: p.queueColumns, allQueueColumns: QUEUE_COLUMNS.map(({ name, title, heading }) => ({ name, title, description: heading })),
       statusBar: p.statusBar, iconSet: p.iconSet, iconSets: ICON_SETS, homePlay: p.homePlay, homePlays: HOME_PLAYS,
       homeLayout: p.homeLayout ?? 'CLASSIC', homeLayouts: HOME_LAYOUTS,
+      setupDone: p.setupDone !== false,
       serviceBadgeStyle: p.serviceBadgeStyle, serviceBadgeStyles: SERVICE_BADGE_STYLES,
     };
     this.store.part('settings', settings);
@@ -299,6 +309,10 @@ export class HostedEngine {
       case 'iconSet': return this.choose('iconSet', c.name, ICON_SETS, 'No such icon set');
       case 'homePlay': return this.choose('homePlay', c.name, HOME_PLAYS, 'No such choice');
       case 'homeLayout': return this.choose('homeLayout', c.name, HOME_LAYOUTS, 'No such layout');
+      case 'finishSetup':
+        this.prefs.setupDone = true;
+        this.savePrefs();
+        return this.emitSettings();
       case 'serviceBadgeStyle': return this.choose('serviceBadgeStyle', c.name, SERVICE_BADGE_STYLES, 'No such badges');
       case 'statusBar': this.prefs.statusBar = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'queueColumns':

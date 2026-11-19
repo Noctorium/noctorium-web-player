@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { FirstTimeSetup } from './components/FirstTimeSetup';
 import { ArrowLeft, ArrowRight, BookmarkPlus, Download, Home as HomeIcon, Library as LibraryIcon, ListMusic, MonitorSpeaker, Search as SearchIcon, Settings as SettingsIcon, X } from './icons';
 import { live, send, useLive, usePart } from './live';
 import { HOSTED } from './mode';
@@ -319,6 +320,7 @@ export function App() {
   useKeys();
   const connection = useLive((l) => l.connection);
   const hasState = useLive((l) => !!l.state.settings);
+  const setupDone = useLive((l) => l.state.settings?.setupDone);
   const { nowPlaying } = useUi();
   const route = useRoute();
   const skin = useSkin();
@@ -332,6 +334,8 @@ export function App() {
     );
   }
   if (!hasState) return <Gate title="Noctorium">{connection === 'closed' ? 'Noctorium is not answering. Is noctorium web still running?' : 'Connecting…'}</Gate>;
+  // A first start: the setup, in place of the page, until it is finished or skipped.
+  if (setupDone === false) return <FirstTimeSetup />;
 
   return (
     <div className="app">
