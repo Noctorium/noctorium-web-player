@@ -327,9 +327,12 @@ function YouSettings({ settings }: { settings: Settings }) {
   const connectOn = usePart('connect')?.enabled ?? settings.connectEnabled;
   return (
     <>
-      <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : 'Optional: counts your listening, and lets Connect find your devices.'}>
+      <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : account?.deviceCode ? `Allow it at ${account.deviceUrl?.split('?')[0]} with the code ${account.deviceCode} — waiting…` : 'Optional: counts your listening, and lets Connect find your devices.'}>
         {account?.signedIn ? <button className="button small danger" onClick={() => send('signOut', { service: 'noctorium' })}>Sign out</button>
           : <button className="button small" onClick={() => openDialog(<NoctoriumLogIn />)}>Sign in</button>}
+        {!account?.signedIn && (account?.deviceCode
+          ? <button className="button small" onClick={() => send('noctoriumBrowserSignInCancel', {})}>Cancel</button>
+          : <button className="button small" onClick={() => send('noctoriumBrowserSignIn', {})}>Discord, Telegram or GitHub</button>)}
       </Row>
       {/* The same switch as at the top of Devices, and the way there, where the other devices are. */}
       <Row setting="connect" title="Noctorium Connect" detail={connectSays(connectOn)}>
