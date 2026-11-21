@@ -6,13 +6,13 @@
 
 **Noctorium in a browser.**
 
-[Open it](https://noctorium-music.vercel.app) · [Noctorium](https://noctorium.xyz)
+[Open it](https://music.noctorium.xyz) · [Noctorium](https://noctorium.xyz)
 
 </div>
 
 One page, built two ways:
 
-- **The hosted player** at [noctorium-music.vercel.app](https://noctorium-music.vercel.app): open it and play.
+- **The hosted player** at [music.noctorium.xyz](https://music.noctorium.xyz): open it and play.
   YouTube Music and SoundCloud in one search, one queue and one player, synced lyrics, every Noctorium
   theme. No account to make, and none of yours to sign in to: likes, playlists and pins are kept in the
   browser, and can be saved as a file and opened in another.
