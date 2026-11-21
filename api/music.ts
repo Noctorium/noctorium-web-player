@@ -11,7 +11,7 @@ import * as youtube from './_lib/youtube.js';
  *   ?op=home
  *   ?op=playlist&key=yt:<id> | sc:pl:<id> | sc:sys:<urn> | sc:url:<address>
  *   ?op=radio&key=<provider>:<id>
- *   ?op=stream&id=<SoundCloud track id>
+ *   ?op=stream&id=<SoundCloud track id>[&progressive=1, a plain MP3 even for a long track]
  *   ?op=link&url=<a YouTube, YouTube Music or SoundCloud address>
  *
  * hl and gl, from the browser's language, say which language and which country's catalogue to ask for.
@@ -151,7 +151,7 @@ export async function GET(request: Request): Promise<Response> {
         const id = url.searchParams.get('id') ?? '';
         if (!/^\d+$/.test(id)) throw new Upstream('No such track');
         // Signed addresses last a couple of hours; never hand out one somebody else was given earlier.
-        return json(await soundcloud.stream(id), 0);
+        return json(await soundcloud.stream(id, url.searchParams.get('progressive') === '1'), 0);
       }
       case 'link': {
         const text = (url.searchParams.get('url') ?? '').trim();

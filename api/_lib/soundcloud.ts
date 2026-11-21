@@ -184,13 +184,14 @@ export interface Stream { url: string; hls: boolean; mime?: string }
  * simplest thing an audio element opens, then the streaming kinds, which hls.js reads. Opus is left out,
  * since SoundCloud sends it in Ogg, which no browser plays through Media Source.
  */
-export async function stream(id: string): Promise<Stream> {
+/** [progressive]: a plain MP3 first even for a long track, for a player that cannot read SoundCloud's AAC streams. */
+export async function stream(id: string, progressive = false): Promise<Stream> {
   const json = await api(`/tracks/${encodeURIComponent(id)}`);
   if (json.policy === 'SNIP') throw new Upstream('This is a SoundCloud Go+ track, so only subscribers can hear it on SoundCloud.');
   if (json.policy === 'BLOCK') throw new Upstream('SoundCloud does not offer this track here.');
   // A plain MP3's address stops working about ten minutes after it is handed out, which a browser still
   // reading a long mix would notice; a stream's addresses last a couple of hours. So a long track streams.
-  const long = (json.full_duration ?? json.duration ?? 0) > 8 * 60_000;
+  const long = !progressive && (json.full_duration ?? json.duration ?? 0) > 8 * 60_000;
   const rank = (t: Json) => {
     const protocol = t.format?.protocol;
     const mime = String(t.format?.mime_type ?? '');
