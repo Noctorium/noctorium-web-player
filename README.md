@@ -6,7 +6,7 @@
 
 **Noctorium in a browser.**
 
-[Open it](https://noctorium-music.vercel.app) · [Noctorium](https://noctorium.vercel.app)
+[Open it](https://noctorium-music.vercel.app) · [Noctorium](https://noctorium.xyz)
 
 </div>
 

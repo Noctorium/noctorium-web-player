@@ -171,7 +171,7 @@ function Sidebar() {
         ))}
       </div>
       {HOSTED && (
-        <a className="sidebar-get" href="https://noctorium.vercel.app" target="_blank" rel="noreferrer">
+        <a className="sidebar-get" href="https://noctorium.xyz" target="_blank" rel="noreferrer">
           <strong>Noctorium for your computer and phone</strong>
           <span>With your own YouTube Music and SoundCloud accounts.</span>
         </a>

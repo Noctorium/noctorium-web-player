@@ -37,7 +37,7 @@ export function HostedListenBrainz({ settings }: { settings: Settings }) {
 export function HostedServices() {
   return (
     <Row setting="services-hosted" title="YouTube Music and SoundCloud" detail="This player plays both without signing in, and keeps your likes and playlists in this browser. Your own accounts — their likes, playlists and mixes, with every change made on the service — need Noctorium on your computer or phone, where their sign-in pages can be shown.">
-      <a className="button small primary" href="https://noctorium.vercel.app" target="_blank" rel="noreferrer">Get Noctorium <ExternalLink size={13} /></a>
+      <a className="button small primary" href="https://noctorium.xyz" target="_blank" rel="noreferrer">Get Noctorium <ExternalLink size={13} /></a>
     </Row>
   );
 }
