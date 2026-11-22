@@ -40,7 +40,7 @@ const e = (page: string, id: string, title: string, description: string, keyword
 const SIGN_IN_LINK = ['copy link', 'link', 'open link', 'open again', 'browser did not open', 'no browser', 'address', 'url'];
 
 export const ENTRIES: Entry[] = [
-  e('you', 'account', 'Noctorium account', 'Counts your listening, and lets Connect find your devices.', ['sign in', 'log in', 'login', 'stats', 'listening stats', 'profile'], 'web'),
+  e('you', 'account', 'Noctorium account', 'Counts your listening, and shows what you play on Discord and Telegram.', ['sign in', 'log in', 'login', 'stats', 'listening stats', 'profile', 'discord', 'telegram', 'github']),
   // Switched here and at the top of Devices; the hosted player has no Connect at all.
   e('you', 'connect', 'Noctorium Connect', 'Whether this computer and your other devices find each other, to move the music between them.', [
     'turn off connect', 'turn on connect', 'disable connect', 'enable connect', 'devices', 'other devices', 'play on another device', 'cast', 'remote', 'multiroom',

@@ -306,7 +306,7 @@ function PageContent({ page, settings }: { page: Page; settings: Settings }) {
 
 function PageSettings({ page, settings }: { page: string; settings: Settings }) {
   switch (page) {
-    case 'you': return HOSTED ? <HostedListenBrainz settings={settings} /> : <YouSettings settings={settings} />;
+    case 'you': return HOSTED ? <><AccountRow /><HostedListenBrainz settings={settings} /></> : <YouSettings settings={settings} />;
     case 'look-theme': return <ThemeSettings settings={settings} />;
     case 'look-player': return <PlayerSettings settings={settings} />;
     case 'look-now-playing': return <NowPlayingSettings />;
@@ -322,18 +322,33 @@ function PageSettings({ page, settings }: { page: string; settings: Settings }) 
 
 // ------------------------------------------------------------------ You
 
-function YouSettings({ settings }: { settings: Settings }) {
+/**
+ * The Noctorium account. Signing in with a code opens the account service's page, where Discord, Telegram, GitHub
+ * or an email all work; the hosted player has only that, as it has no password form of its own to send one through.
+ */
+export function AccountRow() {
   const account = usePart('account');
+  const waiting = !account?.signedIn && account?.deviceCode;
+  return (
+    <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : waiting ? `Allow it at ${account.deviceUrl?.split('?')[0]} with the code ${account.deviceCode} — waiting…` : account?.message ?? (HOSTED ? 'Optional: counts your listening, and shows what you play on Discord and Telegram.' : 'Optional: counts your listening, and lets Connect find your devices.')}>
+      {account?.signedIn ? <button className="button small danger" onClick={() => send('signOut', { service: 'noctorium' })}>Sign out</button>
+        : waiting ? <>
+          <a className="button small primary" href={account.deviceUrl} target="_blank" rel="noreferrer">Open page <ExternalLink size={13} /></a>
+          <button className="button small" onClick={() => send('noctoriumBrowserSignInCancel', {})}>Cancel</button>
+        </>
+        : <>
+          {!HOSTED && <button className="button small" onClick={() => openDialog(<NoctoriumLogIn />)}>Email</button>}
+          <button className="button small primary" onClick={() => send('noctoriumBrowserSignIn', {})}>{HOSTED ? 'Sign in' : 'Discord, Telegram or GitHub'}</button>
+        </>}
+    </Row>
+  );
+}
+
+function YouSettings({ settings }: { settings: Settings }) {
   const connectOn = usePart('connect')?.enabled ?? settings.connectEnabled;
   return (
     <>
-      <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : account?.deviceCode ? `Allow it at ${account.deviceUrl?.split('?')[0]} with the code ${account.deviceCode} — waiting…` : 'Optional: counts your listening, and lets Connect find your devices.'}>
-        {account?.signedIn ? <button className="button small danger" onClick={() => send('signOut', { service: 'noctorium' })}>Sign out</button>
-          : <button className="button small" onClick={() => openDialog(<NoctoriumLogIn />)}>Sign in</button>}
-        {!account?.signedIn && (account?.deviceCode
-          ? <button className="button small" onClick={() => send('noctoriumBrowserSignInCancel', {})}>Cancel</button>
-          : <button className="button small" onClick={() => send('noctoriumBrowserSignIn', {})}>Discord, Telegram or GitHub</button>)}
-      </Row>
+      <AccountRow />
       {/* The same switch as at the top of Devices, and the way there, where the other devices are. */}
       <Row setting="connect" title="Noctorium Connect" detail={connectSays(connectOn)}>
         <button className="button small" onClick={() => go('/devices')}>Devices</button>

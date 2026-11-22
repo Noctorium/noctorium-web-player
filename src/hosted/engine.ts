@@ -14,6 +14,7 @@ import { DEFAULT_QUEUE_COLUMNS, HOME_LAYOUTS, HOME_PLAYS, ICON_SETS, normalisedC
 import { version } from '../../package.json';
 import { ask } from './api';
 import { choose, findLyrics } from './lyrics';
+import { HostedAccount, listenCounts } from './account';
 import { everything, forget, load, save } from './store';
 import { accents, colours, coverColour, themes, wantsArtwork } from './themes';
 import { youtube } from './youtube';
@@ -146,7 +147,9 @@ export class HostedEngine {
   private listenbrainz: Service;
   private scrobbles = 0;
   /** This play's listening, for ListenBrainz: when it began, how much was heard, whether it was sent. */
-  private listen = { generation: -1, startedAt: 0, heardMs: 0, lastAt: 0, nowPlaying: false, sent: false };
+  private listen = { generation: -1, startedAt: 0, heardMs: 0, lastAt: 0, nowPlaying: false, sent: false, counted: false };
+  /** The Noctorium account, signed in or not; see account.ts. */
+  private account!: HostedAccount;
   private savePosition = 0;
   /** The music stops when this song ends; see ended(). Not kept over a reload, as Noctorium does not keep it. */
   private stopAfter = false;
@@ -176,6 +179,8 @@ export class HostedEngine {
     // A reload keeps the boost, as a restart does in Noctorium; the browser starts it with the sound, at a tap.
     if (VolumeBoost.isOn(this.prefs.boostPercent)) audio.command({ command: 'boost', generation: this.generation, percent: this.prefs.boostPercent });
     sound.subscribe(() => this.emitPlayback());
+    this.account = new HostedAccount((account) => this.store.part('account', account));
+    this.account.start();
     this.emitSettings();
     this.emitPlayback();
     this.emitQueue();
@@ -230,6 +235,7 @@ export class HostedEngine {
       at: Date.now(),
     };
     this.store.part('playback', this.playback);
+    this.account?.playing(track, this.playback.status === 'playing', this.playback.positionMs, this.playback.durationMs);
   }
 
   private emitQueue() {
@@ -448,7 +454,10 @@ export class HostedEngine {
       case 'taskbarClock': this.prefs.taskbarClock = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'autoplay': this.prefs.autoplay = !!c.on; this.savePrefs(); return this.emitSettings();
       case 'listenbrainz': return this.connectListenBrainz(String(c.token ?? ''));
+      case 'noctoriumBrowserSignIn': return this.account.signIn();
+      case 'noctoriumBrowserSignInCancel': return this.account.cancel();
       case 'signOut':
+        if (c.service === 'noctorium') return this.account.signOut();
         if (c.service !== 'listenbrainz') throw new Problem('There is nothing to sign out of here');
         this.prefs.listenbrainzToken = undefined;
         this.prefs.listenbrainzUser = undefined;
@@ -559,7 +568,7 @@ export class HostedEngine {
     this.emitQueue();
     const generation = ++this.generation;
     this.pendingSeek = startMs > 0 ? startMs : undefined;
-    this.listen = { generation, startedAt: Math.floor(Date.now() / 1000), heardMs: 0, lastAt: 0, nowPlaying: false, sent: false };
+    this.listen = { generation, startedAt: Math.floor(Date.now() / 1000), heardMs: 0, lastAt: 0, nowPlaying: false, sent: false, counted: false };
     this.format = {};
     this.setPlayback({ status: 'resolving', track, error: undefined, positionMs: startMs, durationMs: track.durationMs ?? 0 });
     this.remember(track);
@@ -881,7 +890,7 @@ export class HostedEngine {
         break;
       case 'looped':
         this.submitListen(true);
-        this.listen = { ...this.listen, startedAt: Math.floor(Date.now() / 1000), heardMs: 0, sent: false };
+        this.listen = { ...this.listen, startedAt: Math.floor(Date.now() / 1000), heardMs: 0, sent: false, counted: false };
         break;
       case 'ended':
         this.submitListen(false);
@@ -1247,6 +1256,10 @@ export class HostedEngine {
     const duration = this.playback.durationMs;
     // Last.fm's rule, which ListenBrainz follows: half the track, or four minutes, whichever is first.
     if (!l.sent && duration >= 30_000 && l.heardMs >= Math.min(duration / 2, 240_000)) this.submitListen(false);
+    if (!l.counted && this.playback.track && listenCounts(l.heardMs, duration)) {
+      l.counted = true;
+      this.account.played(this.playback.track, l.heardMs, l.startedAt);
+    }
   }
 
   private submitListen(force: boolean) {
