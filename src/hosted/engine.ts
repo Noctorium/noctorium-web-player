@@ -179,7 +179,10 @@ export class HostedEngine {
     // A reload keeps the boost, as a restart does in Noctorium; the browser starts it with the sound, at a tap.
     if (VolumeBoost.isOn(this.prefs.boostPercent)) audio.command({ command: 'boost', generation: this.generation, percent: this.prefs.boostPercent });
     sound.subscribe(() => this.emitPlayback());
-    this.account = new HostedAccount((account) => this.store.part('account', account));
+    this.account = new HostedAccount(
+      (account) => this.store.part('account', account),
+      () => (this.prefs.listenbrainzToken ? ['listenbrainz'] : []),
+    );
     this.account.start();
     this.emitSettings();
     this.emitPlayback();
@@ -1269,6 +1272,7 @@ export class HostedEngine {
     if (!force && !(duration >= 30_000 && l.heardMs >= Math.min(duration / 2, 240_000))) return;
     l.sent = true;
     this.submit('single', l.startedAt);
+    if (this.playback.track) this.account.scrobbled(this.playback.track, l.startedAt, l.heardMs, duration);
   }
 
   private submit(kind: 'single' | 'playing_now', listenedAt?: number) {

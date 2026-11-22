@@ -330,7 +330,7 @@ export function AccountRow() {
   const account = usePart('account');
   const waiting = !account?.signedIn && account?.deviceCode;
   return (
-    <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : waiting ? `Allow it at ${account.deviceUrl?.split('?')[0]} with the code ${account.deviceCode} — waiting…` : account?.message ?? (HOSTED ? 'Optional: counts your listening, and shows what you play on Discord and Telegram.' : 'Optional: counts your listening, and lets Connect find your devices.')}>
+    <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : waiting ? `Allow it at ${account.deviceUrl?.split('?')[0]} with the code ${account.deviceCode} — waiting…` : account?.message ?? (HOSTED ? 'Optional: counts your listening, shows what you play on Discord and Telegram, and scrobbles to the Last.fm and ListenBrainz linked to it.' : 'Optional: counts your listening, and lets Connect find your devices.')}>
       {account?.signedIn ? <button className="button small danger" onClick={() => send('signOut', { service: 'noctorium' })}>Sign out</button>
         : waiting ? <>
           <a className="button small primary" href={account.deviceUrl} target="_blank" rel="noreferrer">Open page <ExternalLink size={13} /></a>

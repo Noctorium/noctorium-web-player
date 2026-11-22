@@ -27,7 +27,11 @@ export class HostedAccount {
   private reported?: { key: string; at: number };
   private nowTimer = 0;
 
-  constructor(private emit: (account: NoctoriumAccount) => void) {}
+  /**
+   * [scrobblesItself]: the sites this page already tells by itself -- its own ListenBrainz connection -- which the
+   * service then leaves out when it scrobbles for this page to what the account has linked.
+   */
+  constructor(private emit: (account: NoctoriumAccount) => void, private scrobblesItself: () => string[] = () => []) {}
 
   start() {
     this.send();
@@ -145,6 +149,22 @@ export class HostedAccount {
     });
   }
 
+  /** A listen that meets Last.fm's rule, scrobbled by the service to what the account has linked. */
+  scrobbled(track: Track, startedAt: number, heardMs: number, durationMs: number) {
+    if (!this.kept) return;
+    const song = {
+      title: track.title,
+      artist: track.artists[0]?.name ?? track.artistLine,
+      ...(track.album ? { album: track.album.title } : {}),
+      url: track.sourceUrl,
+      durationMs: Math.round(durationMs),
+    };
+    void this.call('/api/scrobble', {
+      method: 'POST',
+      body: JSON.stringify({ track: song, startedAt, heardMs: Math.round(heardMs), skip: this.scrobblesItself() }),
+    });
+  }
+
   /**
    * What is playing, or nothing: said once it has settled for a few seconds -- skipping through songs is not worth a
    * status each -- and again every five minutes while it plays, as Discord's status lasts only so long.
@@ -166,7 +186,8 @@ export class HostedAccount {
         ...(durationMs > 0 ? { durationMs: Math.round(durationMs) } : {}),
         positionMs: Math.round(positionMs),
       } : null;
-      void this.call('/api/now-playing', { method: 'POST', body: JSON.stringify({ track: now }) });
+      // relay: the service also says it as "now playing" on the Last.fm and ListenBrainz linked to the account.
+      void this.call('/api/now-playing', { method: 'POST', body: JSON.stringify({ track: now, relay: true, skip: this.scrobblesItself() }) });
     }, key ? SETTLE_MS : 0);
   }
 }
