@@ -2,7 +2,7 @@ import type { NoctoriumAccount, Track } from '../types';
 import { load, save } from './store';
 
 /*
- * The Noctorium account, in the hosted player: signed in from a browser tab with a code -- Discord, Telegram, GitHub
+ * The Noctorium account, in the hosted player: signed in from a browser tab with a code -- Discord, Telegram
  * or email, on the account service's own page -- as the apps sign in. Once signed in it counts what is played here,
  * and says what is playing, for the listener's Discord status and Telegram bio. The token is kept in this browser.
  */

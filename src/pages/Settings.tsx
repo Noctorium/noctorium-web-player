@@ -323,8 +323,8 @@ function PageSettings({ page, settings }: { page: string; settings: Settings }) 
 // ------------------------------------------------------------------ You
 
 /**
- * The Noctorium account. Signing in with a code opens the account service's page, where Discord, Telegram, GitHub
- * or an email all work; the hosted player has only that, as it has no password form of its own to send one through.
+ * The Noctorium account. Signing in with a code opens the account service's page, where Discord, Telegram or an
+ * email all work; the hosted player has only that, as it has no password form of its own to send one through.
  */
 export function AccountRow() {
   const account = usePart('account');
@@ -338,7 +338,7 @@ export function AccountRow() {
         </>
         : <>
           {!HOSTED && <button className="button small" onClick={() => openDialog(<NoctoriumLogIn />)}>Email</button>}
-          <button className="button small primary" onClick={() => send('noctoriumBrowserSignIn', {})}>{HOSTED ? 'Sign in' : 'Discord, Telegram or GitHub'}</button>
+          <button className="button small primary" onClick={() => send('noctoriumBrowserSignIn', {})}>{HOSTED ? 'Sign in' : 'Discord or Telegram'}</button>
         </>}
     </Row>
   );
