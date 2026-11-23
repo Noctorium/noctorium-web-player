@@ -329,6 +329,13 @@ function PageSettings({ page, settings }: { page: string; settings: Settings }) 
 export function AccountRow() {
   const account = usePart('account');
   const waiting = !account?.signedIn && account?.deviceCode;
+  if (!HOSTED && account?.verifyWith?.length) {
+    return (
+      <Row setting="account" title="Noctorium account" wide detail={account.message ?? 'Two-step verification'}>
+        <NoctoriumVerify methods={account.verifyWith} strict={!!account.verifyStrict} done={account.verified ?? []} />
+      </Row>
+    );
+  }
   return (
     <Row setting="account" title="Noctorium account" detail={account?.signedIn ? `Signed in as ${account.name || account.email} · ${account.streams.toLocaleString()} listens` : waiting ? `Allow it at ${account.deviceUrl?.split('?')[0]} with the code ${account.deviceCode} — waiting…` : account?.message ?? (HOSTED ? 'Optional: counts your listening, shows what you play on Discord and Telegram, and scrobbles to the Last.fm and ListenBrainz linked to it.' : 'Optional: counts your listening, and lets Connect find your devices.')}>
       {account?.signedIn ? <button className="button small danger" onClick={() => send('signOut', { service: 'noctorium' })}>Sign out</button>
@@ -1097,6 +1104,42 @@ function Channels() {
         </button>
       ))}
     </Dialog>
+  );
+}
+
+/**
+ * Two-step verification, after the password: a code from the authenticator app, one the login bot sends on Telegram, or
+ * a backup code. With both ways on, either one this time; in strict mode, both.
+ */
+function NoctoriumVerify({ methods, strict, done }: { methods: ('totp' | 'telegram')[]; strict: boolean; done: string[] }) {
+  const [chosen, setChosen] = useState(methods[0]);
+  const [backup, setBackup] = useState(false);
+  const [codes, setCodes] = useState<Record<string, string>>({});
+  const wanted = backup ? ['backup'] : strict ? methods.filter((m) => !done.includes(m)) : [chosen];
+  const ready = wanted.every((w) => (codes[w] ?? '').trim());
+  const verify = () => { send('noctoriumVerify', codes); setCodes({}); };
+  const label = (w: string) => (w === 'totp' ? 'The code your authenticator app shows' : w === 'telegram' ? 'The code Telegram sent you' : 'A backup code');
+  return (
+    <div style={{ display: 'grid', gap: 8, width: '100%' }}>
+      <span className="muted" style={{ fontSize: 13 }}>{strict ? 'Strict mode is on: this sign-in needs both codes.' : 'Two-step verification: enter a code to finish signing in.'}</span>
+      {!strict && !backup && methods.length > 1 && (
+        <div style={{ display: 'flex', gap: 6 }}>
+          {methods.map((m) => <button key={m} className={`button small${chosen === m ? ' primary' : ''}`} onClick={() => setChosen(m)}>{m === 'totp' ? 'Authenticator' : 'Telegram'}</button>)}
+        </div>
+      )}
+      {wanted.map((w) => (
+        <div key={w} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input className="field" placeholder={label(w)} inputMode={w === 'backup' ? 'text' : 'numeric'} autoComplete="one-time-code" value={codes[w] ?? ''}
+            onChange={(e) => setCodes({ ...codes, [w]: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter' && ready) verify(); }} />
+          {w === 'telegram' && <button className="button small" onClick={() => send('noctoriumTelegramCode', {})}>Send code</button>}
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button className="button small primary" disabled={!ready} onClick={verify}>Continue</button>
+        <button className="button small" onClick={() => { setBackup(!backup); setCodes({}); }}>{backup ? 'Use my app or Telegram' : 'Use a backup code'}</button>
+        <button className="button small" onClick={() => send('noctoriumVerifyCancel', {})}>Cancel</button>
+      </div>
+    </div>
   );
 }
 

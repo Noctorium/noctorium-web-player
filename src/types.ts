@@ -523,7 +523,7 @@ export interface Connect { available: boolean; enabled: boolean; thisDevice: str
 
 export interface SignIn { state: 'idle' | 'waiting' | 'checking' | 'done' | 'failed'; code?: string; message?: string }
 
-export interface NoctoriumAccount { signedIn: boolean; name?: string; email?: string; streams: number; hours: number; message?: string; deviceCode?: string; deviceUrl?: string }
+export interface NoctoriumAccount { signedIn: boolean; name?: string; email?: string; streams: number; hours: number; message?: string; deviceCode?: string; deviceUrl?: string; verifyWith?: ('totp' | 'telegram')[] | null; verifyStrict?: boolean; verified?: string[] }
 
 export interface State {
   settings?: Settings;

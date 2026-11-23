@@ -7,7 +7,10 @@ import { load, save } from './store';
  * and says what is playing, for the listener's Discord status and Telegram bio. The token is kept in this browser.
  */
 
-export const SERVICE = 'https://service.noctorium.xyz';
+/** Signing in and the account, and listening: two servers since 0.39, chosen by the path asked. */
+export const ACCOUNT = 'https://account.noctorium.xyz';
+export const STATS = 'https://stats.noctorium.xyz';
+const serverFor = (path: string) => (['/api/stats', '/api/plays', '/api/now-playing', '/api/scrobble'].some((p) => path === p || path.startsWith(`${p}?`)) ? STATS : ACCOUNT);
 const SETTLE_MS = 3_000;
 const RENEW_MS = 5 * 60_000;
 
@@ -54,7 +57,7 @@ export class HostedAccount {
   private async call(path: string, init: RequestInit = {}): Promise<Response | null> {
     const headers: Record<string, string> = { Accept: 'application/json', ...(init.body ? { 'Content-Type': 'application/json' } : {}) };
     if (this.kept) headers.Authorization = `Bearer ${this.kept.token}`;
-    return fetch(SERVICE + path, { ...init, headers }).catch(() => null);
+    return fetch(serverFor(path) + path, { ...init, headers }).catch(() => null);
   }
 
   /** Who the token is, and the figures; a token the service refuses signs out. */
