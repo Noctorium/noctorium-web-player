@@ -64,6 +64,8 @@ interface Prefs {
   setupDone?: boolean;
   /** The services' badges with their marks, or with their letters, as Base's ServiceBadgeStyle. */
   serviceBadgeStyle: string;
+  /** Where Settings is: beside the picture at the top, or among the pages. */
+  settingsButton?: 'home' | 'toolbar';
 }
 
 const DEFAULTS: Prefs = {
@@ -215,6 +217,7 @@ export class HostedEngine {
       homeLayout: p.homeLayout ?? 'CLASSIC', homeLayouts: HOME_LAYOUTS,
       setupDone: p.setupDone !== false,
       serviceBadgeStyle: p.serviceBadgeStyle, serviceBadgeStyles: SERVICE_BADGE_STYLES,
+      settingsButton: p.settingsButton ?? 'home',
     };
     this.store.part('settings', settings);
   }
@@ -459,6 +462,10 @@ export class HostedEngine {
       case 'listenbrainz': return this.connectListenBrainz(String(c.token ?? ''));
       case 'noctoriumBrowserSignIn': return this.account.signIn();
       case 'noctoriumBrowserSignInCancel': return this.account.cancel();
+      case 'noctoriumProfile': return this.account.profile(c);
+      case 'noctoriumAvatar': return this.account.avatar(String(c.jpegBase64 ?? ''));
+      case 'noctoriumTelegramCode': return this.account.telegramCode();
+      case 'settingsButton': this.prefs.settingsButton = c.placement === 'toolbar' ? 'toolbar' : 'home'; this.savePrefs(); return this.emitSettings();
       case 'signOut':
         if (c.service === 'noctorium') return this.account.signOut();
         if (c.service !== 'listenbrainz') throw new Problem('There is nothing to sign out of here');

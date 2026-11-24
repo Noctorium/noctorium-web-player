@@ -15,6 +15,7 @@ import { Search } from './pages/Search';
 import { Library, LocalPage, PlaylistPage } from './pages/Library';
 import { DevicesPage, DownloadsPage, QueuePage } from './pages/Other';
 import { SettingsPage } from './pages/Settings';
+import { AccountPage, Avatar } from './pages/Account';
 import { closeNowPlaying, openNowPlaying, useUi } from './ui';
 import { STANDARD_98, windows98Of, windows98Properties } from './windows98';
 import { setIconSet } from './icons';
@@ -36,6 +37,12 @@ const allPages = [
 
 /** What only a Noctorium on a computer has: files kept on it, and its speakers and Connect. */
 const pages = HOSTED ? allPages.filter(([id]) => id !== 'downloads' && id !== 'devices') : allPages;
+
+/** The pages for the sidebar and the tab bar: Settings among them only while its button is not on the top bar. */
+function usePages() {
+  const home = (usePart('settings')?.settingsButton ?? 'home') === 'home';
+  return home ? pages.filter(([id]) => id !== 'settings') : pages;
+}
 
 /** YouTube's player, which only the hosted player shows; left out of the other build. */
 const YouTubeStage = HOSTED ? lazy(() => import('./hosted/Stage')) : null;
@@ -147,7 +154,7 @@ function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="brand"><img src="/noctorium.png" alt="" /> NOCTORIUM</div>
-      {pages.map(([id, label, Icon]) => (
+      {usePages().map(([id, label, Icon]) => (
         <button key={id} className={cls('nav-item', route.page === id && 'active')} onClick={() => { closeNowPlaying(); go(id === 'home' ? '/' : `/${id}`); }}>
           <Icon size={20} /> {label}
         </button>
@@ -185,7 +192,8 @@ function TopBar() {
   const connection = useLive((l) => l.connection);
   const [text, setText] = useState(route.page === 'search' ? route.query.get('q') ?? '' : '');
   const timer = useRef<number>(0);
-  const playLinks = !!usePart('settings')?.playLinksFromSearch;
+  const settings = usePart('settings');
+  const playLinks = !!settings?.playLinksFromSearch;
   useEffect(() => { if (route.page === 'search') setText(route.query.get('q') ?? ''); }, [route]);
 
   function typed(value: string) {
@@ -235,6 +243,12 @@ function TopBar() {
           <span>{connection === 'open' ? 'Connected' : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}</span>
         </span>
       )}
+      <span className="top-you">
+        {(settings?.settingsButton ?? 'home') === 'home' && (
+          <button className={cls('round-button', route.page === 'settings' && 'on')} aria-label="Settings" onClick={() => { closeNowPlaying(); go('/settings'); }}><SettingsIcon size={20} /></button>
+        )}
+        <button className="avatar-button" aria-label="Your account" onClick={() => { closeNowPlaying(); go('/account'); }}><Avatar size={32} /></button>
+      </span>
     </header>
   );
 }
@@ -269,7 +283,7 @@ function TabBar() {
   const { nowPlaying } = useUi();
   return (
     <nav className="tabbar">
-      {pages.filter(([id]) => ['home', 'search', 'library', 'queue', 'settings'].includes(id)).map(([id, label, Icon]) => (
+      {usePages().filter(([id]) => ['home', 'search', 'library', 'queue', 'settings'].includes(id)).map(([id, label, Icon]) => (
         <button key={id} className={cls(route.page === id && !nowPlaying && 'active')} onClick={() => { closeNowPlaying(); go(id === 'home' ? '/' : `/${id}`); }}>
           <Icon size={21} /> {label}
         </button>
@@ -298,6 +312,7 @@ function Page() {
     case 'downloads': return HOSTED ? <Home /> : <DownloadsPage />;
     case 'devices': return HOSTED ? <Home /> : <DevicesPage />;
     case 'settings': return <SettingsPage />;
+    case 'account': return <AccountPage />;
     case 'now-playing': openNowPlaying(); return <Home />;
     default: return <Home />;
   }

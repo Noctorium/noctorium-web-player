@@ -495,6 +495,8 @@ export interface Settings {
   allQueueColumns?: Choice[];
   statusBar?: boolean;
   iconSet?: string;
+  /** Where Settings is: a gear beside the picture at the top (home, the default), or among the pages (toolbar). From 0.40 on. */
+  settingsButton?: 'home' | 'toolbar';
   iconSets?: Choice[];
   homePlay?: string;
   homePlays?: Choice[];
@@ -523,7 +525,11 @@ export interface Connect { available: boolean; enabled: boolean; thisDevice: str
 
 export interface SignIn { state: 'idle' | 'waiting' | 'checking' | 'done' | 'failed'; code?: string; message?: string }
 
-export interface NoctoriumAccount { signedIn: boolean; name?: string; email?: string; streams: number; hours: number; message?: string; deviceCode?: string; deviceUrl?: string; verifyWith?: ('totp' | 'telegram')[] | null; verifyStrict?: boolean; verified?: string[] }
+export interface NoctoriumAccount { signedIn: boolean; name?: string; email?: string; streams: number; hours: number; message?: string; deviceCode?: string; deviceUrl?: string; verifyWith?: ('totp' | 'telegram')[] | null; verifyStrict?: boolean; verified?: string[];
+  /** For the account page, from a Noctorium from 0.40 on: the picture, which proofs a change asks for, and which pictures can be borrowed. */
+  avatar?: string; hasPassword?: boolean; twoStep?: { totp: boolean; telegram: boolean }; linked?: { discord: boolean; telegram: boolean };
+  /** A profile change on its way, and what the service said against the last one. */
+  profileBusy?: boolean; profileError?: string }
 
 export interface State {
   settings?: Settings;

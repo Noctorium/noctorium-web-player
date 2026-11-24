@@ -496,6 +496,9 @@ function PlayerSettings({ settings }: { settings: Settings }) {
         />
         <p className="setting-note">Standard and Line are Lucide (ISC); the others are Material Icons (Apache 2.0), in the styles the desktop and the phone draw them in.</p>
       </Block>
+      <Row setting="settings-button" title="Settings button" detail="A gear at the top beside your picture, or Settings among the pages in the sidebar and tab bar.">
+        <Chips choices={[['home', 'Home screen'], ['toolbar', 'Toolbar']]} chosen={settings.settingsButton ?? 'home'} choose={(placement) => send('settingsButton', { placement })} />
+      </Row>
       <Row setting="home-layout" title="Home layout" wide
         detail={<>{(settings.homeLayouts?.length ? settings.homeLayouts : HOME_LAYOUTS).find((c) => c.name === (settings.homeLayout ?? 'CLASSIC'))?.description} More layouts are on their way.</>}>
         <Chips choices={(settings.homeLayouts?.length ? settings.homeLayouts : HOME_LAYOUTS).map((c) => [c.name, c.title])} chosen={settings.homeLayout ?? 'CLASSIC'} choose={(name) => send('homeLayout', { name })} />

@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 
 /*
  * Where the page is, kept in the address bar so Back works and a page can be bookmarked: /search?q=…,
- * /library, /playlist/<key>, /local/<id>, /queue, /downloads, /devices, /settings. The now playing screen
+ * /library, /playlist/<key>, /local/<id>, /queue, /downloads, /devices, /settings, /account. The now playing screen
  * is a layer over whichever page is open, not a page, so it does not go into the history.
  */
 

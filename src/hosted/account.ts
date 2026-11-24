@@ -16,6 +16,9 @@ const RENEW_MS = 5 * 60_000;
 
 interface Kept { token: string; name: string; email: string }
 
+/** What the account page needs of /me, beside the name and email: asked again at each refresh, so not kept. */
+type Me = Pick<NoctoriumAccount, 'avatar' | 'hasPassword' | 'twoStep' | 'linked'>;
+
 /** Whether a listen counts, as every Noctorium counts it: half a minute, or half the song if it is shorter. */
 export function listenCounts(heardMs: number, durationMs: number): boolean {
   const needed = durationMs > 0 ? Math.min(durationMs / 2, 30_000) : 30_000;
@@ -29,6 +32,9 @@ export class HostedAccount {
   private message?: string;
   private reported?: { key: string; at: number };
   private nowTimer = 0;
+  private me: Me = {};
+  private busy = false;
+  private problem?: string;
 
   /**
    * [scrobblesItself]: the sites this page already tells by itself -- its own ListenBrainz connection -- which the
@@ -51,11 +57,14 @@ export class HostedAccount {
       message: this.message,
       deviceCode: this.waiting?.code,
       deviceUrl: this.waiting?.url,
+      ...(this.kept ? this.me : {}),
+      profileBusy: this.busy,
+      profileError: this.problem,
     });
   }
 
   private async call(path: string, init: RequestInit = {}): Promise<Response | null> {
-    const headers: Record<string, string> = { Accept: 'application/json', ...(init.body ? { 'Content-Type': 'application/json' } : {}) };
+    const headers: Record<string, string> = { Accept: 'application/json', ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...(init.headers as Record<string, string>) };
     if (this.kept) headers.Authorization = `Bearer ${this.kept.token}`;
     return fetch(serverFor(path) + path, { ...init, headers }).catch(() => null);
   }
@@ -64,6 +73,13 @@ export class HostedAccount {
   private async refresh() {
     const me = await this.call('/api/auth/me');
     if (me?.status === 401) return this.signOut('Your Noctorium sign-in ran out. Sign in again.');
+    const user = me?.ok ? (await me.json().catch(() => ({}))).user : undefined;
+    if (user && this.kept) {
+      this.kept = { ...this.kept, name: user.displayName ?? this.kept.name, email: user.email ?? this.kept.email };
+      save('account', this.kept);
+      this.me = { avatar: user.avatarUrl ?? undefined, hasPassword: !!user.hasPassword, twoStep: user.twoStep, linked: user.linked };
+      this.send();
+    }
     const stats = await this.call('/api/stats?range=all');
     if (stats?.ok) {
       const body = await stats.json().catch(() => ({}));
@@ -131,8 +147,50 @@ export class HostedAccount {
     this.kept = null;
     save('account', null);
     this.stats = { streams: 0, hours: 0 };
+    this.me = {};
+    this.problem = undefined;
     this.message = message;
     this.send();
+  }
+
+  /**
+   * A change on the account page, as `noctorium web`'s noctoriumProfile: {action, name?, email?, password?, current?,
+   * code?, confirm?}. An email or password change signs the other devices out and hands this one a fresh token, kept
+   * here; deleting signs out.
+   */
+  profile(fields: Record<string, unknown>) {
+    return this.change('/api/account/profile', JSON.stringify({ ...fields, type: undefined }), {}, (body) => {
+      if (fields.action === 'delete') return this.signOut('Your Noctorium account was deleted.');
+      if (body.token && this.kept) save('account', (this.kept = { ...this.kept, token: body.token }));
+    });
+  }
+
+  /** A new picture: a 256×256 JPEG, in base64 as the bridge carries it. */
+  avatar(jpegBase64: string) {
+    const bytes = Uint8Array.from(atob(jpegBase64), (c) => c.charCodeAt(0));
+    return this.change('/api/account/avatar', bytes, { 'Content-Type': 'image/jpeg' });
+  }
+
+  /** The login bot sends a code on Telegram, for a change while two-step verification by Telegram is on. */
+  telegramCode() {
+    return this.change('/api/account/security', JSON.stringify({ action: 'telegram-send' }));
+  }
+
+  private async change(path: string, body: BodyInit, headers: Record<string, string> = {}, done?: (body: any) => void) {
+    if (!this.kept || this.busy) return;
+    this.busy = true;
+    this.problem = undefined;
+    this.send();
+    const reply = await this.call(path, { method: 'POST', body, headers });
+    const answer = reply ? await reply.json().catch(() => ({})) : {};
+    this.busy = false;
+    if (!reply?.ok) {
+      this.problem = answer.error ?? 'The Noctorium service could not be reached. Try again.';
+      return this.send();
+    }
+    done?.(answer);
+    this.send();
+    if (this.kept) await this.refresh();
   }
 
   /** A listen that counted, as the service keeps it; the next refresh shows it in the figures. */
