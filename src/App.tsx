@@ -16,6 +16,7 @@ import { Library, LocalPage, PlaylistPage } from './pages/Library';
 import { DevicesPage, DownloadsPage, QueuePage } from './pages/Other';
 import { SettingsPage } from './pages/Settings';
 import { AccountPage, Avatar } from './pages/Account';
+import { StatsPage } from './pages/Stats';
 import { closeNowPlaying, openNowPlaying, useUi } from './ui';
 import { STANDARD_98, windows98Of, windows98Properties } from './windows98';
 import { setIconSet } from './icons';
@@ -247,7 +248,7 @@ function TopBar() {
         {(settings?.settingsButton ?? 'home') === 'home' && (
           <button className={cls('round-button', route.page === 'settings' && 'on')} aria-label="Settings" onClick={() => { closeNowPlaying(); go('/settings'); }}><SettingsIcon size={20} /></button>
         )}
-        <button className="avatar-button" aria-label="Your account" onClick={() => { closeNowPlaying(); go('/account'); }}><Avatar size={32} /></button>
+        <YouMenu />
       </span>
     </header>
   );
@@ -313,6 +314,7 @@ function Page() {
     case 'devices': return HOSTED ? <Home /> : <DevicesPage />;
     case 'settings': return <SettingsPage />;
     case 'account': return <AccountPage />;
+    case 'stats': return <StatsPage />;
     case 'now-playing': openNowPlaying(); return <Home />;
     default: return <Home />;
   }
@@ -369,5 +371,28 @@ export function App() {
       <MediaSession />
       {YouTubeStage && <Suspense fallback={null}><YouTubeStage /></Suspense>}
     </div>
+  );
+}
+
+/** The picture at the top, and what it opens: the account, or its Stats, as in the apps. */
+function YouMenu() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const shut = () => setOpen(false);
+    window.addEventListener('click', shut);
+    return () => window.removeEventListener('click', shut);
+  }, [open]);
+  const to = (path: string) => { setOpen(false); closeNowPlaying(); go(path); };
+  return (
+    <span className="you-menu">
+      <button className="avatar-button" aria-label="Your account" aria-haspopup="menu" aria-expanded={open} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}><Avatar size={32} /></button>
+      {open && (
+        <div className="you-menu-list" role="menu">
+          <button role="menuitem" onClick={() => to('/account')}>Account</button>
+          <button role="menuitem" onClick={() => to('/stats')}>Stats</button>
+        </div>
+      )}
+    </span>
   );
 }
